@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'home/home_screen.dart';
 import 'recipes/recipes_screen.dart';
 import 'fridge/fridge_screen.dart';
+import 'profile/profile_screen.dart';
 import 'package:wtfood_app/services/auth_service.dart';
 
 class MainScreen extends StatefulWidget {
@@ -18,6 +19,7 @@ class _MainScreenState extends State<MainScreen> {
     HomeScreen(),
     RecipesScreen(),
     FridgeScreen(),
+    ProfileScreen(),
   ];
 
   Future<void> _confirmLogout() async {
@@ -103,6 +105,11 @@ class _MainScreenState extends State<MainScreen> {
                 icon: Icon(Icons.kitchen_outlined),
                 activeIcon: Icon(Icons.kitchen),
                 label: 'Fridge',
+              ),
+              BottomNavigationBarItem(
+                icon: Icon(Icons.person_outline_rounded),
+                activeIcon: Icon(Icons.person_rounded),
+                label: 'Profile',
               ),
             ],
           ),
