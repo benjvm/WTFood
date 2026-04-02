@@ -22,6 +22,12 @@ class AppTheme {
         surface: AppColors.surface,
         onSurface: AppColors.onSurface,
         onSurfaceVariant: AppColors.onSurfaceVariant,
+        outline: AppColors.outline,
+        outlineVariant: AppColors.outlineVariant,
+        surfaceContainerHigh: AppColors.surfaceContainerHigh,
+        surfaceContainerLow: AppColors.surfaceContainerLow,
+        surfaceContainerHighest: AppColors.surfaceContainerHighest,
+        surfaceContainerLowest: AppColors.surfaceContainerLowest,
         error: AppColors.error,
       ),
       textTheme: TextTheme(

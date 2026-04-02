@@ -32,7 +32,8 @@ class RecipesScreen extends StatelessWidget {
                 borderRadius: BorderRadius.circular(AppConstants.borderRadiusMd),
                 boxShadow: [
                   BoxShadow(
-                    color: Theme.of(context).colorScheme.onSurface.withOpacity(0.02),
+                    color:
+                        Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.02),
                     blurRadius: 10,
                   )
                 ],

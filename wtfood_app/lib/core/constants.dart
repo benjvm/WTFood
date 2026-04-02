@@ -18,7 +18,13 @@ class AppColors {
   static const Color surfaceContainerLowest = Color(0xFFFFFFFF);
   static const Color surfaceContainerLow = Color(0xFFCCFDD1);
   static const Color surfaceContainerHigh = Color(0xFFB7F0BF);
-  static const Color surfaceVariant = Color(0xFFAEebb8);
+  // Same value as Stitch "surface-container-highest".
+  static const Color surfaceContainerHighest = Color(0xFFAEEBB8);
+  static const Color surfaceVariant = surfaceContainerHighest;
+
+  // Stitch "outline" tokens.
+  static const Color outline = Color(0xFF58805F);
+  static const Color outlineVariant = Color(0xFF8DB793);
   
   static const Color onSurface = Color(0xFF0E361B);
   static const Color onSurfaceVariant = Color(0xFF3D6445);

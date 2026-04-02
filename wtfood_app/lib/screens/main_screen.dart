@@ -68,11 +68,12 @@ class _MainScreenState extends State<MainScreen> {
       bottomNavigationBar: Container(
         margin: const EdgeInsets.only(left: 24, right: 24, bottom: 24),
         decoration: BoxDecoration(
-          color: Theme.of(context).colorScheme.surface.withOpacity(0.9),
+          color: Theme.of(context).colorScheme.surface.withValues(alpha: 0.9),
           borderRadius: BorderRadius.circular(40),
           boxShadow: [
             BoxShadow(
-              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.08),
+              color:
+                  Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.08),
               blurRadius: 30,
               offset: const Offset(0, 10),
             )

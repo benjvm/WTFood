@@ -17,7 +17,7 @@ class RecipeCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(AppConstants.borderRadiusLg),
         boxShadow: [
           BoxShadow(
-            color: Theme.of(context).colorScheme.onSurface.withOpacity(0.06),
+            color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.06),
             blurRadius: 30,
             offset: const Offset(0, 10),
           ),
