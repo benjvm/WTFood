@@ -1,3 +1,4 @@
+// register_screen.dart - Pantalla de registro
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:wtfood_app/services/auth_service.dart';
