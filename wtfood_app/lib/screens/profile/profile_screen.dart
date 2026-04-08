@@ -1,11 +1,16 @@
+import 'dart:io';
+
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 import 'package:wtfood_app/core/constants.dart';
 import 'package:wtfood_app/models/user_model.dart';
 import 'package:wtfood_app/providers/user_provider.dart';
 import 'package:wtfood_app/services/auth_service.dart';
+import 'package:wtfood_app/services/cloudinary_service.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -17,8 +22,11 @@ class ProfileScreen extends StatefulWidget {
 class _ProfileScreenState extends State<ProfileScreen> {
   late TextEditingController _nameController;
   late TextEditingController _emailController;
+  final ImagePicker _imagePicker = ImagePicker();
+  final CloudinaryService _cloudinaryService = CloudinaryService();
 
   bool _isSaving = false;
+  File? _selectedImage;
 
   @override
   void initState() {
@@ -50,7 +58,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
       return;
     }
 
-    if (newName == user.name && newEmail == user.email) {
+    if (newName == user.name &&
+        newEmail == user.email &&
+        _selectedImage == null) {
       _showSnackbar('No hay cambios que guardar.');
       return;
     }
@@ -59,6 +69,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
     try {
       final firebaseUser = FirebaseAuth.instance.currentUser!;
+      String? newPhotoUrl = user.photoUrl;
+
+      if (_selectedImage != null) {
+        newPhotoUrl = await _cloudinaryService.uploadProfileImage(
+          _selectedImage!,
+        );
+      }
 
       // Actualizar nombre en Firebase Auth
       if (newName != user.name) {
@@ -70,17 +87,23 @@ class _ProfileScreenState extends State<ProfileScreen> {
         await firebaseUser.verifyBeforeUpdateEmail(newEmail);
       }
 
+      if (newPhotoUrl != user.photoUrl) {
+        await firebaseUser.updatePhotoURL(newPhotoUrl);
+      }
+
       // Actualizar en Firestore
-      await FirebaseFirestore.instance
-          .collection('users')
-          .doc(user.uid)
-          .update({
-        'name': newName,
-        'email': newEmail,
-      });
+      await FirebaseFirestore.instance.collection('users').doc(user.uid).update(
+        {'name': newName, 'email': newEmail, 'photoUrl': newPhotoUrl},
+      );
 
       // Actualizar estado local
-      provider.updateUser(user.copyWith(name: newName, email: newEmail));
+      provider.updateUser(
+        user.copyWith(name: newName, email: newEmail, photoUrl: newPhotoUrl),
+      );
+
+      if (mounted) {
+        setState(() => _selectedImage = null);
+      }
 
       _showSnackbar('Cambios guardados correctamente.');
     } catch (e) {
@@ -108,8 +131,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
             child: Text(
               'Cerrar sesión',
               style: TextStyle(
-                  color: Theme.of(context).colorScheme.error,
-                  fontWeight: FontWeight.bold),
+                color: Theme.of(context).colorScheme.error,
+                fontWeight: FontWeight.bold,
+              ),
             ),
           ),
         ],
@@ -133,6 +157,21 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
+  Future<void> _pickProfileImage() async {
+    try {
+      final pickedFile = await _imagePicker.pickImage(
+        source: ImageSource.gallery,
+        imageQuality: 85,
+      );
+
+      if (pickedFile == null || !mounted) return;
+
+      setState(() => _selectedImage = File(pickedFile.path));
+    } catch (e) {
+      _showSnackbar('No se pudo seleccionar la imagen: $e', isError: true);
+    }
+  }
+
   // ── Helpers ───────────────────────────────────────────────────────────────
 
   void _showSnackbar(String message, {bool isError = false}) {
@@ -140,8 +179,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(message),
-        backgroundColor:
-            isError ? Theme.of(context).colorScheme.error : Colors.green,
+        backgroundColor: isError
+            ? Theme.of(context).colorScheme.error
+            : Colors.green,
         behavior: SnackBarBehavior.floating,
       ),
     );
@@ -151,6 +191,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final user = context.watch<UserProvider>().user;
+
     return SafeArea(
       child: SingleChildScrollView(
         padding: const EdgeInsets.all(AppConstants.paddingLg),
@@ -169,15 +211,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     height: 140,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      color: Theme.of(context)
-                          .colorScheme
-                          .surfaceContainerLowest,
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.surfaceContainerLowest,
                       boxShadow: [
                         BoxShadow(
-                          color: Theme.of(context)
-                              .colorScheme
-                              .onSurface
-                              .withValues(alpha: 0.12),
+                          color: Theme.of(
+                            context,
+                          ).colorScheme.onSurface.withValues(alpha: 0.12),
                           blurRadius: 24,
                           offset: const Offset(8, 8),
                         ),
@@ -190,38 +231,33 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     ),
                     child: Padding(
                       padding: const EdgeInsets.all(8),
-                      child: CircleAvatar(
-                        backgroundColor: Theme.of(context)
-                            .colorScheme
-                            .primaryContainer,
-                        child: Icon(
-                          Icons.person_rounded,
-                          size: 62,
-                          color: Theme.of(context)
-                              .colorScheme
-                              .onPrimaryContainer,
-                        ),
+                      child: _ProfileAvatar(
+                        selectedImage: _selectedImage,
+                        photoUrl: user?.photoUrl,
                       ),
                     ),
                   ),
                   Positioned(
                     bottom: 2,
                     right: 2,
-                    child: Container(
-                      width: 42,
-                      height: 42,
-                      decoration: BoxDecoration(
-                        color: Theme.of(context).colorScheme.primary,
-                        shape: BoxShape.circle,
-                        border: Border.all(
-                          color: Theme.of(context).colorScheme.surface,
-                          width: 3,
+                    child: GestureDetector(
+                      onTap: _isSaving ? null : _pickProfileImage,
+                      child: Container(
+                        width: 42,
+                        height: 42,
+                        decoration: BoxDecoration(
+                          color: Theme.of(context).colorScheme.primary,
+                          shape: BoxShape.circle,
+                          border: Border.all(
+                            color: Theme.of(context).colorScheme.surface,
+                            width: 3,
+                          ),
                         ),
-                      ),
-                      child: Icon(
-                        Icons.edit,
-                        size: 18,
-                        color: Theme.of(context).colorScheme.onPrimary,
+                        child: Icon(
+                          Icons.edit,
+                          size: 18,
+                          color: Theme.of(context).colorScheme.onPrimary,
+                        ),
                       ),
                     ),
                   ),
@@ -235,8 +271,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
               child: Text(
                 'My Profile',
                 style: Theme.of(context).textTheme.headlineLarge?.copyWith(
-                      fontWeight: FontWeight.w800,
-                    ),
+                  fontWeight: FontWeight.w800,
+                ),
               ),
             ),
             const SizedBox(height: 6),
@@ -244,10 +280,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
               child: Text(
                 'Manage your personal information',
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color:
-                          Theme.of(context).colorScheme.onSurfaceVariant,
-                      fontWeight: FontWeight.w600,
-                    ),
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
             ),
 
@@ -299,10 +334,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     borderRadius: BorderRadius.circular(999),
                     boxShadow: [
                       BoxShadow(
-                        color: Theme.of(context)
-                            .colorScheme
-                            .primary
-                            .withValues(alpha: 0.28),
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.primary.withValues(alpha: 0.28),
                         blurRadius: 20,
                         offset: const Offset(0, 10),
                       ),
@@ -320,13 +354,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           )
                         : Text(
                             'Save Changes',
-                            style: Theme.of(context)
-                                .textTheme
-                                .titleMedium
+                            style: Theme.of(context).textTheme.titleMedium
                                 ?.copyWith(
-                                  color: Theme.of(context)
-                                      .colorScheme
-                                      .onPrimary,
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.onPrimary,
                                   fontWeight: FontWeight.w700,
                                 ),
                           ),
@@ -344,9 +376,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 child: Text(
                   'SIGN OUT',
                   style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                        color: Theme.of(context).colorScheme.error,
-                        letterSpacing: 1.2,
-                      ),
+                    color: Theme.of(context).colorScheme.error,
+                    letterSpacing: 1.2,
+                  ),
                 ),
               ),
             ),
@@ -355,6 +387,35 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ],
         ),
       ),
+    );
+  }
+}
+
+class _ProfileAvatar extends StatelessWidget {
+  final File? selectedImage;
+  final String? photoUrl;
+
+  const _ProfileAvatar({required this.selectedImage, required this.photoUrl});
+
+  @override
+  Widget build(BuildContext context) {
+    final primaryContainer = Theme.of(context).colorScheme.primaryContainer;
+    final onPrimaryContainer = Theme.of(context).colorScheme.onPrimaryContainer;
+
+    ImageProvider<Object>? imageProvider;
+
+    if (selectedImage != null) {
+      imageProvider = FileImage(selectedImage!);
+    } else if (photoUrl != null && photoUrl!.isNotEmpty) {
+      imageProvider = CachedNetworkImageProvider(photoUrl!);
+    }
+
+    return CircleAvatar(
+      backgroundColor: primaryContainer,
+      backgroundImage: imageProvider,
+      child: imageProvider == null
+          ? Icon(Icons.person_rounded, size: 62, color: onPrimaryContainer)
+          : null,
     );
   }
 }
@@ -386,9 +447,9 @@ class _EditableField extends StatelessWidget {
           child: Text(
             label,
             style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                  letterSpacing: 1.2,
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
-                ),
+              letterSpacing: 1.2,
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
           ),
         ),
         const SizedBox(height: 8),
@@ -396,14 +457,12 @@ class _EditableField extends StatelessWidget {
           width: double.infinity,
           decoration: BoxDecoration(
             color: Theme.of(context).colorScheme.surfaceContainerHigh,
-            borderRadius:
-                BorderRadius.circular(AppConstants.borderRadiusMd),
+            borderRadius: BorderRadius.circular(AppConstants.borderRadiusMd),
             boxShadow: [
               BoxShadow(
-                color: Theme.of(context)
-                    .colorScheme
-                    .onSurface
-                    .withValues(alpha: 0.06),
+                color: Theme.of(
+                  context,
+                ).colorScheme.onSurface.withValues(alpha: 0.06),
                 blurRadius: 12,
                 offset: const Offset(3, 3),
               ),
@@ -417,12 +476,14 @@ class _EditableField extends StatelessWidget {
           child: TextField(
             controller: controller,
             keyboardType: keyboardType,
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.w700,
-                ),
+            style: Theme.of(
+              context,
+            ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
             decoration: InputDecoration(
-              prefixIcon: Icon(icon,
-                  color: Theme.of(context).colorScheme.onSurfaceVariant),
+              prefixIcon: Icon(
+                icon,
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
               border: InputBorder.none,
               contentPadding: const EdgeInsets.symmetric(
                 horizontal: AppConstants.paddingLg,
@@ -464,18 +525,15 @@ class _ActionRow extends StatelessWidget {
       child: Container(
         width: double.infinity,
         height: 64,
-        padding:
-            const EdgeInsets.symmetric(horizontal: AppConstants.paddingMd),
+        padding: const EdgeInsets.symmetric(horizontal: AppConstants.paddingMd),
         decoration: BoxDecoration(
           color: Theme.of(context).colorScheme.surfaceContainerLowest,
-          borderRadius:
-              BorderRadius.circular(AppConstants.borderRadiusMd),
+          borderRadius: BorderRadius.circular(AppConstants.borderRadiusMd),
           boxShadow: [
             BoxShadow(
-              color: Theme.of(context)
-                  .colorScheme
-                  .onSurface
-                  .withValues(alpha: 0.04),
+              color: Theme.of(
+                context,
+              ).colorScheme.onSurface.withValues(alpha: 0.04),
               blurRadius: 10,
               offset: const Offset(0, 4),
             ),
@@ -496,9 +554,9 @@ class _ActionRow extends StatelessWidget {
             Expanded(
               child: Text(
                 label,
-                style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                      fontWeight: FontWeight.w700,
-                    ),
+                style: Theme.of(
+                  context,
+                ).textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w700),
               ),
             ),
             Icon(
@@ -553,7 +611,8 @@ class _ChangePasswordSheetState extends State<_ChangePasswordSheet> {
     }
     if (newPass.length < 6) {
       setState(
-          () => _error = 'La nueva contraseña debe tener al menos 6 caracteres.');
+        () => _error = 'La nueva contraseña debe tener al menos 6 caracteres.',
+      );
       return;
     }
     if (newPass != confirm) {
@@ -628,9 +687,9 @@ class _ChangePasswordSheetState extends State<_ChangePasswordSheet> {
           const SizedBox(height: 20),
           Text(
             'Change Password',
-            style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                  fontWeight: FontWeight.w800,
-                ),
+            style: Theme.of(
+              context,
+            ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800),
           ),
           const SizedBox(height: 20),
 
@@ -648,8 +707,11 @@ class _ChangePasswordSheetState extends State<_ChangePasswordSheet> {
                   const Icon(Icons.error_outline, color: Colors.red, size: 20),
                   const SizedBox(width: 8),
                   Expanded(
-                      child: Text(_error!,
-                          style: const TextStyle(color: Colors.red))),
+                    child: Text(
+                      _error!,
+                      style: const TextStyle(color: Colors.red),
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -661,8 +723,7 @@ class _ChangePasswordSheetState extends State<_ChangePasswordSheet> {
             controller: _currentController,
             label: 'Contraseña actual',
             obscure: _obscureCurrent,
-            onToggle: () =>
-                setState(() => _obscureCurrent = !_obscureCurrent),
+            onToggle: () => setState(() => _obscureCurrent = !_obscureCurrent),
           ),
           const SizedBox(height: 12),
 
@@ -680,8 +741,7 @@ class _ChangePasswordSheetState extends State<_ChangePasswordSheet> {
             controller: _confirmController,
             label: 'Repite la contraseña',
             obscure: _obscureConfirm,
-            onToggle: () =>
-                setState(() => _obscureConfirm = !_obscureConfirm),
+            onToggle: () => setState(() => _obscureConfirm = !_obscureConfirm),
           ),
           const SizedBox(height: 24),
 
@@ -695,19 +755,24 @@ class _ChangePasswordSheetState extends State<_ChangePasswordSheet> {
                 backgroundColor: Theme.of(context).colorScheme.primary,
                 foregroundColor: Theme.of(context).colorScheme.onPrimary,
                 shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(14)),
+                  borderRadius: BorderRadius.circular(14),
+                ),
               ),
               child: _isLoading
                   ? const SizedBox(
                       width: 22,
                       height: 22,
                       child: CircularProgressIndicator(
-                          color: Colors.white, strokeWidth: 2.5),
+                        color: Colors.white,
+                        strokeWidth: 2.5,
+                      ),
                     )
                   : const Text(
                       'Update Password',
                       style: TextStyle(
-                          fontSize: 16, fontWeight: FontWeight.bold),
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
             ),
           ),
