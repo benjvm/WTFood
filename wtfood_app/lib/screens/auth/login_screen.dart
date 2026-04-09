@@ -1,6 +1,7 @@
 // login_screen.dart - Pantalla de login
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:wtfood_app/core/constants.dart';
 import 'package:wtfood_app/services/auth_service.dart';
 import 'package:wtfood_app/screens/auth/register_screen.dart';
 
@@ -96,7 +97,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   const Icon(
                     Icons.restaurant_menu,
                     size: 72,
-                    color: Colors.deepOrange,
+                    color: AppColors.primary,
                   ),
                   const SizedBox(height: 16),
                   Text(
@@ -111,7 +112,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     'Inicia sesión para continuar',
                     textAlign: TextAlign.center,
                     style: theme.textTheme.bodyMedium?.copyWith(
-                      color: Colors.grey,
+                      color: AppColors.onSurfaceVariant,
                     ),
                   ),
                   const SizedBox(height: 36),
@@ -121,19 +122,19 @@ class _LoginScreenState extends State<LoginScreen> {
                     Container(
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
-                        color: Colors.red.shade50,
+                        color: AppColors.errorContainer.withValues(alpha: 0.18),
                         borderRadius: BorderRadius.circular(10),
-                        border: Border.all(color: Colors.red.shade200),
+                        border: Border.all(color: AppColors.errorContainer),
                       ),
                       child: Row(
                         children: [
                           const Icon(Icons.error_outline,
-                              color: Colors.red, size: 20),
+                              color: AppColors.error, size: 20),
                           const SizedBox(width: 8),
                           Expanded(
                             child: Text(
                               _errorMessage!,
-                              style: const TextStyle(color: Colors.red),
+                              style: const TextStyle(color: AppColors.error),
                             ),
                           ),
                         ],
@@ -203,8 +204,8 @@ class _LoginScreenState extends State<LoginScreen> {
                     child: ElevatedButton(
                       onPressed: _isLoading ? null : _login,
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.deepOrange,
-                        foregroundColor: Colors.white,
+                        backgroundColor: AppColors.primary,
+                        foregroundColor: AppColors.onPrimary,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
                         ),
@@ -214,7 +215,7 @@ class _LoginScreenState extends State<LoginScreen> {
                               width: 22,
                               height: 22,
                               child: CircularProgressIndicator(
-                                color: Colors.white,
+                                color: AppColors.onPrimary,
                                 strokeWidth: 2.5,
                               ),
                             )
@@ -244,7 +245,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         child: const Text(
                           'Crear cuenta',
                           style: TextStyle(
-                            color: Colors.deepOrange,
+                            color: AppColors.primary,
                             fontWeight: FontWeight.bold,
                           ),
                         ),

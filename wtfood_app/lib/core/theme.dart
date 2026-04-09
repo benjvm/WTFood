@@ -9,26 +9,33 @@ class AppTheme {
       scaffoldBackgroundColor: AppColors.surface,
       colorScheme: ColorScheme.light(
         primary: AppColors.primary,
-        onPrimary: AppColors.surfaceContainerLowest,
+        onPrimary: AppColors.onPrimary,
         primaryContainer: AppColors.primaryContainer,
         onPrimaryContainer: AppColors.onPrimaryContainer,
         secondary: AppColors.secondary,
-        onSecondary: AppColors.surfaceContainerLowest,
+        onSecondary: AppColors.onSecondary,
         secondaryContainer: AppColors.secondaryContainer,
         onSecondaryContainer: AppColors.onSecondaryContainer,
         tertiary: AppColors.tertiary,
-        onTertiary: AppColors.surfaceContainerLowest,
+        onTertiary: AppColors.onTertiary,
         tertiaryContainer: AppColors.tertiaryContainer,
+        onTertiaryContainer: AppColors.onTertiaryContainer,
         surface: AppColors.surface,
         onSurface: AppColors.onSurface,
         onSurfaceVariant: AppColors.onSurfaceVariant,
         outline: AppColors.outline,
         outlineVariant: AppColors.outlineVariant,
+        surfaceDim: AppColors.surfaceDim,
+        surfaceBright: AppColors.surfaceBright,
+        surfaceContainer: AppColors.surfaceContainer,
         surfaceContainerHigh: AppColors.surfaceContainerHigh,
         surfaceContainerLow: AppColors.surfaceContainerLow,
         surfaceContainerHighest: AppColors.surfaceContainerHighest,
         surfaceContainerLowest: AppColors.surfaceContainerLowest,
         error: AppColors.error,
+        onError: AppColors.onError,
+        errorContainer: AppColors.errorContainer,
+        onErrorContainer: AppColors.onErrorContainer,
       ),
       textTheme: TextTheme(
         displayLarge: GoogleFonts.plusJakartaSans(
@@ -95,11 +102,64 @@ class AppTheme {
         unselectedItemColor: AppColors.onSurfaceVariant,
         elevation: 0,
       ),
+      snackBarTheme: SnackBarThemeData(
+        backgroundColor: AppColors.primary,
+        contentTextStyle: GoogleFonts.manrope(
+          color: AppColors.onPrimary,
+          fontWeight: FontWeight.w600,
+        ),
+        behavior: SnackBarBehavior.floating,
+      ),
+      bottomSheetTheme: const BottomSheetThemeData(
+        backgroundColor: AppColors.surface,
+        surfaceTintColor: Colors.transparent,
+      ),
+      dialogTheme: DialogThemeData(
+        backgroundColor: AppColors.surfaceContainerLowest,
+        surfaceTintColor: Colors.transparent,
+        titleTextStyle: GoogleFonts.plusJakartaSans(
+          fontSize: 22,
+          fontWeight: FontWeight.w700,
+          color: AppColors.onSurface,
+        ),
+        contentTextStyle: GoogleFonts.manrope(
+          fontSize: 14,
+          color: AppColors.onSurfaceVariant,
+        ),
+      ),
       floatingActionButtonTheme: const FloatingActionButtonThemeData(
         backgroundColor: AppColors.primaryContainer,
         foregroundColor: AppColors.onPrimaryContainer,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.all(Radius.circular(AppConstants.borderRadiusMd)),
+        ),
+      ),
+      elevatedButtonTheme: ElevatedButtonThemeData(
+        style: ElevatedButton.styleFrom(
+          backgroundColor: AppColors.primary,
+          foregroundColor: AppColors.onPrimary,
+          elevation: 0,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(AppConstants.borderRadiusSm + 4),
+          ),
+        ),
+      ),
+      textButtonTheme: TextButtonThemeData(
+        style: TextButton.styleFrom(
+          foregroundColor: AppColors.primary,
+          textStyle: GoogleFonts.manrope(fontWeight: FontWeight.w700),
+        ),
+      ),
+      appBarTheme: AppBarTheme(
+        backgroundColor: AppColors.surface,
+        foregroundColor: AppColors.primary,
+        elevation: 0,
+        surfaceTintColor: Colors.transparent,
+        titleTextStyle: GoogleFonts.plusJakartaSans(
+          fontSize: 24,
+          fontWeight: FontWeight.w800,
+          color: AppColors.primary,
+          letterSpacing: -0.6,
         ),
       ),
     );

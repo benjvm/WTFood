@@ -1,6 +1,7 @@
 // register_screen.dart - Pantalla de registro
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:wtfood_app/core/constants.dart';
 import 'package:wtfood_app/services/auth_service.dart';
 
 class RegisterScreen extends StatefulWidget {
@@ -113,7 +114,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     'Rellena los datos para registrarte',
                     textAlign: TextAlign.center,
                     style: theme.textTheme.bodyMedium
-                        ?.copyWith(color: Colors.grey),
+                        ?.copyWith(color: AppColors.onSurfaceVariant),
                   ),
                   const SizedBox(height: 28),
 
@@ -122,19 +123,19 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     Container(
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
-                        color: Colors.red.shade50,
+                        color: AppColors.errorContainer.withValues(alpha: 0.18),
                         borderRadius: BorderRadius.circular(10),
-                        border: Border.all(color: Colors.red.shade200),
+                        border: Border.all(color: AppColors.errorContainer),
                       ),
                       child: Row(
                         children: [
                           const Icon(Icons.error_outline,
-                              color: Colors.red, size: 20),
+                              color: AppColors.error, size: 20),
                           const SizedBox(width: 8),
                           Expanded(
                             child: Text(
                               _errorMessage!,
-                              style: const TextStyle(color: Colors.red),
+                              style: const TextStyle(color: AppColors.error),
                             ),
                           ),
                         ],
@@ -260,8 +261,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     child: ElevatedButton(
                       onPressed: _isLoading ? null : _register,
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.deepOrange,
-                        foregroundColor: Colors.white,
+                        backgroundColor: AppColors.primary,
+                        foregroundColor: AppColors.onPrimary,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
                         ),
@@ -271,7 +272,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                               width: 22,
                               height: 22,
                               child: CircularProgressIndicator(
-                                color: Colors.white,
+                                color: AppColors.onPrimary,
                                 strokeWidth: 2.5,
                               ),
                             )
@@ -294,7 +295,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         child: const Text(
                           'Iniciar sesión',
                           style: TextStyle(
-                            color: Colors.deepOrange,
+                            color: AppColors.primary,
                             fontWeight: FontWeight.bold,
                           ),
                         ),

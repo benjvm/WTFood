@@ -181,7 +181,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         content: Text(message),
         backgroundColor: isError
             ? Theme.of(context).colorScheme.error
-            : Colors.green,
+            : AppColors.primary,
         behavior: SnackBarBehavior.floating,
       ),
     );
@@ -223,7 +223,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           offset: const Offset(8, 8),
                         ),
                         const BoxShadow(
-                          color: Colors.white,
+                          color: AppColors.surfaceContainerLowest,
                           blurRadius: 18,
                           offset: Offset(-8, -8),
                         ),
@@ -348,7 +348,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             width: 22,
                             height: 22,
                             child: CircularProgressIndicator(
-                              color: Colors.white,
+                              color: AppColors.onPrimary,
                               strokeWidth: 2.5,
                             ),
                           )
@@ -641,7 +641,7 @@ class _ChangePasswordSheetState extends State<_ChangePasswordSheet> {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('Contraseña actualizada correctamente.'),
-            backgroundColor: Colors.green,
+            backgroundColor: AppColors.primary,
             behavior: SnackBarBehavior.floating,
           ),
         );
@@ -698,18 +698,18 @@ class _ChangePasswordSheetState extends State<_ChangePasswordSheet> {
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: Colors.red.shade50,
+                color: AppColors.errorContainer.withValues(alpha: 0.18),
                 borderRadius: BorderRadius.circular(10),
-                border: Border.all(color: Colors.red.shade200),
+                border: Border.all(color: AppColors.errorContainer),
               ),
               child: Row(
                 children: [
-                  const Icon(Icons.error_outline, color: Colors.red, size: 20),
+                  const Icon(Icons.error_outline, color: AppColors.error, size: 20),
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
                       _error!,
-                      style: const TextStyle(color: Colors.red),
+                      style: const TextStyle(color: AppColors.error),
                     ),
                   ),
                 ],
@@ -763,7 +763,7 @@ class _ChangePasswordSheetState extends State<_ChangePasswordSheet> {
                       width: 22,
                       height: 22,
                       child: CircularProgressIndicator(
-                        color: Colors.white,
+                        color: AppColors.onPrimary,
                         strokeWidth: 2.5,
                       ),
                     )

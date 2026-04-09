@@ -2,6 +2,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:wtfood_app/core/constants.dart';
 import 'package:wtfood_app/providers/user_provider.dart';
 import 'package:wtfood_app/screens/auth/login_screen.dart';
 import 'package:wtfood_app/screens/main_screen.dart';
@@ -75,7 +76,7 @@ class _AuthWrapperState extends State<AuthWrapper> {
   Widget _buildSplash() {
     return const Scaffold(
       body: Center(
-        child: CircularProgressIndicator(color: Colors.deepOrange),
+        child: CircularProgressIndicator(color: AppColors.primary),
       ),
     );
   }
