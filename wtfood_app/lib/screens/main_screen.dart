@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'home/home_screen.dart';
 import 'recipes/recipes_screen.dart';
 import 'fridge/fridge_screen.dart';
+import 'scan/scan_screen.dart';
 import 'profile/profile_screen.dart';
+import 'package:wtfood_app/providers/user_provider.dart';
 import 'package:wtfood_app/services/auth_service.dart';
 
 class MainScreen extends StatefulWidget {
@@ -18,6 +21,7 @@ class _MainScreenState extends State<MainScreen> {
   final List<Widget> _pages = const [
     HomeScreen(),
     RecipesScreen(),
+    ScanScreen(),
     FridgeScreen(),
     ProfileScreen(),
   ];
@@ -48,15 +52,79 @@ class _MainScreenState extends State<MainScreen> {
     }
   }
 
+  void _goToProfile() {
+    setState(() {
+      _currentIndex = 4;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
+    final user = context.watch<UserProvider>().user;
+    final photoUrl = user?.photoUrl;
+
     return Scaffold(
       appBar: AppBar(
-        title: const Text('WTFood'),
+        titleSpacing: 0,
+        centerTitle: false,
+        title: Image.asset(
+          'assets/images/wtfood_title.png',
+          height: 85,
+          fit: BoxFit.contain,
+        ),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.logout),
-            onPressed: _confirmLogout,
+          PopupMenuButton<_MainMenuAction>(
+            tooltip: 'Menú de usuario',
+            onSelected: (value) {
+              switch (value) {
+                case _MainMenuAction.profile:
+                  _goToProfile();
+                  break;
+                case _MainMenuAction.logout:
+                  _confirmLogout();
+                  break;
+              }
+            },
+            itemBuilder: (context) => const [
+              PopupMenuItem<_MainMenuAction>(
+                value: _MainMenuAction.profile,
+                child: ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  leading: Icon(Icons.person_outline_rounded),
+                  title: Text('Mi perfil'),
+                ),
+              ),
+              PopupMenuItem<_MainMenuAction>(
+                value: _MainMenuAction.logout,
+                child: ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  leading: Icon(Icons.logout),
+                  title: Text('Cerrar sesión'),
+                ),
+              ),
+            ],
+            child: Padding(
+              padding: const EdgeInsets.only(right: 12),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  CircleAvatar(
+                    radius: 18,
+                    backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+                    backgroundImage: photoUrl != null && photoUrl.isNotEmpty
+                        ? NetworkImage(photoUrl)
+                        : null,
+                    child: photoUrl == null || photoUrl.isEmpty
+                        ? Icon(
+                            Icons.person_rounded,
+                            color: Theme.of(context).colorScheme.onPrimaryContainer,
+                          )
+                        : null,
+                  ),
+                  const SizedBox(width: 8),
+                ],
+              ),
+            ),
           ),
         ],
       ),
@@ -98,9 +166,14 @@ class _MainScreenState extends State<MainScreen> {
                 label: 'Home',
               ),
               BottomNavigationBarItem(
-                icon: Icon(Icons.receipt_long_outlined),
-                activeIcon: Icon(Icons.receipt_long),
+                icon: Icon(Icons.local_dining_rounded),
+                activeIcon: Icon(Icons.local_dining),
                 label: 'Recipes',
+              ),
+              BottomNavigationBarItem(
+                icon: Icon(Icons.enhance_photo_translate_outlined),
+                activeIcon: Icon(Icons.enhance_photo_translate),
+                label: 'Scan',
               ),
               BottomNavigationBarItem(
                 icon: Icon(Icons.kitchen_outlined),
@@ -118,4 +191,9 @@ class _MainScreenState extends State<MainScreen> {
       ),
     );
   }
+}
+
+enum _MainMenuAction {
+  profile,
+  logout,
 }

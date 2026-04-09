@@ -94,12 +94,12 @@ class _LoginScreenState extends State<LoginScreen> {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   // Logo / Título
-                  const Icon(
-                    Icons.restaurant_menu,
-                    size: 72,
-                    color: AppColors.primary,
+                  Image.asset(
+                    'assets/images/wtfood_logo.png',
+                    height: 160,
+                    fit: BoxFit.contain,
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 20),
                   Text(
                     'Bienvenido',
                     textAlign: TextAlign.center,

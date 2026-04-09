@@ -102,6 +102,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
+                  Image.asset(
+                    'assets/images/wtfood_logo.png',
+                    height: 140,
+                    fit: BoxFit.contain,
+                  ),
+                  const SizedBox(height: 20),
                   Text(
                     'Crear cuenta',
                     textAlign: TextAlign.center,
