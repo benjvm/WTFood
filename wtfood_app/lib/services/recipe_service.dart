@@ -1,15 +1,22 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:wtfood_app/models/recipe.dart';
+import '../models/recipe.dart';
 
 class RecipeService {
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final FirebaseFirestore _db = FirebaseFirestore.instance;
 
-  Stream<List<Recipe>> getRecipes() {
-    return _firestore
+  /// Devuelve un stream de recetas en tiempo real.
+  ///
+  /// [limit] limita el número de recetas cargadas de Firestore.
+  /// Aumenta el valor o quita el `.limit()` si quieres cargar todas,
+  /// pero paginar mejora notablemente el tiempo de carga inicial.
+  Stream<List<Recipe>> getRecipes({int limit = 20}) {
+    return _db
         .collection('recipes')
         .orderBy('title')
+        .limit(limit)
         .snapshots()
-        .map((snapshot) =>
-            snapshot.docs.map((doc) => Recipe.fromFirestore(doc)).toList());
+        .map(
+          (snap) => snap.docs.map(Recipe.fromFirestore).toList(),
+        );
   }
 }

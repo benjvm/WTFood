@@ -6,7 +6,7 @@ class AppTheme {
   static ThemeData get lightTheme {
     return ThemeData(
       useMaterial3: true,
-      scaffoldBackgroundColor: AppColors.surface,
+      scaffoldBackgroundColor: AppColors.background,
       colorScheme: ColorScheme.light(
         primary: AppColors.primary,
         onPrimary: AppColors.onPrimary,
@@ -97,10 +97,20 @@ class AppTheme {
         ),
       ),
       bottomNavigationBarTheme: BottomNavigationBarThemeData(
-        backgroundColor: Colors.transparent, // Floating island logic
+        backgroundColor: Colors.transparent,
         selectedItemColor: AppColors.primary,
         unselectedItemColor: AppColors.onSurfaceVariant,
         elevation: 0,
+        selectedIconTheme: const IconThemeData(size: 24),
+        unselectedIconTheme: const IconThemeData(size: 22),
+      ),
+      cardTheme: CardThemeData(
+        color: AppColors.surfaceContainerLowest,
+        elevation: 0,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppConstants.borderRadiusLg),
+        ),
+        surfaceTintColor: Colors.transparent,
       ),
       snackBarTheme: SnackBarThemeData(
         backgroundColor: AppColors.primary,
@@ -111,8 +121,21 @@ class AppTheme {
         behavior: SnackBarBehavior.floating,
       ),
       bottomSheetTheme: const BottomSheetThemeData(
-        backgroundColor: AppColors.surface,
+        backgroundColor: AppColors.surfaceContainerLowest,
         surfaceTintColor: Colors.transparent,
+      ),
+      popupMenuTheme: PopupMenuThemeData(
+        color: AppColors.surfaceContainerLowest,
+        surfaceTintColor: Colors.transparent,
+        elevation: 8,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppConstants.borderRadiusMd),
+        ),
+        textStyle: GoogleFonts.manrope(
+          fontSize: 14,
+          fontWeight: FontWeight.w600,
+          color: AppColors.onSurface,
+        ),
       ),
       dialogTheme: DialogThemeData(
         backgroundColor: AppColors.surfaceContainerLowest,
@@ -128,8 +151,8 @@ class AppTheme {
         ),
       ),
       floatingActionButtonTheme: const FloatingActionButtonThemeData(
-        backgroundColor: AppColors.primaryContainer,
-        foregroundColor: AppColors.onPrimaryContainer,
+        backgroundColor: AppColors.primary,
+        foregroundColor: AppColors.onPrimary,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.all(Radius.circular(AppConstants.borderRadiusMd)),
         ),
@@ -151,10 +174,11 @@ class AppTheme {
         ),
       ),
       appBarTheme: AppBarTheme(
-        backgroundColor: AppColors.surface,
+        backgroundColor: AppColors.surfaceContainerLowest,
         foregroundColor: AppColors.primary,
         elevation: 0,
         surfaceTintColor: Colors.transparent,
+        shadowColor: AppColors.onSurface.withValues(alpha: 0.05),
         titleTextStyle: GoogleFonts.plusJakartaSans(
           fontSize: 24,
           fontWeight: FontWeight.w800,

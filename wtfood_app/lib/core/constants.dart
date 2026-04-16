@@ -1,44 +1,45 @@
 import 'package:flutter/material.dart';
 
 class AppColors {
-  // Stitch palette
-  static const Color background = Color(0xFFDEFFE0);
-  static const Color surface = Color(0xFFDEFFE0);
-  static const Color surfaceBright = Color(0xFFDEFFE0);
-  static const Color surfaceDim = Color(0xFFA3E3AE);
-  static const Color surfaceContainer = Color(0xFFC0F5C7);
+  // Soft fresh palette inspired by the updated mockup
+  static const Color background = Color(0xFFF6F7F3);
+  static const Color surface = Color(0xFFF6F7F3);
+  static const Color surfaceBright = Color(0xFFFFFFFF);
+  static const Color surfaceDim = Color(0xFFE8ECE5);
+  static const Color surfaceContainer = Color(0xFFF0F3EE);
   static const Color surfaceContainerLowest = Color(0xFFFFFFFF);
-  static const Color surfaceContainerLow = Color(0xFFCCFDD1);
-  static const Color surfaceContainerHigh = Color(0xFFB7F0BF);
-  static const Color surfaceContainerHighest = Color(0xFFAEEBB8);
-  static const Color surfaceVariant = Color(0xFFAEEBB8);
-  static const Color onBackground = Color(0xFF0E361B);
-  static const Color onSurface = Color(0xFF0E361B);
-  static const Color onSurfaceVariant = Color(0xFF3D6445);
+  static const Color surfaceContainerLow = Color(0xFFF8F9F6);
+  static const Color surfaceContainerHigh = Color(0xFFF2F4F0);
+  static const Color surfaceContainerHighest = Color(0xFFE5EAE3);
+  static const Color surfaceVariant = Color(0xFFE7ECE6);
+  static const Color onBackground = Color(0xFF243129);
+  static const Color onSurface = Color(0xFF243129);
+  static const Color onSurfaceVariant = Color(0xFF7A847C);
 
-  static const Color primary = Color(0xFF006B0A);
-  static const Color primaryDim = Color(0xFF005D07);
-  static const Color primaryContainer = Color(0xFF59EE50);
-  static const Color onPrimary = Color(0xFFD2FFC4);
-  static const Color onPrimaryContainer = Color(0xFF005406);
+  static const Color primary = Color(0xFF0B8A43);
+  static const Color primaryDim = Color(0xFF067437);
+  static const Color primaryContainer = Color(0xFFDDF4E4);
+  static const Color onPrimary = Color(0xFFFFFFFF);
+  static const Color onPrimaryContainer = Color(0xFF185634);
+  static const Color primaryDark = Color(0xFF067437);
 
-  static const Color secondary = Color(0xFF006666);
-  static const Color secondaryContainer = Color(0xFF8DEDEC);
-  static const Color onSecondary = Color(0xFFBBFFFE);
-  static const Color onSecondaryContainer = Color(0xFF005858);
+  static const Color secondary = Color(0xFFFF8A24);
+  static const Color secondaryContainer = Color(0xFFFFE7D4);
+  static const Color onSecondary = Color(0xFFFFFFFF);
+  static const Color onSecondaryContainer = Color(0xFF8D4B16);
 
-  static const Color tertiary = Color(0xFF00666D);
-  static const Color tertiaryContainer = Color(0xFF19EDFD);
-  static const Color onTertiary = Color(0xFFD0FAFF);
-  static const Color onTertiaryContainer = Color(0xFF00535A);
+  static const Color tertiary = Color(0xFF405058);
+  static const Color tertiaryContainer = Color(0xFFE3E8EA);
+  static const Color onTertiary = Color(0xFFFFFFFF);
+  static const Color onTertiaryContainer = Color(0xFF2E3B41);
 
-  static const Color outline = Color(0xFF58805F);
-  static const Color outlineVariant = Color(0xFF8DB793);
+  static const Color outline = Color(0xFFD5DDD5);
+  static const Color outlineVariant = Color(0xFFE4EAE3);
 
-  static const Color error = Color(0xFFB02500);
-  static const Color onError = Color(0xFFFFEFEC);
-  static const Color errorContainer = Color(0xFFF95630);
-  static const Color onErrorContainer = Color(0xFF520C00);
+  static const Color error = Color(0xFFC45A2A);
+  static const Color onError = Color(0xFFFFFFFF);
+  static const Color errorContainer = Color(0xFFFBE4D7);
+  static const Color onErrorContainer = Color(0xFF7A3214);
 
   // Semantic aliases
   static const Color success = primary;

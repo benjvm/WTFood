@@ -5,6 +5,7 @@ import 'recipes/recipes_screen.dart';
 import 'fridge/fridge_screen.dart';
 import 'scan/scan_screen.dart';
 import 'profile/profile_screen.dart';
+import 'package:wtfood_app/core/constants.dart';
 import 'package:wtfood_app/providers/user_provider.dart';
 import 'package:wtfood_app/services/auth_service.dart';
 
@@ -62,15 +63,36 @@ class _MainScreenState extends State<MainScreen> {
   Widget build(BuildContext context) {
     final user = context.watch<UserProvider>().user;
     final photoUrl = user?.photoUrl;
+    final colorScheme = Theme.of(context).colorScheme;
 
     return Scaffold(
+      backgroundColor: AppColors.background,
       appBar: AppBar(
-        titleSpacing: 0,
+        backgroundColor: AppColors.surfaceContainerLowest,
+        surfaceTintColor: Colors.transparent,
+        shadowColor: AppColors.onSurface.withValues(alpha: 0.05),
+        elevation: 0,
+        titleSpacing: 18,
         centerTitle: false,
-        title: Image.asset(
-          'assets/images/wtfood_title.png',
-          height: 85,
-          fit: BoxFit.contain,
+        title: Text.rich(
+          TextSpan(
+            children: [
+              TextSpan(
+                text: 'WT',
+                style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                  color: AppColors.primaryDark,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+              TextSpan(
+                text: 'Food',
+                style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                  color: AppColors.secondary,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+            ],
+          ),
         ),
         actions: [
           PopupMenuButton<_MainMenuAction>(
@@ -108,18 +130,26 @@ class _MainScreenState extends State<MainScreen> {
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  CircleAvatar(
-                    radius: 18,
-                    backgroundColor: Theme.of(context).colorScheme.primaryContainer,
-                    backgroundImage: photoUrl != null && photoUrl.isNotEmpty
-                        ? NetworkImage(photoUrl)
-                        : null,
-                    child: photoUrl == null || photoUrl.isEmpty
-                        ? Icon(
-                            Icons.person_rounded,
-                            color: Theme.of(context).colorScheme.onPrimaryContainer,
-                          )
-                        : null,
+                  Container(
+                    width: 38,
+                    height: 38,
+                    decoration: const BoxDecoration(
+                      color: AppColors.tertiary,
+                      shape: BoxShape.circle,
+                    ),
+                    child: CircleAvatar(
+                      radius: 18,
+                      backgroundColor: Colors.transparent,
+                      backgroundImage: photoUrl != null && photoUrl.isNotEmpty
+                          ? NetworkImage(photoUrl)
+                          : null,
+                      child: photoUrl == null || photoUrl.isEmpty
+                          ? const Icon(
+                              Icons.menu_rounded,
+                              color: AppColors.surfaceContainerLowest,
+                            )
+                          : null,
+                    ),
                   ),
                   const SizedBox(width: 8),
                 ],
@@ -136,15 +166,15 @@ class _MainScreenState extends State<MainScreen> {
       bottomNavigationBar: Container(
         margin: const EdgeInsets.only(left: 24, right: 24, bottom: 24),
         decoration: BoxDecoration(
-          color: Theme.of(context).colorScheme.surface.withValues(alpha: 0.9),
+          color: AppColors.surfaceContainerLowest.withValues(alpha: 0.98),
           borderRadius: BorderRadius.circular(40),
+          border: Border.all(color: AppColors.outlineVariant),
           boxShadow: [
             BoxShadow(
-              color:
-                  Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.08),
+              color: AppColors.onSurface.withValues(alpha: 0.08),
               blurRadius: 30,
               offset: const Offset(0, 10),
-            )
+            ),
           ],
         ),
         child: ClipRRect(
@@ -159,6 +189,9 @@ class _MainScreenState extends State<MainScreen> {
             showSelectedLabels: false,
             showUnselectedLabels: false,
             type: BottomNavigationBarType.fixed,
+            backgroundColor: Colors.transparent,
+            selectedItemColor: colorScheme.primary,
+            unselectedItemColor: colorScheme.onSurfaceVariant,
             items: const [
               BottomNavigationBarItem(
                 icon: Icon(Icons.home_outlined),

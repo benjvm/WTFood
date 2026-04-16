@@ -130,6 +130,7 @@ class _LoginScreenState extends State<LoginScreen> {
               const SizedBox(height: 26),
               Text(
                 'Bienvenido',
+                textAlign: TextAlign.center,
                 style: theme.textTheme.headlineMedium?.copyWith(
                   fontWeight: FontWeight.w700,
                   color: const Color(0xFF1A1E17),
@@ -138,6 +139,7 @@ class _LoginScreenState extends State<LoginScreen> {
               const SizedBox(height: 8),
               Text(
                 'Inicia sesión para continuar',
+                textAlign: TextAlign.center,
                 style: theme.textTheme.bodyMedium?.copyWith(
                   color: const Color(0xFF7E857B),
                 ),

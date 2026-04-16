@@ -60,9 +60,9 @@ class RecipesScreen extends StatelessWidget {
               ),
               Expanded(
                 child: TabBarView(
-                  children: [
-                    const _ExploreTab(),
-                    _ForYouTab(),
+                  children: const [
+                    _ExploreTab(),
+                    _ForYouTab(), // ahora es StatefulWidget
                   ],
                 ),
               ),
@@ -74,33 +74,47 @@ class RecipesScreen extends StatelessWidget {
   }
 }
 
-class _HeaderIcon extends StatelessWidget {
-  const _HeaderIcon({required this.icon, required this.color});
+// ─── For You Tab ────────────────────────────────────────────────────────────
 
-  final IconData icon;
-  final Color color;
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      width: 40,
-      child: Icon(icon, size: 20, color: color),
-    );
-  }
-}
-
-class _ForYouTab extends StatelessWidget {
+/// Convertido a StatefulWidget para poder usar AutomaticKeepAliveClientMixin
+/// y mantener el estado (y el stream) vivo al cambiar de pestaña.
+class _ForYouTab extends StatefulWidget {
   const _ForYouTab();
 
   @override
+  State<_ForYouTab> createState() => _ForYouTabState();
+}
+
+class _ForYouTabState extends State<_ForYouTab>
+    with AutomaticKeepAliveClientMixin {
+  /// El stream se crea una sola vez en initState y se reutiliza.
+  /// Así evitamos reconectarnos a Firestore cada vez que el tab
+  /// vuelve a ser visible.
+  late final Stream<List<Recipe>> _recipesStream;
+
+  @override
+  void initState() {
+    super.initState();
+    _recipesStream = RecipeService().getRecipes();
+  }
+
+  /// Le indica a Flutter que NO destruya este widget al salir del tab.
+  @override
+  bool get wantKeepAlive => true;
+
+  @override
   Widget build(BuildContext context) {
+    // Obligatorio cuando se usa AutomaticKeepAliveClientMixin.
+    super.build(context);
+
     final colorScheme = Theme.of(context).colorScheme;
 
     return StreamBuilder<List<Recipe>>(
-      stream: RecipeService().getRecipes(),
+      stream: _recipesStream,
       builder: (context, snapshot) {
-        // Cargando
-        if (snapshot.connectionState == ConnectionState.waiting) {
+        // Mostrar spinner solo si no hay ningún dato previo todavía.
+        if (snapshot.connectionState == ConnectionState.waiting &&
+            !snapshot.hasData) {
           return Center(
             child: CircularProgressIndicator(color: colorScheme.primary),
           );
@@ -143,7 +157,7 @@ class _ForYouTab extends StatelessWidget {
           );
         }
 
-        // Masonry grid en dos columnas (igual que antes)
+        // Masonry grid en dos columnas
         final leftColumn = <Widget>[];
         final rightColumn = <Widget>[];
 
@@ -192,6 +206,8 @@ class _ForYouTab extends StatelessWidget {
     );
   }
 }
+
+// ─── Explore Tab ─────────────────────────────────────────────────────────────
 
 class _ExploreTab extends StatelessWidget {
   const _ExploreTab();

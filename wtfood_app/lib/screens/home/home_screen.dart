@@ -20,17 +20,17 @@ class HomeScreen extends StatelessWidget {
       _FridgeChipData(
         label: 'Egg',
         icon: Icons.egg_alt,
-        iconColor: Color(0xFFFF9800),
+        iconColor: AppColors.secondary,
       ),
       _FridgeChipData(
         label: 'Tomato',
         icon: Icons.local_dining,
-        iconColor: Colors.redAccent,
+        iconColor: AppColors.error,
       ),
       _FridgeChipData(
         label: 'Cheese',
         icon: Icons.trolley,
-        iconColor: Color(0xFFFFD54F),
+        iconColor: AppColors.primaryDark,
       ),
     ];
 

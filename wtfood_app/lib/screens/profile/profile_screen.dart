@@ -12,6 +12,23 @@ import 'package:wtfood_app/providers/user_provider.dart';
 import 'package:wtfood_app/services/auth_service.dart';
 import 'package:wtfood_app/services/cloudinary_service.dart';
 
+class _ProfilePalette {
+  static const Color background = Color(0xFFF6F7F3);
+  static const Color surface = Color(0xFFFFFFFF);
+  static const Color surfaceBorder = Color(0xFFE8ECE6);
+  static const Color shadow = Color(0x140D2A18);
+
+  static const Color primary = Color(0xFF0B8A43);
+  static const Color primaryDark = Color(0xFF067437);
+  static const Color onPrimary = Color(0xFFFFFFFF);
+
+  static const Color accent = Color(0xFFFF8A24);
+  static const Color textPrimary = Color(0xFF29342D);
+  static const Color textSecondary = Color(0xFF7A847C);
+  static const Color textMuted = Color(0xFFAAB1AB);
+  static const Color avatarBackground = Color(0xFFE3E3E3);
+}
+
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
 
@@ -194,7 +211,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final user = context.watch<UserProvider>().user;
 
     return SafeArea(
-      child: SingleChildScrollView(
+      child: DecoratedBox(
+        decoration: const BoxDecoration(color: _ProfilePalette.background),
+        child: SingleChildScrollView(
         padding: const EdgeInsets.all(AppConstants.paddingLg),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -209,23 +228,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   Container(
                     width: 140,
                     height: 140,
-                    decoration: BoxDecoration(
+                    decoration: const BoxDecoration(
                       shape: BoxShape.circle,
-                      color: Theme.of(
-                        context,
-                      ).colorScheme.surfaceContainerLowest,
+                      color: _ProfilePalette.avatarBackground,
                       boxShadow: [
                         BoxShadow(
-                          color: Theme.of(
-                            context,
-                          ).colorScheme.onSurface.withValues(alpha: 0.12),
-                          blurRadius: 24,
-                          offset: const Offset(8, 8),
-                        ),
-                        const BoxShadow(
-                          color: AppColors.surfaceContainerLowest,
-                          blurRadius: 18,
-                          offset: Offset(-8, -8),
+                          color: _ProfilePalette.shadow,
+                          blurRadius: 20,
+                          offset: Offset(0, 10),
                         ),
                       ],
                     ),
@@ -246,17 +256,24 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         width: 42,
                         height: 42,
                         decoration: BoxDecoration(
-                          color: Theme.of(context).colorScheme.primary,
+                          color: _ProfilePalette.accent,
                           shape: BoxShape.circle,
                           border: Border.all(
-                            color: Theme.of(context).colorScheme.surface,
+                            color: _ProfilePalette.surface,
                             width: 3,
                           ),
+                          boxShadow: const [
+                            BoxShadow(
+                              color: Color(0x33FF8A24),
+                              blurRadius: 12,
+                              offset: Offset(0, 4),
+                            ),
+                          ],
                         ),
-                        child: Icon(
+                        child: const Icon(
                           Icons.edit,
                           size: 18,
-                          color: Theme.of(context).colorScheme.onPrimary,
+                          color: _ProfilePalette.onPrimary,
                         ),
                       ),
                     ),
@@ -272,6 +289,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 'My Profile',
                 style: Theme.of(context).textTheme.headlineLarge?.copyWith(
                   fontWeight: FontWeight.w800,
+                  color: _ProfilePalette.primaryDark,
                 ),
               ),
             ),
@@ -280,7 +298,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               child: Text(
                 'Manage your personal information',
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  color: _ProfilePalette.textSecondary,
                   fontWeight: FontWeight.w600,
                 ),
               ),
@@ -325,20 +343,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 onTap: _isSaving ? null : _saveChanges,
                 child: DecoratedBox(
                   decoration: BoxDecoration(
-                    gradient: LinearGradient(
+                    gradient: const LinearGradient(
                       colors: [
-                        Theme.of(context).colorScheme.primary,
-                        Theme.of(context).colorScheme.onPrimaryContainer,
+                        _ProfilePalette.primaryDark,
+                        _ProfilePalette.primary,
                       ],
                     ),
                     borderRadius: BorderRadius.circular(999),
-                    boxShadow: [
+                    boxShadow: const [
                       BoxShadow(
-                        color: Theme.of(
-                          context,
-                        ).colorScheme.primary.withValues(alpha: 0.28),
+                        color: Color(0x330B8A43),
                         blurRadius: 20,
-                        offset: const Offset(0, 10),
+                        offset: Offset(0, 10),
                       ),
                     ],
                   ),
@@ -348,7 +364,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             width: 22,
                             height: 22,
                             child: CircularProgressIndicator(
-                              color: AppColors.onPrimary,
+                              color: _ProfilePalette.onPrimary,
                               strokeWidth: 2.5,
                             ),
                           )
@@ -356,9 +372,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             'Save Changes',
                             style: Theme.of(context).textTheme.titleMedium
                                 ?.copyWith(
-                                  color: Theme.of(
-                                    context,
-                                  ).colorScheme.onPrimary,
+                                  color: _ProfilePalette.onPrimary,
                                   fontWeight: FontWeight.w700,
                                 ),
                           ),
@@ -376,8 +390,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 child: Text(
                   'SIGN OUT',
                   style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                    color: Theme.of(context).colorScheme.error,
+                    color: _ProfilePalette.accent,
                     letterSpacing: 1.2,
+                    fontWeight: FontWeight.w700,
                   ),
                 ),
               ),
@@ -385,6 +400,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
             const SizedBox(height: 100),
           ],
+        ),
         ),
       ),
     );
@@ -399,9 +415,6 @@ class _ProfileAvatar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final primaryContainer = Theme.of(context).colorScheme.primaryContainer;
-    final onPrimaryContainer = Theme.of(context).colorScheme.onPrimaryContainer;
-
     ImageProvider<Object>? imageProvider;
 
     if (selectedImage != null) {
@@ -411,10 +424,14 @@ class _ProfileAvatar extends StatelessWidget {
     }
 
     return CircleAvatar(
-      backgroundColor: primaryContainer,
+      backgroundColor: _ProfilePalette.avatarBackground,
       backgroundImage: imageProvider,
       child: imageProvider == null
-          ? Icon(Icons.person_rounded, size: 62, color: onPrimaryContainer)
+          ? const Icon(
+              Icons.person_rounded,
+              size: 62,
+              color: _ProfilePalette.surface,
+            )
           : null,
     );
   }
@@ -448,7 +465,8 @@ class _EditableField extends StatelessWidget {
             label,
             style: Theme.of(context).textTheme.labelMedium?.copyWith(
               letterSpacing: 1.2,
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
+              color: _ProfilePalette.textSecondary,
+              fontWeight: FontWeight.w700,
             ),
           ),
         ),
@@ -456,20 +474,14 @@ class _EditableField extends StatelessWidget {
         Container(
           width: double.infinity,
           decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.surfaceContainerHigh,
+            color: _ProfilePalette.surface,
             borderRadius: BorderRadius.circular(AppConstants.borderRadiusMd),
-            boxShadow: [
+            border: Border.all(color: _ProfilePalette.surfaceBorder),
+            boxShadow: const [
               BoxShadow(
-                color: Theme.of(
-                  context,
-                ).colorScheme.onSurface.withValues(alpha: 0.06),
+                color: _ProfilePalette.shadow,
                 blurRadius: 12,
-                offset: const Offset(3, 3),
-              ),
-              const BoxShadow(
-                color: Colors.white,
-                blurRadius: 10,
-                offset: Offset(-3, -3),
+                offset: Offset(0, 4),
               ),
             ],
           ),
@@ -478,11 +490,14 @@ class _EditableField extends StatelessWidget {
             keyboardType: keyboardType,
             style: Theme.of(
               context,
-            ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
+            ).textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.w700,
+              color: _ProfilePalette.textPrimary,
+            ),
             decoration: InputDecoration(
               prefixIcon: Icon(
                 icon,
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
+                color: _ProfilePalette.primary,
               ),
               border: InputBorder.none,
               contentPadding: const EdgeInsets.symmetric(
@@ -517,8 +532,8 @@ class _ActionRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final iconColor = useTertiary
-        ? Theme.of(context).colorScheme.tertiary
-        : Theme.of(context).colorScheme.primary;
+        ? _ProfilePalette.accent
+        : _ProfilePalette.primary;
 
     return GestureDetector(
       onTap: onTap,
@@ -527,15 +542,14 @@ class _ActionRow extends StatelessWidget {
         height: 64,
         padding: const EdgeInsets.symmetric(horizontal: AppConstants.paddingMd),
         decoration: BoxDecoration(
-          color: Theme.of(context).colorScheme.surfaceContainerLowest,
+          color: _ProfilePalette.surface,
           borderRadius: BorderRadius.circular(AppConstants.borderRadiusMd),
-          boxShadow: [
+          border: Border.all(color: _ProfilePalette.surfaceBorder),
+          boxShadow: const [
             BoxShadow(
-              color: Theme.of(
-                context,
-              ).colorScheme.onSurface.withValues(alpha: 0.04),
+              color: _ProfilePalette.shadow,
               blurRadius: 10,
-              offset: const Offset(0, 4),
+              offset: Offset(0, 4),
             ),
           ],
         ),
@@ -556,12 +570,15 @@ class _ActionRow extends StatelessWidget {
                 label,
                 style: Theme.of(
                   context,
-                ).textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w700),
+                ).textTheme.bodyLarge?.copyWith(
+                  fontWeight: FontWeight.w700,
+                  color: _ProfilePalette.textPrimary,
+                ),
               ),
             ),
-            Icon(
+            const Icon(
               Icons.chevron_right_rounded,
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
+              color: _ProfilePalette.textMuted,
             ),
           ],
         ),
@@ -679,7 +696,7 @@ class _ChangePasswordSheetState extends State<_ChangePasswordSheet> {
               width: 40,
               height: 4,
               decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.outlineVariant,
+                color: _ProfilePalette.surfaceBorder,
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
@@ -689,7 +706,10 @@ class _ChangePasswordSheetState extends State<_ChangePasswordSheet> {
             'Change Password',
             style: Theme.of(
               context,
-            ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800),
+            ).textTheme.titleLarge?.copyWith(
+              fontWeight: FontWeight.w800,
+              color: _ProfilePalette.textPrimary,
+            ),
           ),
           const SizedBox(height: 20),
 
@@ -752,8 +772,8 @@ class _ChangePasswordSheetState extends State<_ChangePasswordSheet> {
             child: ElevatedButton(
               onPressed: _isLoading ? null : _changePassword,
               style: ElevatedButton.styleFrom(
-                backgroundColor: Theme.of(context).colorScheme.primary,
-                foregroundColor: Theme.of(context).colorScheme.onPrimary,
+                backgroundColor: _ProfilePalette.primary,
+                foregroundColor: _ProfilePalette.onPrimary,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(14),
                 ),
@@ -763,7 +783,7 @@ class _ChangePasswordSheetState extends State<_ChangePasswordSheet> {
                       width: 22,
                       height: 22,
                       child: CircularProgressIndicator(
-                        color: AppColors.onPrimary,
+                        color: _ProfilePalette.onPrimary,
                         strokeWidth: 2.5,
                       ),
                     )
@@ -802,12 +822,32 @@ class _PasswordField extends StatelessWidget {
       obscureText: obscure,
       decoration: InputDecoration(
         labelText: label,
-        prefixIcon: const Icon(Icons.lock_outline),
+        labelStyle: const TextStyle(color: _ProfilePalette.textSecondary),
+        prefixIcon: const Icon(
+          Icons.lock_outline,
+          color: _ProfilePalette.primary,
+        ),
         suffixIcon: IconButton(
-          icon: Icon(obscure ? Icons.visibility_off : Icons.visibility),
+          icon: Icon(
+            obscure ? Icons.visibility_off : Icons.visibility,
+            color: _ProfilePalette.textSecondary,
+          ),
           onPressed: onToggle,
         ),
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+        filled: true,
+        fillColor: _ProfilePalette.surface,
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: _ProfilePalette.surfaceBorder),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: _ProfilePalette.surfaceBorder),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: _ProfilePalette.primary),
+        ),
       ),
     );
   }
