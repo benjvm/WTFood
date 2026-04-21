@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import '../core/constants.dart';
 import '../models/recipe.dart';
+import '../../screens//recipes/recipe_detail_screen.dart';
+
 
 enum RecipeCardLayout {
   portrait,
@@ -262,7 +264,7 @@ class RecipeCard extends StatelessWidget {
                     padding: const EdgeInsets.symmetric(
                         horizontal: 12, vertical: 6),
                     decoration: BoxDecoration(
-                      color: colorScheme.primaryContainer.withValues(alpha: 0.4),
+                      color: colorScheme.primaryContainer.withValues(alpha: 0.9),
                       borderRadius: BorderRadius.circular(999),
                     ),
                     child: Text(
@@ -336,6 +338,30 @@ class RecipeCard extends StatelessWidget {
                         ),
                       ),
                     ],
+                  ),
+                ),
+              ),
+              // Botón Ver receta
+              const SizedBox(height: AppConstants.paddingLg),
+              SizedBox(
+                width: double.infinity,
+                child: FilledButton.icon(
+                  onPressed: () {
+                    Navigator.pop(ctx); // cierra el bottom sheet
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => RecipeDetailScreen(recipe: recipe),
+                      ),
+                    );
+                  },
+                  icon: const Icon(Icons.menu_book_rounded),
+                  label: const Text('Ver receta'),
+                  style: FilledButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(AppConstants.borderRadiusLg),
+                    ),
                   ),
                 ),
               ),

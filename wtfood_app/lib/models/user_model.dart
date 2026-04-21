@@ -7,6 +7,7 @@ class UserModel {
   final String email;
   final String? photoUrl;
   final DateTime createdAt;
+  final List<String> favoriteRecipes;
 
   const UserModel({
     required this.uid,
@@ -14,6 +15,7 @@ class UserModel {
     required this.email,
     this.photoUrl,
     required this.createdAt,
+    this.favoriteRecipes = const [],
   });
 
   /// Construye un UserModel desde un documento de Firestore.
@@ -25,6 +27,7 @@ class UserModel {
       email: data['email'] as String? ?? '',
       photoUrl: data['photoUrl'] as String?,
       createdAt: (data['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
+      favoriteRecipes: List<String>.from(data['favoriteRecipes'] ?? []),
     );
   }
 
@@ -41,6 +44,7 @@ class UserModel {
     String? name,
     String? email,
     String? photoUrl,
+    List<String>? favoriteRecipes,
   }) =>
       UserModel(
         uid: uid,
@@ -48,6 +52,7 @@ class UserModel {
         email: email ?? this.email,
         photoUrl: photoUrl ?? this.photoUrl,
         createdAt: createdAt,
+        favoriteRecipes: favoriteRecipes ?? this.favoriteRecipes,
       );
 
   @override

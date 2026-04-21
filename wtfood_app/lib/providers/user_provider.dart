@@ -73,4 +73,31 @@ class UserProvider extends ChangeNotifier {
     _user = updatedUser;
     notifyListeners();
   }
+
+  /// Añade o elimina una receta de favoritos, actualizando Firestore y el estado local.
+  Future<void> toggleFavoriteRecipe(String uid, String recipeId) async {
+    if (_user == null) return;
+
+    final isFav = _user!.favoriteRecipes.contains(recipeId);
+    final updatedList = isFav
+        ? _user!.favoriteRecipes.where((id) => id != recipeId).toList()
+        : [..._user!.favoriteRecipes, recipeId];
+
+    // Actualiza local primero (optimistic update) para respuesta inmediata en UI
+    updateUser(_user!.copyWith(favoriteRecipes: updatedList));
+
+    try {
+      await _db.collection('users').doc(uid).update({
+        'favoriteRecipes': updatedList,
+      });
+    } catch (e) {
+      // Si falla, revertimos al estado anterior
+      updateUser(_user!.copyWith(favoriteRecipes: _user!.favoriteRecipes));
+      debugPrint('[UserProvider] Error al actualizar favoritos: $e');
+    }
+  }
+
+  /// Comprueba si una receta está en favoritos.
+  bool isFavorite(String recipeId) =>
+      _user?.favoriteRecipes.contains(recipeId) ?? false;
 }

@@ -278,7 +278,7 @@ class _FridgeScreenState extends State<FridgeScreen> {
         content: const Text(
           'Pronto podrás generar una receta con estos ingredientes.',
         ),
-        backgroundColor: Theme.of(context).colorScheme.primary,
+        backgroundColor: Theme.of(context).colorScheme.secondary,
       ),
     );
   }
