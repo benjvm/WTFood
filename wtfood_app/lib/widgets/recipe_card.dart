@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:wtfood_app/screens/recipes/recipe_detail_screen.dart';
+
 import '../core/constants.dart';
 import '../models/recipe.dart';
-import '../../screens//recipes/recipe_detail_screen.dart';
-
 
 enum RecipeCardLayout {
   portrait,
