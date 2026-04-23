@@ -3,17 +3,10 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
-// ¡NUEVO IMPORTE!
 import 'package:google_generative_ai/google_generative_ai.dart'; 
-
+import '../../../core/env.dart';
 import '../../../core/constants.dart';
 import 'ingredients_review_screen.dart';
-
-// ─────────────────────────────────────────────
-// IMPORTANTE: En producción, usa flutter_dotenv
-// o variables de entorno para ocultar tu API Key.
-// ─────────────────────────────────────────────
-const String _kGeminiApiKey = 'api';
 
 class ScanScreen extends StatefulWidget {
   const ScanScreen({super.key});
@@ -99,7 +92,7 @@ class _ScanScreenState extends State<ScanScreen>
       // 3. Inicializamos el modelo de IA
       final model = GenerativeModel(
         model: 'gemini-2.5-flash',
-        apiKey: _kGeminiApiKey,
+        apiKey: AppEnv.geminiApiKey,
         generationConfig: GenerationConfig(
           temperature: 0.2,
           // Forzamos a que responda SOLO el JSON con nuestra estructura
@@ -161,12 +154,6 @@ class _ScanScreenState extends State<ScanScreen>
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return Scaffold(
-      backgroundColor: AppColors.background,
-      appBar: AppBar(
-        title: const Text('Escanear ingredientes'),
-        backgroundColor: AppColors.surfaceContainerLowest,
-        elevation: 0,
-      ),
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(AppConstants.paddingLg),

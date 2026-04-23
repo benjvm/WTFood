@@ -1,27 +1,23 @@
-import 'dart:io';
 import 'dart:convert';
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-// ¡NUEVO IMPORTE! Eliminamos http y agregamos el SDK
-import 'package:google_generative_ai/google_generative_ai.dart'; 
+import 'package:google_generative_ai/google_generative_ai.dart';
 
 import '../../../core/constants.dart';
+import '../../../core/env.dart';
 import 'recipe_result_screen.dart';
 
-// ─────────────────────────────────────────────
-//  IMPORTANTE: Oculta tu API Key en producción
-// ─────────────────────────────────────────────
-const String _kGeminiApiKeyReview = 'api';
-
 class IngredientsReviewScreen extends StatefulWidget {
-  final List<String> ingredients;
-  final File imageFile;
-
   const IngredientsReviewScreen({
     super.key,
     required this.ingredients,
     required this.imageFile,
   });
+
+  final List<String> ingredients;
+  final File imageFile;
 
   @override
   State<IngredientsReviewScreen> createState() =>
@@ -53,27 +49,28 @@ class _IngredientsReviewScreenState extends State<IngredientsReviewScreen> {
   void _addIngredient() {
     final text = _addController.text.trim();
     if (text.isEmpty) return;
-    if (_ingredients.any(
-        (i) => i.toLowerCase() == text.toLowerCase())) {
+
+    if (_ingredients.any((i) => i.toLowerCase() == text.toLowerCase())) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('«$text» ya está en la lista'),
+          content: Text('"$text" ya esta en la lista'),
           backgroundColor: AppColors.secondary,
         ),
       );
       return;
     }
+
     setState(() {
       _ingredients.add(text);
       _addController.clear();
     });
   }
 
-  // ── LOGICA ACTUALIZADA: Gemini SDK + Esquema de Receta ─
   Future<void> _generateRecipe() async {
     if (_ingredients.isEmpty) {
-      setState(() =>
-          _errorMessage = 'Añade al menos un ingrediente para continuar.');
+      setState(() {
+        _errorMessage = 'Anade al menos un ingrediente para continuar.';
+      });
       return;
     }
 
@@ -84,17 +81,24 @@ class _IngredientsReviewScreenState extends State<IngredientsReviewScreen> {
 
     try {
       final ingredientsList = _ingredients.join(', ');
-      final promptText = 'Eres un chef profesional. Con los siguientes ingredientes: $ingredientsList, crea una receta detallada y deliciosa.';
+      final promptText =
+          'Eres un chef profesional. Con los siguientes ingredientes: '
+          '$ingredientsList, crea una receta detallada y deliciosa.';
 
-      // 1. Definimos el Esquema EXACTO que espera recipe_result_screen.dart
       final recipeSchema = Schema.object(
         properties: {
           'nombre': Schema.string(description: 'Nombre del plato'),
-          'descripcion': Schema.string(description: 'Breve descripción apetitosa del plato (2-3 frases)'),
+          'descripcion': Schema.string(
+            description: 'Breve descripcion apetitosa del plato (2-3 frases)',
+          ),
           'tiempo_preparacion': Schema.string(description: 'Ejemplo: 15 min'),
           'tiempo_coccion': Schema.string(description: 'Ejemplo: 30 min'),
-          'porciones': Schema.integer(description: 'Cantidad de porciones, ejemplo: 2'),
-          'dificultad': Schema.string(description: 'Fácil, Media o Difícil'),
+          'porciones': Schema.integer(
+            description: 'Cantidad de porciones, ejemplo: 2',
+          ),
+          'dificultad': Schema.string(
+            description: 'Facil, Media o Dificil',
+          ),
           'ingredientes': Schema.array(
             description: 'Lista de ingredientes con cantidades',
             items: Schema.object(
@@ -107,10 +111,12 @@ class _IngredientsReviewScreenState extends State<IngredientsReviewScreen> {
             ),
           ),
           'pasos': Schema.array(
-            description: 'Lista de pasos para la preparación',
+            description: 'Lista de pasos para la preparacion',
             items: Schema.string(),
           ),
-          'consejos': Schema.string(description: 'Tip o consejo del chef para esta receta'),
+          'consejos': Schema.string(
+            description: 'Tip o consejo del chef para esta receta',
+          ),
         },
         requiredProperties: [
           'nombre',
@@ -121,31 +127,28 @@ class _IngredientsReviewScreenState extends State<IngredientsReviewScreen> {
           'dificultad',
           'ingredientes',
           'pasos',
-          'consejos'
+          'consejos',
         ],
       );
 
-      // 2. Inicializamos el modelo forzando el esquema
       final model = GenerativeModel(
-        model: 'gemini-2.5-flash',
-        apiKey: _kGeminiApiKeyReview,
+        model: 'gemini-1.5-flash',
+        apiKey: AppEnv.geminiApiKey,
         generationConfig: GenerationConfig(
-          temperature: 0.7, // Mantenemos 0.7 para que sea creativo con la receta
+          temperature: 0.7,
           responseMimeType: 'application/json',
           responseSchema: recipeSchema,
         ),
       );
 
-      // 3. Hacemos la petición (solo texto esta vez)
       final response = await model.generateContent([
-        Content.text(promptText)
+        Content.text(promptText),
       ]);
 
       if (response.text == null) {
-        throw Exception('La IA no devolvió texto.');
+        throw Exception('La IA no devolvio texto.');
       }
 
-      // 4. Parseamos y navegamos (ya viene limpio gracias al JSON Mode)
       final recipe = jsonDecode(response.text!) as Map<String, dynamic>;
 
       if (!mounted) return;
@@ -160,18 +163,17 @@ class _IngredientsReviewScreenState extends State<IngredientsReviewScreen> {
           ),
         ),
       );
-    } catch (e) {
+    } catch (error, stackTrace) {
       if (!mounted) return;
       setState(() {
-        _errorMessage =
-            'No se pudo generar la receta. Inténtalo de nuevo.';
+        _errorMessage = 'Error real: ${error.toString()}';
         _isGenerating = false;
       });
-      debugPrint('Error Gemini: $e');
+      debugPrint('Error Gemini al generar receta: $error');
+      debugPrintStack(stackTrace: stackTrace);
     }
   }
 
-  // ── UI (El resto de tu código queda exactamente igual) ──
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -205,7 +207,7 @@ class _IngredientsReviewScreenState extends State<IngredientsReviewScreen> {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      'Elimina los incorrectos o añade los que falten.',
+                      'Elimina los incorrectos o anade los que falten.',
                       style: GoogleFonts.manrope(
                         fontSize: 13,
                         color: AppColors.onSurfaceVariant,
@@ -228,7 +230,7 @@ class _IngredientsReviewScreenState extends State<IngredientsReviewScreen> {
                       ),
                     const SizedBox(height: 24),
                     Text(
-                      'Añadir ingrediente',
+                      'Anadir ingrediente',
                       style: GoogleFonts.plusJakartaSans(
                         fontSize: 16,
                         fontWeight: FontWeight.w700,
@@ -244,7 +246,7 @@ class _IngredientsReviewScreenState extends State<IngredientsReviewScreen> {
                             textCapitalization: TextCapitalization.sentences,
                             onSubmitted: (_) => _addIngredient(),
                             decoration: InputDecoration(
-                              hintText: 'ej: tomates, queso, cebolla…',
+                              hintText: 'ej: tomates, queso, cebolla...',
                               hintStyle: GoogleFonts.manrope(
                                 color: AppColors.onSurfaceVariant,
                                 fontSize: 14,
@@ -257,21 +259,28 @@ class _IngredientsReviewScreenState extends State<IngredientsReviewScreen> {
                               ),
                               border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(
-                                    AppConstants.borderRadiusMd),
-                                borderSide: BorderSide(
-                                    color: AppColors.outline),
+                                  AppConstants.borderRadiusMd,
+                                ),
+                                borderSide: const BorderSide(
+                                  color: AppColors.outline,
+                                ),
                               ),
                               enabledBorder: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(
-                                    AppConstants.borderRadiusMd),
-                                borderSide: BorderSide(
-                                    color: AppColors.outline),
+                                  AppConstants.borderRadiusMd,
+                                ),
+                                borderSide: const BorderSide(
+                                  color: AppColors.outline,
+                                ),
                               ),
                               focusedBorder: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(
-                                    AppConstants.borderRadiusMd),
+                                  AppConstants.borderRadiusMd,
+                                ),
                                 borderSide: const BorderSide(
-                                    color: AppColors.primary, width: 2),
+                                  color: AppColors.primary,
+                                  width: 2,
+                                ),
                               ),
                             ),
                           ),
@@ -287,7 +296,8 @@ class _IngredientsReviewScreenState extends State<IngredientsReviewScreen> {
                               foregroundColor: AppColors.onPrimary,
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(
-                                    AppConstants.borderRadiusMd),
+                                  AppConstants.borderRadiusMd,
+                                ),
                               ),
                               padding: EdgeInsets.zero,
                               elevation: 0,
@@ -318,15 +328,11 @@ class _IngredientsReviewScreenState extends State<IngredientsReviewScreen> {
   }
 }
 
-// ─────────────────────────────────────────────────────────
-//  Sub-widgets
-// ─────────────────────────────────────────────────────────
-
 class _HeaderSection extends StatelessWidget {
+  const _HeaderSection({required this.imageFile, required this.count});
+
   final File imageFile;
   final int count;
-
-  const _HeaderSection({required this.imageFile, required this.count});
 
   @override
   Widget build(BuildContext context) {
@@ -350,11 +356,12 @@ class _HeaderSection extends StatelessWidget {
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                 decoration: BoxDecoration(
                   color: AppColors.primaryContainer,
-                  borderRadius:
-                      BorderRadius.circular(AppConstants.borderRadiusSm),
+                  borderRadius: BorderRadius.circular(
+                    AppConstants.borderRadiusSm,
+                  ),
                 ),
                 child: Text(
-                  '✅ Análisis completado',
+                  'Analisis completado',
                   style: GoogleFonts.manrope(
                     fontSize: 12,
                     fontWeight: FontWeight.w700,
@@ -387,10 +394,10 @@ class _HeaderSection extends StatelessWidget {
 }
 
 class _IngredientChip extends StatelessWidget {
+  const _IngredientChip({required this.label, required this.onDelete});
+
   final String label;
   final VoidCallback onDelete;
-
-  const _IngredientChip({required this.label, required this.onDelete});
 
   @override
   Widget build(BuildContext context) {
@@ -428,8 +435,10 @@ class _IngredientChip extends StatelessWidget {
     );
   }
 
-  String _capitalize(String s) =>
-      s.isEmpty ? s : s[0].toUpperCase() + s.substring(1);
+  String _capitalize(String value) {
+    if (value.isEmpty) return value;
+    return value[0].toUpperCase() + value.substring(1);
+  }
 }
 
 class _EmptyIngredients extends StatelessWidget {
@@ -441,12 +450,18 @@ class _EmptyIngredients extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppColors.surfaceContainerLowest,
         borderRadius: BorderRadius.circular(AppConstants.borderRadiusMd),
-        border: Border.all(color: AppColors.outlineVariant, style: BorderStyle.solid),
+        border: Border.all(
+          color: AppColors.outlineVariant,
+          style: BorderStyle.solid,
+        ),
       ),
       child: Column(
         children: [
-          const Icon(Icons.inbox_rounded,
-              size: 36, color: AppColors.onSurfaceVariant),
+          const Icon(
+            Icons.inbox_rounded,
+            size: 36,
+            color: AppColors.onSurfaceVariant,
+          ),
           const SizedBox(height: 8),
           Text(
             'Sin ingredientes',
@@ -457,7 +472,7 @@ class _EmptyIngredients extends StatelessWidget {
             ),
           ),
           Text(
-            'Añade ingredientes usando el campo de abajo.',
+            'Anade ingredientes usando el campo de abajo.',
             style: GoogleFonts.manrope(
               fontSize: 12,
               color: AppColors.onSurfaceVariant,
@@ -471,8 +486,9 @@ class _EmptyIngredients extends StatelessWidget {
 }
 
 class _ErrorBanner extends StatelessWidget {
-  final String message;
   const _ErrorBanner({required this.message});
+
+  final String message;
 
   @override
   Widget build(BuildContext context) {
@@ -484,8 +500,11 @@ class _ErrorBanner extends StatelessWidget {
       ),
       child: Row(
         children: [
-          const Icon(Icons.error_outline_rounded,
-              color: AppColors.error, size: 20),
+          const Icon(
+            Icons.error_outline_rounded,
+            color: AppColors.error,
+            size: 20,
+          ),
           const SizedBox(width: 10),
           Expanded(
             child: Text(
@@ -504,15 +523,15 @@ class _ErrorBanner extends StatelessWidget {
 }
 
 class _BottomBar extends StatelessWidget {
-  final int ingredientCount;
-  final bool isGenerating;
-  final VoidCallback onGenerate;
-
   const _BottomBar({
     required this.ingredientCount,
     required this.isGenerating,
     required this.onGenerate,
   });
+
+  final int ingredientCount;
+  final bool isGenerating;
+  final VoidCallback onGenerate;
 
   @override
   Widget build(BuildContext context) {
@@ -521,8 +540,7 @@ class _BottomBar extends StatelessWidget {
         AppConstants.paddingLg,
         AppConstants.paddingMd,
         AppConstants.paddingLg,
-        AppConstants.paddingMd +
-            MediaQuery.of(context).padding.bottom,
+        AppConstants.paddingMd + MediaQuery.of(context).padding.bottom,
       ),
       decoration: BoxDecoration(
         color: AppColors.surfaceContainerLowest,
@@ -537,9 +555,7 @@ class _BottomBar extends StatelessWidget {
       child: SizedBox(
         height: 54,
         child: ElevatedButton.icon(
-          onPressed: (ingredientCount > 0 && !isGenerating)
-              ? onGenerate
-              : null,
+          onPressed: (ingredientCount > 0 && !isGenerating) ? onGenerate : null,
           icon: isGenerating
               ? const SizedBox(
                   width: 20,
@@ -551,7 +567,7 @@ class _BottomBar extends StatelessWidget {
                 )
               : const Icon(Icons.restaurant_menu_rounded),
           label: Text(
-            isGenerating ? 'Generando receta…' : 'Generar receta',
+            isGenerating ? 'Generando receta...' : 'Generar receta',
             style: GoogleFonts.manrope(
               fontSize: 16,
               fontWeight: FontWeight.w700,
@@ -560,12 +576,10 @@ class _BottomBar extends StatelessWidget {
           style: ElevatedButton.styleFrom(
             backgroundColor: AppColors.primary,
             foregroundColor: AppColors.onPrimary,
-            disabledBackgroundColor:
-                AppColors.primary.withValues(alpha: 0.4),
+            disabledBackgroundColor: AppColors.primary.withValues(alpha: 0.4),
             disabledForegroundColor: AppColors.onPrimary,
             shape: RoundedRectangleBorder(
-              borderRadius:
-                  BorderRadius.circular(AppConstants.borderRadiusMd),
+              borderRadius: BorderRadius.circular(AppConstants.borderRadiusMd),
             ),
             elevation: 0,
           ),

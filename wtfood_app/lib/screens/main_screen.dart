@@ -10,22 +10,25 @@ import 'package:wtfood_app/providers/user_provider.dart';
 import 'package:wtfood_app/services/auth_service.dart';
 
 class MainScreen extends StatefulWidget {
-  const MainScreen({super.key});
+  const MainScreen({
+    super.key,
+    this.initialIndex = 0,
+  });
+
+  final int initialIndex;
 
   @override
   State<MainScreen> createState() => _MainScreenState();
 }
 
 class _MainScreenState extends State<MainScreen> {
-  int _currentIndex = 0;
+  late int _currentIndex;
 
-  final List<Widget> _pages = const [
-    HomeScreen(),
-    RecipesScreen(),
-    ScanScreen(),
-    FridgeScreen(),
-    ProfileScreen(),
-  ];
+  @override
+  void initState() {
+    super.initState();
+    _currentIndex = widget.initialIndex.clamp(0, 4);
+  }
 
   Future<void> _confirmLogout() async {
     final confirm = await showDialog<bool>(
@@ -54,8 +57,12 @@ class _MainScreenState extends State<MainScreen> {
   }
 
   void _goToProfile() {
+    _selectTab(4);
+  }
+
+  void _selectTab(int index) {
     setState(() {
-      _currentIndex = 4;
+      _currentIndex = index;
     });
   }
 
@@ -64,6 +71,13 @@ class _MainScreenState extends State<MainScreen> {
     final user = context.watch<UserProvider>().user;
     final photoUrl = user?.photoUrl;
     final colorScheme = Theme.of(context).colorScheme;
+    final pages = [
+      HomeScreen(onTabSelected: _selectTab),
+      const RecipesScreen(),
+      const ScanScreen(),
+      const FridgeScreen(),
+      const ProfileScreen(),
+    ];
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -160,7 +174,7 @@ class _MainScreenState extends State<MainScreen> {
       ),
       body: AnimatedSwitcher(
         duration: const Duration(milliseconds: 300),
-        child: _pages[_currentIndex],
+        child: pages[_currentIndex],
       ),
       extendBody: true,
       bottomNavigationBar: Container(
@@ -181,11 +195,7 @@ class _MainScreenState extends State<MainScreen> {
           borderRadius: BorderRadius.circular(40),
           child: BottomNavigationBar(
             currentIndex: _currentIndex,
-            onTap: (index) {
-              setState(() {
-                _currentIndex = index;
-              });
-            },
+            onTap: _selectTab,
             showSelectedLabels: false,
             showUnselectedLabels: false,
             type: BottomNavigationBarType.fixed,
