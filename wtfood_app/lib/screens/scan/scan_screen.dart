@@ -1,11 +1,11 @@
 import 'dart:io';
-import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:google_generative_ai/google_generative_ai.dart'; 
-import '../../../core/env.dart';
+
 import '../../../core/constants.dart';
+import '../../../services/ai_service.dart';
 import 'ingredients_review_screen.dart';
 
 class ScanScreen extends StatefulWidget {
@@ -42,7 +42,7 @@ class _ScanScreenState extends State<ScanScreen>
     super.dispose();
   }
 
-  // ── Image picking (Sin cambios) ────────────────────────
+  // ── Image picking ──────────────────────────────────────────────────────────
   Future<void> _pickImage(ImageSource source) async {
     setState(() => _errorMessage = null);
     try {
@@ -60,7 +60,7 @@ class _ScanScreenState extends State<ScanScreen>
     }
   }
 
-  // ── LOGICA ACTUALIZADA: Gemini SDK + JSON Mode ─────────
+  // ── Lógica de análisis delegada a AiService ────────────────────────────────
   Future<void> _analyzeImage() async {
     if (_selectedImage == null) return;
     setState(() {
@@ -69,50 +69,14 @@ class _ScanScreenState extends State<ScanScreen>
     });
 
     try {
-      // 1. Preparamos la imagen
       final imageBytes = await _selectedImage!.readAsBytes();
       final extension = _selectedImage!.path.split('.').last.toLowerCase();
       final mimeType = extension == 'png' ? 'image/png' : 'image/jpeg';
-      
-      final imagePart = DataPart(mimeType, imageBytes);
-      final promptPart = TextPart(
-          'Analiza esta imagen de alimentos y devuelve una lista de los ingredientes que identifiques. Si no ves alimentos, devuelve una lista vacía.');
 
-      // 2. Definimos el ESQUEMA (El truco para que nunca falle el JSON)
-      final responseSchema = Schema.object(
-        properties: {
-          'ingredientes': Schema.array(
-            description: 'Lista de ingredientes identificados',
-            items: Schema.string(),
-          ),
-        },
-        requiredProperties: ['ingredientes'],
+      final ingredientes = await AiService.instance.analyzeIngredients(
+        imageBytes: imageBytes,
+        mimeType: mimeType,
       );
-
-      // 3. Inicializamos el modelo de IA
-      final model = GenerativeModel(
-        model: 'gemini-2.5-flash',
-        apiKey: AppEnv.geminiApiKey,
-        generationConfig: GenerationConfig(
-          temperature: 0.2,
-          // Forzamos a que responda SOLO el JSON con nuestra estructura
-          responseMimeType: 'application/json',
-          responseSchema: responseSchema,
-        ),
-      );
-
-      // 4. Hacemos la petición
-      final response = await model.generateContent([
-        Content.multi([promptPart, imagePart])
-      ]);
-
-      if (response.text == null) {
-        throw Exception('La IA no devolvió texto.');
-      }
-
-      // 5. Parseamos directamente (ya no necesitamos limpiar Markdown)
-      final parsed = jsonDecode(response.text!);
-      final ingredientes = List<String>.from(parsed['ingredientes'] ?? []);
 
       if (!mounted) return;
 
@@ -127,7 +91,6 @@ class _ScanScreenState extends State<ScanScreen>
 
       setState(() => _isAnalyzing = false);
 
-      // Navegamos a la siguiente pantalla
       Navigator.push(
         context,
         MaterialPageRoute(
@@ -138,18 +101,16 @@ class _ScanScreenState extends State<ScanScreen>
         ),
       );
     } catch (e) {
-      // ESTO ES VITAL: Imprime el error real en la consola de debug
-      print('DEBUG ERROR GEMINI: $e'); 
-      
+      debugPrint('DEBUG ERROR AiService (scan): $e');
       if (!mounted) return;
       setState(() {
-        _errorMessage = 'Error real: ${e.toString()}'; // Temporalmente muestra el error en pantalla
+        _errorMessage = 'Error: ${e.toString()}';
         _isAnalyzing = false;
       });
     }
   }
 
-  // ── UI (El resto de tu código queda exactamente igual) ──
+  // ── UI (sin cambios visuales) ──────────────────────────────────────────────
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -231,9 +192,11 @@ class _ScanScreenState extends State<ScanScreen>
                               color: AppColors.onPrimary,
                             ),
                           )
-                        : const Icon(Icons.auto_awesome_rounded),
+                        : const Icon(Icons.search_rounded),
                     label: Text(
-                      _isAnalyzing ? 'Analizando...' : 'Analizar ingredientes',
+                      _isAnalyzing
+                          ? 'Analizando imagen...'
+                          : 'Identificar ingredientes',
                       style: GoogleFonts.manrope(
                         fontSize: 16,
                         fontWeight: FontWeight.w700,
@@ -243,11 +206,11 @@ class _ScanScreenState extends State<ScanScreen>
                       backgroundColor: AppColors.primary,
                       foregroundColor: AppColors.onPrimary,
                       disabledBackgroundColor:
-                          AppColors.primary.withValues(alpha: 0.5),
+                          AppColors.primary.withValues(alpha: 0.4),
                       disabledForegroundColor: AppColors.onPrimary,
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(
-                            AppConstants.borderRadiusMd),
+                        borderRadius:
+                            BorderRadius.circular(AppConstants.borderRadiusMd),
                       ),
                       elevation: 0,
                     ),
@@ -264,9 +227,7 @@ class _ScanScreenState extends State<ScanScreen>
   }
 }
 
-// ─────────────────────────────────────────────────────────
-//  Sub-widgets
-// ─────────────────────────────────────────────────────────
+// ── Widgets privados (sin cambios) ─────────────────────────────────────────
 
 class _ImagePreviewCard extends StatelessWidget {
   final File? image;
@@ -295,87 +256,78 @@ class _ImagePreviewCard extends StatelessWidget {
             color: image != null
                 ? AppColors.primary.withValues(alpha: 0.4)
                 : AppColors.outline,
-            width: image != null ? 2 : 1.5,
+            width: image != null ? 2 : 1,
           ),
-          boxShadow: [
-            BoxShadow(
-              color: AppColors.primary.withValues(alpha: image != null ? 0.08 : 0.0),
-              blurRadius: 20,
-              offset: const Offset(0, 6),
-            ),
-          ],
         ),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(AppConstants.borderRadiusLg - 2),
-          child: image != null
-              ? Stack(
-                  fit: StackFit.expand,
-                  children: [
-                    Image.file(image!, fit: BoxFit.cover),
-                    if (isAnalyzing)
-                      Container(
-                        color: AppColors.onSurface.withValues(alpha: 0.45),
-                        child: Center(
-                          child: ScaleTransition(
-                            scale: pulseAnimation,
-                            child: Column(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                const CircularProgressIndicator(
-                                  color: AppColors.onPrimary,
-                                  strokeWidth: 3,
+        clipBehavior: Clip.antiAlias,
+        child: image != null
+            ? Stack(
+                fit: StackFit.expand,
+                children: [
+                  Image.file(image!, fit: BoxFit.cover),
+                  if (isAnalyzing)
+                    Container(
+                      color: AppColors.onSurface.withValues(alpha: 0.45),
+                      child: Center(
+                        child: ScaleTransition(
+                          scale: pulseAnimation,
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const CircularProgressIndicator(
+                                color: AppColors.onPrimary,
+                                strokeWidth: 3,
+                              ),
+                              const SizedBox(height: 12),
+                              Text(
+                                'Identificando ingredientes…',
+                                style: GoogleFonts.manrope(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 13,
                                 ),
-                                const SizedBox(height: 12),
-                                Text(
-                                  'Identificando ingredientes…',
-                                  style: GoogleFonts.manrope(
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.w600,
-                                    fontSize: 13,
-                                  ),
-                                ),
-                              ],
-                            ),
+                              ),
+                            ],
                           ),
                         ),
                       ),
-                  ],
-                )
-              : Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: AppColors.primaryContainer,
-                        shape: BoxShape.circle,
-                      ),
-                      child: const Icon(
-                        Icons.add_photo_alternate_rounded,
-                        size: 36,
-                        color: AppColors.primary,
-                      ),
                     ),
-                    const SizedBox(height: 12),
-                    Text(
-                      'Toca para añadir imagen',
-                      style: GoogleFonts.manrope(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.onSurfaceVariant,
-                      ),
+                ],
+              )
+            : Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: AppColors.primaryContainer,
+                      shape: BoxShape.circle,
                     ),
-                    const SizedBox(height: 4),
-                    Text(
-                      'JPG o PNG',
-                      style: GoogleFonts.manrope(
-                        fontSize: 12,
-                        color: AppColors.onSurfaceVariant.withValues(alpha: 0.6),
-                      ),
+                    child: const Icon(
+                      Icons.add_photo_alternate_rounded,
+                      size: 36,
+                      color: AppColors.primary,
                     ),
-                  ],
-                ),
-        ),
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    'Toca para añadir imagen',
+                    style: GoogleFonts.manrope(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.onSurfaceVariant,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'JPG o PNG',
+                    style: GoogleFonts.manrope(
+                      fontSize: 12,
+                      color: AppColors.onSurfaceVariant.withValues(alpha: 0.6),
+                    ),
+                  ),
+                ],
+              ),
       ),
     );
   }
@@ -467,9 +419,12 @@ class _TipsSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final tips = [
-      (Icons.wb_sunny_rounded, 'Buena iluminación', 'La imagen debe tener buena luz natural o artificial.'),
-      (Icons.grid_view_rounded, 'Ingredientes visibles', 'Coloca los ingredientes separados y bien visibles.'),
-      (Icons.crop_rounded, 'Encuadre cercano', 'Acércate para que los ingredientes ocupen la imagen.'),
+      (Icons.wb_sunny_rounded, 'Buena iluminación',
+          'La imagen debe tener buena luz natural o artificial.'),
+      (Icons.grid_view_rounded, 'Ingredientes visibles',
+          'Coloca los ingredientes separados y bien visibles.'),
+      (Icons.crop_rounded, 'Encuadre cercano',
+          'Acércate para que los ingredientes ocupen la imagen.'),
     ];
 
     return Container(

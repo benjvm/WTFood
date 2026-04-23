@@ -1,12 +1,10 @@
-import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:google_generative_ai/google_generative_ai.dart';
 
 import '../../../core/constants.dart';
-import '../../../core/env.dart';
+import '../../../services/ai_service.dart';
 import 'recipe_result_screen.dart';
 
 class IngredientsReviewScreen extends StatefulWidget {
@@ -53,7 +51,7 @@ class _IngredientsReviewScreenState extends State<IngredientsReviewScreen> {
     if (_ingredients.any((i) => i.toLowerCase() == text.toLowerCase())) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('"$text" ya esta en la lista'),
+          content: Text('"$text" ya está en la lista'),
           backgroundColor: AppColors.secondary,
         ),
       );
@@ -66,10 +64,11 @@ class _IngredientsReviewScreenState extends State<IngredientsReviewScreen> {
     });
   }
 
+  // ── Lógica delegada a AiService ────────────────────────────────────────────
   Future<void> _generateRecipe() async {
     if (_ingredients.isEmpty) {
       setState(() {
-        _errorMessage = 'Anade al menos un ingrediente para continuar.';
+        _errorMessage = 'Añade al menos un ingrediente para continuar.';
       });
       return;
     }
@@ -81,75 +80,7 @@ class _IngredientsReviewScreenState extends State<IngredientsReviewScreen> {
 
     try {
       final ingredientsList = _ingredients.join(', ');
-      final promptText =
-          'Eres un chef profesional. Con los siguientes ingredientes: '
-          '$ingredientsList, crea una receta detallada y deliciosa.';
-
-      final recipeSchema = Schema.object(
-        properties: {
-          'nombre': Schema.string(description: 'Nombre del plato'),
-          'descripcion': Schema.string(
-            description: 'Breve descripcion apetitosa del plato (2-3 frases)',
-          ),
-          'tiempo_preparacion': Schema.string(description: 'Ejemplo: 15 min'),
-          'tiempo_coccion': Schema.string(description: 'Ejemplo: 30 min'),
-          'porciones': Schema.integer(
-            description: 'Cantidad de porciones, ejemplo: 2',
-          ),
-          'dificultad': Schema.string(
-            description: 'Facil, Media o Dificil',
-          ),
-          'ingredientes': Schema.array(
-            description: 'Lista de ingredientes con cantidades',
-            items: Schema.object(
-              properties: {
-                'cantidad': Schema.string(),
-                'unidad': Schema.string(),
-                'nombre': Schema.string(),
-              },
-              requiredProperties: ['cantidad', 'unidad', 'nombre'],
-            ),
-          ),
-          'pasos': Schema.array(
-            description: 'Lista de pasos para la preparacion',
-            items: Schema.string(),
-          ),
-          'consejos': Schema.string(
-            description: 'Tip o consejo del chef para esta receta',
-          ),
-        },
-        requiredProperties: [
-          'nombre',
-          'descripcion',
-          'tiempo_preparacion',
-          'tiempo_coccion',
-          'porciones',
-          'dificultad',
-          'ingredientes',
-          'pasos',
-          'consejos',
-        ],
-      );
-
-      final model = GenerativeModel(
-        model: 'gemini-1.5-flash',
-        apiKey: AppEnv.geminiApiKey,
-        generationConfig: GenerationConfig(
-          temperature: 0.7,
-          responseMimeType: 'application/json',
-          responseSchema: recipeSchema,
-        ),
-      );
-
-      final response = await model.generateContent([
-        Content.text(promptText),
-      ]);
-
-      if (response.text == null) {
-        throw Exception('La IA no devolvio texto.');
-      }
-
-      final recipe = jsonDecode(response.text!) as Map<String, dynamic>;
+      final recipe = await AiService.instance.generateRecipe(ingredientsList);
 
       if (!mounted) return;
       setState(() => _isGenerating = false);
@@ -166,14 +97,15 @@ class _IngredientsReviewScreenState extends State<IngredientsReviewScreen> {
     } catch (error, stackTrace) {
       if (!mounted) return;
       setState(() {
-        _errorMessage = 'Error real: ${error.toString()}';
+        _errorMessage = 'Error: ${error.toString()}';
         _isGenerating = false;
       });
-      debugPrint('Error Gemini al generar receta: $error');
+      debugPrint('Error AiService al generar receta: $error');
       debugPrintStack(stackTrace: stackTrace);
     }
   }
 
+  // ── UI (sin cambios visuales) ──────────────────────────────────────────────
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -207,7 +139,7 @@ class _IngredientsReviewScreenState extends State<IngredientsReviewScreen> {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      'Elimina los incorrectos o anade los que falten.',
+                      'Elimina los incorrectos o añade los que falten.',
                       style: GoogleFonts.manrope(
                         fontSize: 13,
                         color: AppColors.onSurfaceVariant,
@@ -230,7 +162,7 @@ class _IngredientsReviewScreenState extends State<IngredientsReviewScreen> {
                       ),
                     const SizedBox(height: 24),
                     Text(
-                      'Anadir ingrediente',
+                      'Añadir ingrediente',
                       style: GoogleFonts.plusJakartaSans(
                         fontSize: 16,
                         fontWeight: FontWeight.w700,
@@ -253,56 +185,44 @@ class _IngredientsReviewScreenState extends State<IngredientsReviewScreen> {
                               ),
                               filled: true,
                               fillColor: AppColors.surfaceContainerLowest,
-                              contentPadding: const EdgeInsets.symmetric(
-                                horizontal: 16,
-                                vertical: 14,
-                              ),
                               border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(
-                                  AppConstants.borderRadiusMd,
-                                ),
-                                borderSide: const BorderSide(
-                                  color: AppColors.outline,
-                                ),
+                                    AppConstants.borderRadiusMd),
+                                borderSide:
+                                    BorderSide(color: AppColors.outline),
                               ),
                               enabledBorder: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(
-                                  AppConstants.borderRadiusMd,
-                                ),
-                                borderSide: const BorderSide(
-                                  color: AppColors.outline,
-                                ),
+                                    AppConstants.borderRadiusMd),
+                                borderSide:
+                                    BorderSide(color: AppColors.outline),
                               ),
                               focusedBorder: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(
-                                  AppConstants.borderRadiusMd,
-                                ),
-                                borderSide: const BorderSide(
-                                  color: AppColors.primary,
-                                  width: 2,
-                                ),
+                                    AppConstants.borderRadiusMd),
+                                borderSide: BorderSide(
+                                    color: AppColors.primary, width: 2),
                               ),
+                              contentPadding: const EdgeInsets.symmetric(
+                                  horizontal: 14, vertical: 14),
                             ),
                           ),
                         ),
                         const SizedBox(width: 10),
                         SizedBox(
-                          height: 50,
-                          width: 50,
+                          height: 52,
                           child: ElevatedButton(
                             onPressed: _addIngredient,
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: AppColors.primary,
-                              foregroundColor: AppColors.onPrimary,
+                              backgroundColor: AppColors.primaryContainer,
+                              foregroundColor: AppColors.onPrimaryContainer,
+                              elevation: 0,
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(
-                                  AppConstants.borderRadiusMd,
-                                ),
+                                    AppConstants.borderRadiusMd),
                               ),
-                              padding: EdgeInsets.zero,
-                              elevation: 0,
                             ),
-                            child: const Icon(Icons.add_rounded, size: 24),
+                            child: const Icon(Icons.add_rounded),
                           ),
                         ),
                       ],
@@ -311,22 +231,23 @@ class _IngredientsReviewScreenState extends State<IngredientsReviewScreen> {
                       const SizedBox(height: 16),
                       _ErrorBanner(message: _errorMessage!),
                     ],
-                    const SizedBox(height: 100),
                   ],
                 ),
               ),
             ),
+            _BottomBar(
+              ingredientCount: _ingredients.length,
+              isGenerating: _isGenerating,
+              onGenerate: _generateRecipe,
+            ),
           ],
         ),
-      ),
-      bottomNavigationBar: _BottomBar(
-        ingredientCount: _ingredients.length,
-        isGenerating: _isGenerating,
-        onGenerate: _generateRecipe,
       ),
     );
   }
 }
+
+// ── Widgets privados (sin cambios) ─────────────────────────────────────────
 
 class _HeaderSection extends StatelessWidget {
   const _HeaderSection({required this.imageFile, required this.count});
@@ -353,7 +274,8 @@ class _HeaderSection extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                 decoration: BoxDecoration(
                   color: AppColors.primaryContainer,
                   borderRadius: BorderRadius.circular(
@@ -361,7 +283,7 @@ class _HeaderSection extends StatelessWidget {
                   ),
                 ),
                 child: Text(
-                  'Analisis completado',
+                  'Análisis completado',
                   style: GoogleFonts.manrope(
                     fontSize: 12,
                     fontWeight: FontWeight.w700,
@@ -472,7 +394,7 @@ class _EmptyIngredients extends StatelessWidget {
             ),
           ),
           Text(
-            'Anade ingredientes usando el campo de abajo.',
+            'Añade ingredientes usando el campo de abajo.',
             style: GoogleFonts.manrope(
               fontSize: 12,
               color: AppColors.onSurfaceVariant,
@@ -555,7 +477,8 @@ class _BottomBar extends StatelessWidget {
       child: SizedBox(
         height: 54,
         child: ElevatedButton.icon(
-          onPressed: (ingredientCount > 0 && !isGenerating) ? onGenerate : null,
+          onPressed:
+              (ingredientCount > 0 && !isGenerating) ? onGenerate : null,
           icon: isGenerating
               ? const SizedBox(
                   width: 20,
@@ -579,7 +502,8 @@ class _BottomBar extends StatelessWidget {
             disabledBackgroundColor: AppColors.primary.withValues(alpha: 0.4),
             disabledForegroundColor: AppColors.onPrimary,
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(AppConstants.borderRadiusMd),
+              borderRadius:
+                  BorderRadius.circular(AppConstants.borderRadiusMd),
             ),
             elevation: 0,
           ),

@@ -1,8 +1,8 @@
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class AppEnv {
-  static String get geminiApiKey => _require('GEMINI_API_KEY');
   static String get pixabayApiKey => _require('PIXABAY_API_KEY');
+  static String get openRouterApiKey => _require('OPENROUTER_API_KEY');
 
   static bool get hasPixabayKey {
     final value = dotenv.env['PIXABAY_API_KEY']?.trim() ?? '';
