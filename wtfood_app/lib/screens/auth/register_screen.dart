@@ -114,16 +114,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     final theme = Theme.of(context);
 
     return AuthScreenShell(
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        surfaceTintColor: Colors.transparent,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new),
-          onPressed: () => Navigator.pop(context),
-        ),
-      ),
-      topPadding: 8,
+      topPadding: 5,
       bottomPadding: 24,
       child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 420),
@@ -132,7 +123,18 @@ class _RegisterScreenState extends State<RegisterScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              const SizedBox(height: 8),
+              Align(
+                alignment: Alignment.centerLeft,
+                child: IconButton(
+                  onPressed: () => Navigator.pop(context),
+                  icon: const Icon(Icons.arrow_back_ios_new),
+                  color: AppColors.primary,
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(),
+                  splashRadius: 22,
+                ),
+              ),
+              const SizedBox(height: 12),
               Image.asset(
                 'assets/images/wtfood_logo.png',
                 height: 116,

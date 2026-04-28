@@ -23,10 +23,72 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
 
     final userProvider = context.watch<UserProvider>();
     final isFav = userProvider.isFavorite(widget.recipe.id);
+    final isShoppingListSaved = userProvider.isShoppingListSaved(
+      widget.recipe.id,
+    );
     final uid = userProvider.user?.uid ?? '';
 
     return Scaffold(
       backgroundColor: colorScheme.surface,
+      bottomNavigationBar: SafeArea(
+        top: false,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(
+            AppConstants.paddingLg,
+            AppConstants.paddingMd,
+            AppConstants.paddingLg,
+            AppConstants.paddingLg,
+          ),
+          child: SizedBox(
+            height: 56,
+            child: FilledButton.icon(
+              onPressed: uid.isEmpty
+                  ? null
+                  : () async {
+                      final wasAlreadySaved = isShoppingListSaved;
+                      final didSave = await userProvider.saveShoppingList(
+                        uid,
+                        widget.recipe,
+                      );
+
+                      if (!context.mounted) {
+                        return;
+                      }
+
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(
+                            didSave
+                                ? wasAlreadySaved
+                                    ? 'Lista de compra actualizada.'
+                                    : 'Lista de compra guardada.'
+                                : 'No se pudo guardar la lista de compra.',
+                          ),
+                          behavior: SnackBarBehavior.floating,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(
+                              AppConstants.borderRadiusMd,
+                            ),
+                          ),
+                          margin: const EdgeInsets.fromLTRB(
+                            AppConstants.paddingLg,
+                            0,
+                            AppConstants.paddingLg,
+                            AppConstants.paddingLg,
+                          ),
+                        ),
+                      );
+                    },
+              icon: Icon(
+                isShoppingListSaved
+                    ? Icons.playlist_add_check_circle_rounded
+                    : Icons.playlist_add_rounded,
+              ),
+              label: const Text('Guardar lista de compra'),
+            ),
+          ),
+        ),
+      ),
       body: CustomScrollView(
         slivers: [
           // ── Hero App Bar ──────────────────────────────────────────
@@ -88,7 +150,7 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
                       ? Image.network(
                           widget.recipe.photoUrl,
                           fit: BoxFit.cover,
-                          errorBuilder: (_, __, ___) =>
+                          errorBuilder: (context, error, stackTrace) =>
                               _HeroPlaceholder(colorScheme: colorScheme),
                         )
                       : _HeroPlaceholder(colorScheme: colorScheme),

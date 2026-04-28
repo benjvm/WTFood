@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'home/home_screen.dart';
 import 'recipes/recipes_screen.dart';
-import 'fridge/fridge_screen.dart';
+import 'list/shopping_lists_screen.dart';
 import 'scan/scan_screen.dart';
 import 'profile/profile_screen.dart';
 import 'package:wtfood_app/core/constants.dart';
@@ -75,7 +75,7 @@ class _MainScreenState extends State<MainScreen> {
       HomeScreen(onTabSelected: _selectTab),
       const RecipesScreen(),
       const ScanScreen(),
-      const FridgeScreen(),
+      ShoppingListsScreen(onGoToRecipes: () => _selectTab(1)),
       const ProfileScreen(),
     ];
 
@@ -229,9 +229,9 @@ class _MainScreenState extends State<MainScreen> {
                 label: 'Scan',
               ),
               BottomNavigationBarItem(
-                icon: Icon(Icons.kitchen_outlined),
-                activeIcon: Icon(Icons.kitchen),
-                label: 'Fridge',
+                icon: Icon(Icons.playlist_add_check_circle_outlined),
+                activeIcon: Icon(Icons.playlist_add_check_circle_rounded),
+                label: 'Lista',
               ),
               BottomNavigationBarItem(
                 icon: Icon(Icons.person_outline_rounded),

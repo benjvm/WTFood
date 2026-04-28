@@ -490,7 +490,8 @@ class _ExploreCollectionTile extends StatelessWidget {
                 Image.network(
                   collection.previewRecipe!.photoUrl,
                   fit: BoxFit.cover,
-                  errorBuilder: (_, __, ___) => _CollectionTileFallback(
+                  errorBuilder: (context, error, stackTrace) =>
+                      _CollectionTileFallback(
                     colors: collection.gradientColors,
                     icon: collection.icon,
                   ),

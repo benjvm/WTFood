@@ -31,6 +31,8 @@ class AuthService {
       'uid': credential.user!.uid,
       'name': name,
       'email': email,
+      'favoriteRecipes': const <String>[],
+      'shoppingLists': const <Map<String, dynamic>>[],
       'createdAt': FieldValue.serverTimestamp(),
       'lastLogin': FieldValue.serverTimestamp(),
     });

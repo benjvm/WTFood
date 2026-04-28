@@ -113,7 +113,6 @@ class _ScanScreenState extends State<ScanScreen>
   // ── UI (sin cambios visuales) ──────────────────────────────────────────────
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     return Scaffold(
       body: SafeArea(
         child: SingleChildScrollView(
@@ -122,7 +121,7 @@ class _ScanScreenState extends State<ScanScreen>
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Text(
-                '¿Qué tienes en la nevera? 🥦',
+                'Escanea tu nevera!',
                 style: GoogleFonts.plusJakartaSans(
                   fontSize: 26,
                   fontWeight: FontWeight.w800,

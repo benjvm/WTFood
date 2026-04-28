@@ -525,7 +525,7 @@ class _CategoryShelf extends StatelessWidget {
             child: ListView.separated(
               scrollDirection: Axis.horizontal,
               itemCount: section.recipes.length,
-              separatorBuilder: (_, __) => const SizedBox(width: 14),
+              separatorBuilder: (context, index) => const SizedBox(width: 14),
               itemBuilder: (context, index) {
                 final recipe = section.recipes[index];
                 return _CategoryRecipeCard(recipe: recipe);
@@ -656,7 +656,7 @@ class _RecipeCardImage extends StatelessWidget {
       child: CachedNetworkImage(
         imageUrl: photoUrl,
         fit: BoxFit.cover,
-        placeholder: (_, __) => Container(
+        placeholder: (context, imageUrl) => Container(
           color: colorScheme.surfaceContainerHigh,
           alignment: Alignment.center,
           child: SizedBox(
@@ -668,7 +668,8 @@ class _RecipeCardImage extends StatelessWidget {
             ),
           ),
         ),
-        errorWidget: (_, __, ___) => _RecipeImagePlaceholder(iconSize: iconSize),
+        errorWidget: (context, imageUrl, error) =>
+            _RecipeImagePlaceholder(iconSize: iconSize),
       ),
     );
   }
@@ -784,7 +785,7 @@ class _CategoryShelfSkeleton extends StatelessWidget {
     return Column(
       children: List.generate(
         3,
-        (_) => Padding(
+        (index) => Padding(
           padding: const EdgeInsets.only(bottom: AppConstants.paddingLg),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -803,8 +804,9 @@ class _CategoryShelfSkeleton extends StatelessWidget {
                 child: ListView.separated(
                   scrollDirection: Axis.horizontal,
                   itemCount: 2,
-                  separatorBuilder: (_, __) => const SizedBox(width: 14),
-                  itemBuilder: (_, __) => Container(
+                  separatorBuilder: (context, index) =>
+                      const SizedBox(width: 14),
+                  itemBuilder: (context, index) => Container(
                     width: 172,
                     decoration: BoxDecoration(
                       color: color,

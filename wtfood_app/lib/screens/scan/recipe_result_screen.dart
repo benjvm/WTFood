@@ -94,7 +94,7 @@ class _RecipeResultScreenState extends State<RecipeResultScreen> {
                         Image.network(
                           photo.imageUrl,
                           fit: BoxFit.cover,
-                          errorBuilder: (_, __, ___) =>
+                          errorBuilder: (context, error, stackTrace) =>
                               _HeroPlaceholder(colorScheme: colorScheme),
                         )
                       else

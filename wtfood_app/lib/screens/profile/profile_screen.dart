@@ -7,7 +7,6 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 import 'package:wtfood_app/core/constants.dart';
-import 'package:wtfood_app/models/user_model.dart';
 import 'package:wtfood_app/providers/user_provider.dart';
 import 'package:wtfood_app/services/auth_service.dart';
 import 'package:wtfood_app/services/cloudinary_service.dart';

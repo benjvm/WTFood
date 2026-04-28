@@ -67,7 +67,8 @@ class RecipeCard extends StatelessWidget {
                         ? Image.network(
                             recipe.photoUrl,
                             fit: BoxFit.cover,
-                            errorBuilder: (_, __, ___) => _RecipeCardPlaceholder(
+                            errorBuilder: (context, error, stackTrace) =>
+                                _RecipeCardPlaceholder(
                               colorScheme: colorScheme,
                             ),
                             loadingBuilder: (context, child, loadingProgress) {
