@@ -9,10 +9,12 @@ class RecipeResultScreen extends StatefulWidget {
     super.key,
     required this.recipe,
     required this.usedIngredients,
+    this.recipePhoto,
   });
 
   final Map<String, dynamic> recipe;
   final List<String> usedIngredients;
+  final PixabayPhoto? recipePhoto;
 
   @override
   State<RecipeResultScreen> createState() => _RecipeResultScreenState();
@@ -24,7 +26,9 @@ class _RecipeResultScreenState extends State<RecipeResultScreen> {
   @override
   void initState() {
     super.initState();
-    _photoFuture = const PixabayService().findRecipePhoto(_recipeName);
+    _photoFuture = widget.recipePhoto != null
+        ? Future<PixabayPhoto?>.value(widget.recipePhoto)
+        : const PixabayService().findRecipePhoto(_recipeName);
   }
 
   String get _recipeName => _readText(widget.recipe['nombre'], fallback: 'Receta');

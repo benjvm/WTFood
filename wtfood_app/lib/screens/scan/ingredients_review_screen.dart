@@ -2,9 +2,11 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:lottie/lottie.dart';
 
 import '../../../core/constants.dart';
 import '../../../services/ai_service.dart';
+import '../../../services/pixabay_service.dart';
 import 'recipe_result_screen.dart';
 
 class IngredientsReviewScreen extends StatefulWidget {
@@ -81,6 +83,19 @@ class _IngredientsReviewScreenState extends State<IngredientsReviewScreen> {
     try {
       final ingredientsList = _ingredients.join(', ');
       final recipe = await AiService.instance.generateRecipe(ingredientsList);
+      final recipeName = (recipe['nombre']?.toString().trim() ?? '');
+      final recipePhoto = await const PixabayService().findRecipePhoto(
+        recipeName,
+      );
+
+      if (mounted && recipePhoto != null) {
+        try {
+          await precacheImage(NetworkImage(recipePhoto.imageUrl), context);
+        } catch (error, stackTrace) {
+          debugPrint('No se pudo precargar la imagen de Pixabay: $error');
+          debugPrintStack(stackTrace: stackTrace);
+        }
+      }
 
       if (!mounted) return;
       setState(() => _isGenerating = false);
@@ -91,6 +106,7 @@ class _IngredientsReviewScreenState extends State<IngredientsReviewScreen> {
           builder: (_) => RecipeResultScreen(
             recipe: recipe,
             usedIngredients: _ingredients,
+            recipePhoto: recipePhoto,
           ),
         ),
       );
@@ -110,20 +126,24 @@ class _IngredientsReviewScreenState extends State<IngredientsReviewScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(
-        title: const Text('Ingredientes detectados'),
-        backgroundColor: AppColors.surfaceContainerLowest,
-        elevation: 0,
-      ),
+      appBar: _isGenerating
+          ? null
+          : AppBar(
+              title: const Text('Ingredientes detectados'),
+              backgroundColor: AppColors.surfaceContainerLowest,
+              elevation: 0,
+            ),
       body: SafeArea(
-        child: Column(
+        child: Stack(
           children: [
-            Expanded(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.all(AppConstants.paddingLg),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
+            Column(
+              children: [
+                Expanded(
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.all(AppConstants.paddingLg),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
                     _HeaderSection(
                       imageFile: widget.imageFile,
                       count: _ingredients.length,
@@ -227,19 +247,25 @@ class _IngredientsReviewScreenState extends State<IngredientsReviewScreen> {
                         ),
                       ],
                     ),
-                    if (_errorMessage != null) ...[
-                      const SizedBox(height: 16),
-                      _ErrorBanner(message: _errorMessage!),
-                    ],
-                  ],
+                        if (_errorMessage != null) ...[
+                          const SizedBox(height: 16),
+                          _ErrorBanner(message: _errorMessage!),
+                        ],
+                      ],
+                    ),
+                  ),
                 ),
+                if (!_isGenerating)
+                  _BottomBar(
+                    ingredientCount: _ingredients.length,
+                    onGenerate: _generateRecipe,
+                  ),
+              ],
+            ),
+            if (_isGenerating)
+              const Positioned.fill(
+                child: _GeneratingRecipeOverlay(),
               ),
-            ),
-            _BottomBar(
-              ingredientCount: _ingredients.length,
-              isGenerating: _isGenerating,
-              onGenerate: _generateRecipe,
-            ),
           ],
         ),
       ),
@@ -447,12 +473,10 @@ class _ErrorBanner extends StatelessWidget {
 class _BottomBar extends StatelessWidget {
   const _BottomBar({
     required this.ingredientCount,
-    required this.isGenerating,
     required this.onGenerate,
   });
 
   final int ingredientCount;
-  final bool isGenerating;
   final VoidCallback onGenerate;
 
   @override
@@ -465,32 +489,15 @@ class _BottomBar extends StatelessWidget {
         AppConstants.paddingMd + MediaQuery.of(context).padding.bottom,
       ),
       decoration: BoxDecoration(
-        color: AppColors.surfaceContainerLowest,
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.onSurface.withValues(alpha: 0.06),
-            blurRadius: 16,
-            offset: const Offset(0, -4),
-          ),
-        ],
+        color: AppColors.background,
       ),
       child: SizedBox(
         height: 54,
         child: ElevatedButton.icon(
-          onPressed:
-              (ingredientCount > 0 && !isGenerating) ? onGenerate : null,
-          icon: isGenerating
-              ? const SizedBox(
-                  width: 20,
-                  height: 20,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2.5,
-                    color: AppColors.onPrimary,
-                  ),
-                )
-              : const Icon(Icons.restaurant_menu_rounded),
+          onPressed: ingredientCount > 0 ? onGenerate : null,
+          icon: const Icon(Icons.restaurant_menu_rounded),
           label: Text(
-            isGenerating ? 'Generando receta...' : 'Generar receta',
+            'Generar receta',
             style: GoogleFonts.manrope(
               fontSize: 16,
               fontWeight: FontWeight.w700,
@@ -506,6 +513,58 @@ class _BottomBar extends StatelessWidget {
                   BorderRadius.circular(AppConstants.borderRadiusMd),
             ),
             elevation: 0,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _GeneratingRecipeOverlay extends StatelessWidget {
+  const _GeneratingRecipeOverlay();
+
+  @override
+  Widget build(BuildContext context) {
+    return ColoredBox(
+      color: AppColors.background,
+      child: Center(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppConstants.paddingXl,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              SizedBox(
+                width: 220,
+                height: 220,
+                child: Lottie.asset(
+                  'assets/json/Preparing Food.json',
+                  fit: BoxFit.contain,
+                  repeat: true,
+                ),
+              ),
+              const SizedBox(height: 20),
+              Text(
+                'Generando receta',
+                style: GoogleFonts.plusJakartaSans(
+                  fontSize: 22,
+                  fontWeight: FontWeight.w800,
+                  color: AppColors.onSurface,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Estamos preparando la receta y cargando su imagen.',
+                style: GoogleFonts.manrope(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                  color: AppColors.onSurfaceVariant,
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ],
           ),
         ),
       ),
