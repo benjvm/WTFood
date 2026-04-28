@@ -209,7 +209,7 @@ class _ExploreTabState extends State<_ExploreTab>
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Explore Flavors',
+                'Explora categorías',
                 style: theme.textTheme.headlineMedium?.copyWith(
                   fontWeight: FontWeight.w800,
                   height: 1.05,

@@ -204,7 +204,7 @@ class _ScanCallToAction extends StatelessWidget {
                   ),
                 ),
                 child: const Icon(
-                  Icons.document_scanner_rounded,
+                  Icons.enhance_photo_translate_rounded,
                   color: Colors.white,
                   size: 30,
                 ),

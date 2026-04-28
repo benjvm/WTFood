@@ -196,22 +196,32 @@ class _MainScreenState extends State<MainScreen> {
           child: BottomNavigationBar(
             currentIndex: _currentIndex,
             onTap: _selectTab,
-            showSelectedLabels: false,
-            showUnselectedLabels: false,
+            showSelectedLabels: true,
+            showUnselectedLabels: true,
             type: BottomNavigationBarType.fixed,
             backgroundColor: Colors.transparent,
             selectedItemColor: colorScheme.primary,
             unselectedItemColor: colorScheme.onSurfaceVariant,
+            selectedFontSize: 12,
+            unselectedFontSize: 12,
+            selectedLabelStyle: const TextStyle(
+              fontWeight: FontWeight.w600,
+              height: 1.2,
+            ),
+            unselectedLabelStyle: const TextStyle(
+              fontWeight: FontWeight.w500,
+              height: 1.2,
+            ),
             items: const [
               BottomNavigationBarItem(
                 icon: Icon(Icons.home_outlined),
                 activeIcon: Icon(Icons.home),
-                label: 'Home',
+                label: 'Inicio',
               ),
               BottomNavigationBarItem(
                 icon: Icon(Icons.local_dining_rounded),
                 activeIcon: Icon(Icons.local_dining),
-                label: 'Recipes',
+                label: 'Recetas',
               ),
               BottomNavigationBarItem(
                 icon: Icon(Icons.enhance_photo_translate_outlined),
@@ -226,7 +236,7 @@ class _MainScreenState extends State<MainScreen> {
               BottomNavigationBarItem(
                 icon: Icon(Icons.person_outline_rounded),
                 activeIcon: Icon(Icons.person_rounded),
-                label: 'Profile',
+                label: 'Mi perfil',
               ),
             ],
           ),
