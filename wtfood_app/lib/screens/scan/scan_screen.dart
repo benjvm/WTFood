@@ -216,6 +216,30 @@ class _ScanScreenState extends State<ScanScreen>
                   ),
                 ),
               ),
+              const SizedBox(height: 12),
+              SizedBox(
+                height: 52,
+                child: ElevatedButton.icon(
+                  onPressed: () => Navigator.of(context).pushNamed('/fridge'),
+                  icon: const Icon(Icons.kitchen_outlined),
+                  label: Text(
+                    'Ver mi nevera',
+                    style: GoogleFonts.manrope(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.secondary,
+                    foregroundColor: AppColors.onSecondary,
+                    shape: RoundedRectangleBorder(
+                      borderRadius:
+                          BorderRadius.circular(AppConstants.borderRadiusMd),
+                    ),
+                    elevation: 0,
+                  ),
+                ),
+              ),
               const SizedBox(height: 32),
               const _TipsSection(),
             ],

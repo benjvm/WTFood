@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'home/home_screen.dart';
-import 'recipes/recipes_screen.dart';
-import 'list/shopping_lists_screen.dart';
-import 'scan/scan_screen.dart';
-import 'profile/profile_screen.dart';
 import 'package:wtfood_app/core/constants.dart';
 import 'package:wtfood_app/providers/user_provider.dart';
+import 'package:wtfood_app/screens/home/home_screen.dart';
+import 'package:wtfood_app/screens/list/shopping_lists_screen.dart';
+import 'package:wtfood_app/screens/profile/profile_screen.dart';
+import 'package:wtfood_app/screens/recipes/recipes_screen.dart';
+import 'package:wtfood_app/screens/scan/scan_screen.dart';
+import 'package:wtfood_app/screens/settings/settings_screen.dart';
 import 'package:wtfood_app/services/auth_service.dart';
 
 class MainScreen extends StatefulWidget {
@@ -33,16 +34,16 @@ class _MainScreenState extends State<MainScreen> {
   Future<void> _confirmLogout() async {
     final confirm = await showDialog<bool>(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Cerrar sesión'),
-        content: const Text('¿Estás seguro de que quieres salir?'),
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Cerrar sesion'),
+        content: const Text('Estas seguro de que quieres salir?'),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
+            onPressed: () => Navigator.pop(dialogContext, false),
             child: const Text('Cancelar'),
           ),
           TextButton(
-            onPressed: () => Navigator.pop(ctx, true),
+            onPressed: () => Navigator.pop(dialogContext, true),
             child: Text(
               'Salir',
               style: TextStyle(color: Theme.of(context).colorScheme.error),
@@ -51,13 +52,26 @@ class _MainScreenState extends State<MainScreen> {
         ],
       ),
     );
+
     if (confirm == true) {
       await AuthService().logout();
     }
   }
 
-  void _goToProfile() {
-    _selectTab(4);
+  Future<void> _openProfile() async {
+    await Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => const _ProfileRouteScreen(),
+      ),
+    );
+  }
+
+  Future<void> _openSettings() async {
+    await Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => const _SettingsRouteScreen(),
+      ),
+    );
   }
 
   void _selectTab(int index) {
@@ -71,107 +85,18 @@ class _MainScreenState extends State<MainScreen> {
     final user = context.watch<UserProvider>().user;
     final photoUrl = user?.photoUrl;
     final colorScheme = Theme.of(context).colorScheme;
+    final isSettingsTab = _currentIndex == 4;
     final pages = [
       HomeScreen(onTabSelected: _selectTab),
       const RecipesScreen(),
       const ScanScreen(),
       ShoppingListsScreen(onGoToRecipes: () => _selectTab(1)),
-      const ProfileScreen(),
+      const SettingsScreen(),
     ];
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(
-        backgroundColor: AppColors.surfaceContainerLowest,
-        surfaceTintColor: Colors.transparent,
-        shadowColor: AppColors.onSurface.withValues(alpha: 0.05),
-        elevation: 0,
-        titleSpacing: 18,
-        centerTitle: false,
-        title: Text.rich(
-          TextSpan(
-            children: [
-              TextSpan(
-                text: 'WT',
-                style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                  color: AppColors.primaryDark,
-                  fontWeight: FontWeight.w800,
-                ),
-              ),
-              TextSpan(
-                text: 'Food',
-                style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                  color: AppColors.secondary,
-                  fontWeight: FontWeight.w800,
-                ),
-              ),
-            ],
-          ),
-        ),
-        actions: [
-          PopupMenuButton<_MainMenuAction>(
-            tooltip: 'Menú de usuario',
-            onSelected: (value) {
-              switch (value) {
-                case _MainMenuAction.profile:
-                  _goToProfile();
-                  break;
-                case _MainMenuAction.logout:
-                  _confirmLogout();
-                  break;
-              }
-            },
-            itemBuilder: (context) => const [
-              PopupMenuItem<_MainMenuAction>(
-                value: _MainMenuAction.profile,
-                child: ListTile(
-                  contentPadding: EdgeInsets.zero,
-                  leading: Icon(Icons.person_outline_rounded),
-                  title: Text('Mi perfil'),
-                ),
-              ),
-              PopupMenuItem<_MainMenuAction>(
-                value: _MainMenuAction.logout,
-                child: ListTile(
-                  contentPadding: EdgeInsets.zero,
-                  leading: Icon(Icons.logout),
-                  title: Text('Cerrar sesión'),
-                ),
-              ),
-            ],
-            child: Padding(
-              padding: const EdgeInsets.only(right: 12),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Container(
-                    width: 38,
-                    height: 38,
-                    decoration: const BoxDecoration(
-                      color: AppColors.tertiary,
-                      shape: BoxShape.circle,
-                    ),
-                    child: CircleAvatar(
-                      radius: 18,
-                      backgroundColor: Colors.transparent,
-                      backgroundImage: photoUrl != null && photoUrl.isNotEmpty
-                          ? NetworkImage(photoUrl)
-                          : null,
-                      child: photoUrl == null || photoUrl.isEmpty
-                          ? const Icon(
-                              Icons.menu_rounded,
-                              color: AppColors.surfaceContainerLowest,
-                            )
-                          : null,
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                ],
-              ),
-            ),
-          ),
-        ],
-      ),
+      appBar: isSettingsTab ? null : _buildAppBar(photoUrl),
       body: AnimatedSwitcher(
         duration: const Duration(milliseconds: 300),
         child: pages[_currentIndex],
@@ -234,9 +159,9 @@ class _MainScreenState extends State<MainScreen> {
                 label: 'Lista',
               ),
               BottomNavigationBarItem(
-                icon: Icon(Icons.person_outline_rounded),
-                activeIcon: Icon(Icons.person_rounded),
-                label: 'Mi perfil',
+                icon: Icon(Icons.settings_outlined),
+                activeIcon: Icon(Icons.settings_rounded),
+                label: 'Ajustes',
               ),
             ],
           ),
@@ -244,9 +169,144 @@ class _MainScreenState extends State<MainScreen> {
       ),
     );
   }
+
+  PreferredSizeWidget _buildAppBar(String? photoUrl) {
+    return AppBar(
+      backgroundColor: AppColors.surfaceContainerLowest,
+      surfaceTintColor: Colors.transparent,
+      shadowColor: AppColors.onSurface.withValues(alpha: 0.05),
+      elevation: 0,
+      titleSpacing: 18,
+      centerTitle: false,
+      title: Text.rich(
+        TextSpan(
+          children: [
+            TextSpan(
+              text: 'WT',
+              style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                color: AppColors.primaryDark,
+                fontWeight: FontWeight.w800,
+              ),
+            ),
+            TextSpan(
+              text: 'Food',
+              style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                color: AppColors.secondary,
+                fontWeight: FontWeight.w800,
+              ),
+            ),
+          ],
+        ),
+      ),
+      actions: [
+        PopupMenuButton<_MainMenuAction>(
+          tooltip: 'Menu de usuario',
+          onSelected: (value) {
+            switch (value) {
+              case _MainMenuAction.profile:
+                _openProfile();
+                break;
+              case _MainMenuAction.settings:
+                _openSettings();
+                break;
+              case _MainMenuAction.logout:
+                _confirmLogout();
+                break;
+            }
+          },
+          itemBuilder: (context) => const [
+            PopupMenuItem<_MainMenuAction>(
+              value: _MainMenuAction.profile,
+              child: ListTile(
+                contentPadding: EdgeInsets.zero,
+                leading: Icon(Icons.person_outline_rounded),
+                title: Text('Mi perfil'),
+              ),
+            ),
+            PopupMenuItem<_MainMenuAction>(
+              value: _MainMenuAction.settings,
+              child: ListTile(
+                contentPadding: EdgeInsets.zero,
+                leading: Icon(Icons.settings_outlined),
+                title: Text('Configuración'),
+              ),
+            ),
+            PopupMenuItem<_MainMenuAction>(
+              value: _MainMenuAction.logout,
+              child: ListTile(
+                contentPadding: EdgeInsets.zero,
+                leading: Icon(Icons.logout),
+                title: Text('Cerrar sesion'),
+              ),
+            ),
+          ],
+          child: Padding(
+            padding: const EdgeInsets.only(right: 12),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 38,
+                  height: 38,
+                  decoration: const BoxDecoration(
+                    color: AppColors.tertiary,
+                    shape: BoxShape.circle,
+                  ),
+                  child: CircleAvatar(
+                    radius: 18,
+                    backgroundColor: Colors.transparent,
+                    backgroundImage: photoUrl != null && photoUrl.isNotEmpty
+                        ? NetworkImage(photoUrl)
+                        : null,
+                    child: photoUrl == null || photoUrl.isEmpty
+                        ? const Icon(
+                            Icons.menu_rounded,
+                            color: AppColors.surfaceContainerLowest,
+                          )
+                        : null,
+                  ),
+                ),
+                const SizedBox(width: 8),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
 }
 
 enum _MainMenuAction {
   profile,
+  settings,
   logout,
+}
+
+class _ProfileRouteScreen extends StatelessWidget {
+  const _ProfileRouteScreen();
+
+  @override
+  Widget build(BuildContext context) {
+    return const Scaffold(
+      backgroundColor: AppColors.background,
+      body: ProfileScreen(showBackButton: true),
+    );
+  }
+}
+
+class _SettingsRouteScreen extends StatelessWidget {
+  const _SettingsRouteScreen();
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: AppColors.background,
+      appBar: AppBar(
+        backgroundColor: AppColors.surfaceContainerLowest,
+        surfaceTintColor: Colors.transparent,
+        title: const Text('Configuración'),
+      ),
+      body: const SettingsScreen(),
+    );
+  }
 }

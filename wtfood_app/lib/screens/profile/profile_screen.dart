@@ -29,7 +29,12 @@ class _ProfilePalette {
 }
 
 class ProfileScreen extends StatefulWidget {
-  const ProfileScreen({super.key});
+  const ProfileScreen({
+    super.key,
+    this.showBackButton = false,
+  });
+
+  final bool showBackButton;
 
   @override
   State<ProfileScreen> createState() => _ProfileScreenState();
@@ -217,6 +222,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            if (widget.showBackButton) ...[
+              _BackToSettingsButton(
+                onTap: () => Navigator.of(context).maybePop(),
+              ),
+              const SizedBox(height: AppConstants.paddingLg),
+            ],
             const SizedBox(height: AppConstants.paddingMd),
 
             // Avatar
@@ -400,6 +411,55 @@ class _ProfileScreenState extends State<ProfileScreen> {
             const SizedBox(height: 100),
           ],
         ),
+        ),
+      ),
+    );
+  }
+}
+
+class _BackToSettingsButton extends StatelessWidget {
+  const _BackToSettingsButton({required this.onTap});
+
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppConstants.paddingMd,
+          vertical: 12,
+        ),
+        decoration: BoxDecoration(
+          color: _ProfilePalette.surface,
+          borderRadius: BorderRadius.circular(999),
+          border: Border.all(color: _ProfilePalette.surfaceBorder),
+          boxShadow: const [
+            BoxShadow(
+              color: _ProfilePalette.shadow,
+              blurRadius: 10,
+              offset: Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(
+              Icons.arrow_back_ios_new_rounded,
+              size: 16,
+              color: _ProfilePalette.primaryDark,
+            ),
+            const SizedBox(width: 8),
+            Text(
+              'Back to settings',
+              style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                color: _ProfilePalette.primaryDark,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ],
         ),
       ),
     );

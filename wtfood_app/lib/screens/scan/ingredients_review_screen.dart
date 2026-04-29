@@ -3,8 +3,10 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lottie/lottie.dart';
+import 'package:provider/provider.dart';
 
 import '../../../core/constants.dart';
+import '../../../providers/fridge_provider.dart';
 import '../../../services/ai_service.dart';
 import '../../../services/pixabay_service.dart';
 import 'recipe_result_screen.dart';
@@ -26,7 +28,6 @@ class IngredientsReviewScreen extends StatefulWidget {
 
 class _IngredientsReviewScreenState extends State<IngredientsReviewScreen> {
   late List<String> _ingredients;
-  final TextEditingController _addController = TextEditingController();
   bool _isGenerating = false;
   String? _errorMessage;
 
@@ -36,41 +37,41 @@ class _IngredientsReviewScreenState extends State<IngredientsReviewScreen> {
     _ingredients = List<String>.from(widget.ingredients);
   }
 
-  @override
-  void dispose() {
-    _addController.dispose();
-    super.dispose();
-  }
-
   void _removeIngredient(int index) {
     setState(() => _ingredients.removeAt(index));
   }
 
-  void _addIngredient() {
-    final text = _addController.text.trim();
-    if (text.isEmpty) return;
-
-    if (_ingredients.any((i) => i.toLowerCase() == text.toLowerCase())) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('"$text" ya está en la lista'),
-          backgroundColor: AppColors.secondary,
-        ),
-      );
+  void _saveIngredientsToFridge() {
+    if (_ingredients.isEmpty) {
+      setState(() {
+        _errorMessage = 'Necesitas al menos un ingrediente para guardarlo.';
+      });
       return;
     }
 
+    final addedIngredients =
+        context.read<FridgeProvider>().addIngredients(_ingredients);
+
     setState(() {
-      _ingredients.add(text);
-      _addController.clear();
+      _errorMessage = null;
     });
+
+    final message = addedIngredients == 0
+        ? 'Estos ingredientes ya estaban guardados en tu nevera.'
+        : '$addedIngredients ingrediente${addedIngredients == 1 ? '' : 's'} guardado${addedIngredients == 1 ? '' : 's'} en tu nevera.';
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: AppColors.secondary,
+      ),
+    );
   }
 
-  // ── Lógica delegada a AiService ────────────────────────────────────────────
   Future<void> _generateRecipe() async {
     if (_ingredients.isEmpty) {
       setState(() {
-        _errorMessage = 'Añade al menos un ingrediente para continuar.';
+        _errorMessage = 'A\u00f1ade al menos un ingrediente para continuar.';
       });
       return;
     }
@@ -97,7 +98,10 @@ class _IngredientsReviewScreenState extends State<IngredientsReviewScreen> {
         }
       }
 
-      if (!mounted) return;
+      if (!mounted) {
+        return;
+      }
+
       setState(() => _isGenerating = false);
 
       Navigator.push(
@@ -111,7 +115,10 @@ class _IngredientsReviewScreenState extends State<IngredientsReviewScreen> {
         ),
       );
     } catch (error, stackTrace) {
-      if (!mounted) return;
+      if (!mounted) {
+        return;
+      }
+
       setState(() {
         _errorMessage = 'Error: ${error.toString()}';
         _isGenerating = false;
@@ -121,7 +128,6 @@ class _IngredientsReviewScreenState extends State<IngredientsReviewScreen> {
     }
   }
 
-  // ── UI (sin cambios visuales) ──────────────────────────────────────────────
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -144,109 +150,42 @@ class _IngredientsReviewScreenState extends State<IngredientsReviewScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                    _HeaderSection(
-                      imageFile: widget.imageFile,
-                      count: _ingredients.length,
-                    ),
-                    const SizedBox(height: 24),
-                    Text(
-                      'Ingredientes identificados',
-                      style: GoogleFonts.plusJakartaSans(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w700,
-                        color: AppColors.onSurface,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      'Elimina los incorrectos o añade los que falten.',
-                      style: GoogleFonts.manrope(
-                        fontSize: 13,
-                        color: AppColors.onSurfaceVariant,
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    if (_ingredients.isEmpty)
-                      _EmptyIngredients()
-                    else
-                      Wrap(
-                        spacing: 8,
-                        runSpacing: 8,
-                        children: List.generate(
-                          _ingredients.length,
-                          (i) => _IngredientChip(
-                            label: _ingredients[i],
-                            onDelete: () => _removeIngredient(i),
+                        _HeaderSection(
+                          imageFile: widget.imageFile,
+                          count: _ingredients.length,
+                        ),
+                        const SizedBox(height: 24),
+                        Text(
+                          'Ingredientes identificados',
+                          style: GoogleFonts.plusJakartaSans(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.onSurface,
                           ),
                         ),
-                      ),
-                    const SizedBox(height: 24),
-                    Text(
-                      'Añadir ingrediente',
-                      style: GoogleFonts.plusJakartaSans(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w700,
-                        color: AppColors.onSurface,
-                      ),
-                    ),
-                    const SizedBox(height: 10),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: TextField(
-                            controller: _addController,
-                            textCapitalization: TextCapitalization.sentences,
-                            onSubmitted: (_) => _addIngredient(),
-                            decoration: InputDecoration(
-                              hintText: 'ej: tomates, queso, cebolla...',
-                              hintStyle: GoogleFonts.manrope(
-                                color: AppColors.onSurfaceVariant,
-                                fontSize: 14,
+                        const SizedBox(height: 4),
+                        Text(
+                          'Elimina los incorrectos antes de guardar o generar la receta.',
+                          style: GoogleFonts.manrope(
+                            fontSize: 13,
+                            color: AppColors.onSurfaceVariant,
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        if (_ingredients.isEmpty)
+                          const _EmptyIngredients()
+                        else
+                          Wrap(
+                            spacing: 8,
+                            runSpacing: 8,
+                            children: List.generate(
+                              _ingredients.length,
+                              (i) => _IngredientChip(
+                                label: _ingredients[i],
+                                onDelete: () => _removeIngredient(i),
                               ),
-                              filled: true,
-                              fillColor: AppColors.surfaceContainerLowest,
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(
-                                    AppConstants.borderRadiusMd),
-                                borderSide:
-                                    BorderSide(color: AppColors.outline),
-                              ),
-                              enabledBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(
-                                    AppConstants.borderRadiusMd),
-                                borderSide:
-                                    BorderSide(color: AppColors.outline),
-                              ),
-                              focusedBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(
-                                    AppConstants.borderRadiusMd),
-                                borderSide: BorderSide(
-                                    color: AppColors.primary, width: 2),
-                              ),
-                              contentPadding: const EdgeInsets.symmetric(
-                                  horizontal: 14, vertical: 14),
                             ),
                           ),
-                        ),
-                        const SizedBox(width: 10),
-                        SizedBox(
-                          height: 52,
-                          child: ElevatedButton(
-                            onPressed: _addIngredient,
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: AppColors.primaryContainer,
-                              foregroundColor: AppColors.onPrimaryContainer,
-                              elevation: 0,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(
-                                    AppConstants.borderRadiusMd),
-                              ),
-                            ),
-                            child: const Icon(Icons.add_rounded),
-                          ),
-                        ),
-                      ],
-                    ),
                         if (_errorMessage != null) ...[
                           const SizedBox(height: 16),
                           _ErrorBanner(message: _errorMessage!),
@@ -258,6 +197,7 @@ class _IngredientsReviewScreenState extends State<IngredientsReviewScreen> {
                 if (!_isGenerating)
                   _BottomBar(
                     ingredientCount: _ingredients.length,
+                    onSave: _saveIngredientsToFridge,
                     onGenerate: _generateRecipe,
                   ),
               ],
@@ -272,8 +212,6 @@ class _IngredientsReviewScreenState extends State<IngredientsReviewScreen> {
     );
   }
 }
-
-// ── Widgets privados (sin cambios) ─────────────────────────────────────────
 
 class _HeaderSection extends StatelessWidget {
   const _HeaderSection({required this.imageFile, required this.count});
@@ -309,7 +247,7 @@ class _HeaderSection extends StatelessWidget {
                   ),
                 ),
                 child: Text(
-                  'Análisis completado',
+                  'Analisis completado',
                   style: GoogleFonts.manrope(
                     fontSize: 12,
                     fontWeight: FontWeight.w700,
@@ -327,7 +265,7 @@ class _HeaderSection extends StatelessWidget {
                 ),
               ),
               Text(
-                'Revisa y edita la lista antes de generar la receta.',
+                'Revisa la lista antes de guardarla en tu nevera.',
                 style: GoogleFonts.manrope(
                   fontSize: 12,
                   color: AppColors.onSurfaceVariant,
@@ -384,12 +322,17 @@ class _IngredientChip extends StatelessWidget {
   }
 
   String _capitalize(String value) {
-    if (value.isEmpty) return value;
+    if (value.isEmpty) {
+      return value;
+    }
+
     return value[0].toUpperCase() + value.substring(1);
   }
 }
 
 class _EmptyIngredients extends StatelessWidget {
+  const _EmptyIngredients();
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -420,7 +363,7 @@ class _EmptyIngredients extends StatelessWidget {
             ),
           ),
           Text(
-            'Añade ingredientes usando el campo de abajo.',
+            'Prueba a escanear otra imagen para detectar nuevos alimentos.',
             style: GoogleFonts.manrope(
               fontSize: 12,
               color: AppColors.onSurfaceVariant,
@@ -473,10 +416,12 @@ class _ErrorBanner extends StatelessWidget {
 class _BottomBar extends StatelessWidget {
   const _BottomBar({
     required this.ingredientCount,
+    required this.onSave,
     required this.onGenerate,
   });
 
   final int ingredientCount;
+  final VoidCallback onSave;
   final VoidCallback onGenerate;
 
   @override
@@ -488,33 +433,69 @@ class _BottomBar extends StatelessWidget {
         AppConstants.paddingLg,
         AppConstants.paddingMd + MediaQuery.of(context).padding.bottom,
       ),
-      decoration: BoxDecoration(
+      decoration: const BoxDecoration(
         color: AppColors.background,
       ),
-      child: SizedBox(
-        height: 54,
-        child: ElevatedButton.icon(
-          onPressed: ingredientCount > 0 ? onGenerate : null,
-          icon: const Icon(Icons.restaurant_menu_rounded),
-          label: Text(
-            'Generar receta',
-            style: GoogleFonts.manrope(
-              fontSize: 16,
-              fontWeight: FontWeight.w700,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          SizedBox(
+            width: double.infinity,
+            height: 50,
+            child: ElevatedButton.icon(
+              onPressed: ingredientCount > 0 ? onSave : null,
+              icon: const Icon(Icons.bookmark_border_rounded),
+              label: Text(
+                'Guardar ingredientes',
+                style: GoogleFonts.manrope(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.secondaryContainer,
+                foregroundColor: AppColors.onSecondaryContainer,
+                disabledBackgroundColor:
+                    AppColors.secondaryContainer.withValues(alpha: 0.5),
+                disabledForegroundColor:
+                    AppColors.onSecondaryContainer.withValues(alpha: 0.7),
+                shape: RoundedRectangleBorder(
+                  borderRadius:
+                      BorderRadius.circular(AppConstants.borderRadiusMd),
+                ),
+                elevation: 0,
+              ),
             ),
           ),
-          style: ElevatedButton.styleFrom(
-            backgroundColor: AppColors.primary,
-            foregroundColor: AppColors.onPrimary,
-            disabledBackgroundColor: AppColors.primary.withValues(alpha: 0.4),
-            disabledForegroundColor: AppColors.onPrimary,
-            shape: RoundedRectangleBorder(
-              borderRadius:
-                  BorderRadius.circular(AppConstants.borderRadiusMd),
+          const SizedBox(height: 12),
+          SizedBox(
+            width: double.infinity,
+            height: 54,
+            child: ElevatedButton.icon(
+              onPressed: ingredientCount > 0 ? onGenerate : null,
+              icon: const Icon(Icons.restaurant_menu_rounded),
+              label: Text(
+                'Generar receta',
+                style: GoogleFonts.manrope(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primary,
+                foregroundColor: AppColors.onPrimary,
+                disabledBackgroundColor:
+                    AppColors.primary.withValues(alpha: 0.4),
+                disabledForegroundColor: AppColors.onPrimary,
+                shape: RoundedRectangleBorder(
+                  borderRadius:
+                      BorderRadius.circular(AppConstants.borderRadiusMd),
+                ),
+                elevation: 0,
+              ),
             ),
-            elevation: 0,
           ),
-        ),
+        ],
       ),
     );
   }

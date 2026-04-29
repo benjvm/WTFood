@@ -1,4 +1,3 @@
-// auth_service.dart - Servicio de autenticación
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
@@ -6,13 +5,10 @@ class AuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
-  // Stream para escuchar cambios en el estado de autenticación
   Stream<User?> get authStateChanges => _auth.authStateChanges();
 
-  // Usuario actual
   User? get currentUser => _auth.currentUser;
 
-  // REGISTRO de nuevo usuario
   Future<UserCredential> register({
     required String email,
     required String password,
@@ -23,10 +19,8 @@ class AuthService {
       password: password,
     );
 
-    // Actualizar displayName en Firebase Auth
     await credential.user?.updateDisplayName(name);
 
-    // Guardar datos del usuario en Firestore
     await _firestore.collection('users').doc(credential.user!.uid).set({
       'uid': credential.user!.uid,
       'name': name,
@@ -40,7 +34,6 @@ class AuthService {
     return credential;
   }
 
-  // INICIO DE SESIÓN
   Future<UserCredential> login({
     required String email,
     required String password,
@@ -50,7 +43,6 @@ class AuthService {
       password: password,
     );
 
-    // Actualizar último login en Firestore
     await _firestore.collection('users').doc(credential.user!.uid).update({
       'lastLogin': FieldValue.serverTimestamp(),
     });
@@ -58,12 +50,36 @@ class AuthService {
     return credential;
   }
 
-  // CERRAR SESIÓN
   Future<void> logout() async {
     await _auth.signOut();
   }
 
-  // Obtener datos del usuario desde Firestore
+  Future<void> deleteAccount() async {
+    final user = _auth.currentUser;
+
+    if (user == null) {
+      throw FirebaseAuthException(
+        code: 'no-current-user',
+        message: 'No hay ninguna sesion activa.',
+      );
+    }
+
+    final userDoc = _firestore.collection('users').doc(user.uid);
+    final snapshot = await userDoc.get();
+    final userData = snapshot.data();
+
+    await userDoc.delete();
+
+    try {
+      await user.delete();
+    } catch (error) {
+      if (userData != null) {
+        await userDoc.set(userData);
+      }
+      rethrow;
+    }
+  }
+
   Future<Map<String, dynamic>?> getUserData(String uid) async {
     final doc = await _firestore.collection('users').doc(uid).get();
     return doc.data();
