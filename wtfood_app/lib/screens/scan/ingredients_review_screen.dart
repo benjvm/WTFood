@@ -28,6 +28,7 @@ class IngredientsReviewScreen extends StatefulWidget {
 
 class _IngredientsReviewScreenState extends State<IngredientsReviewScreen> {
   late List<String> _ingredients;
+  final TextEditingController _addController = TextEditingController();
   bool _isGenerating = false;
   String? _errorMessage;
 
@@ -39,6 +40,35 @@ class _IngredientsReviewScreenState extends State<IngredientsReviewScreen> {
 
   void _removeIngredient(int index) {
     setState(() => _ingredients.removeAt(index));
+  }
+
+  @override
+  void dispose() {
+    _addController.dispose();
+    super.dispose();
+  }
+
+  void _addIngredient() {
+    final text = _addController.text.trim();
+    if (text.isEmpty) {
+      return;
+    }
+
+    if (_ingredients.any((ingredient) => ingredient.toLowerCase() == text.toLowerCase())) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('"$text" ya esta en la lista'),
+          backgroundColor: AppColors.secondary,
+        ),
+      );
+      return;
+    }
+
+    setState(() {
+      _ingredients.add(text);
+      _addController.clear();
+      _errorMessage = null;
+    });
   }
 
   void _saveIngredientsToFridge() {
@@ -186,6 +216,81 @@ class _IngredientsReviewScreenState extends State<IngredientsReviewScreen> {
                               ),
                             ),
                           ),
+                        const SizedBox(height: 24),
+                        Text(
+                          'Anadir ingrediente',
+                          style: GoogleFonts.plusJakartaSans(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.onSurface,
+                          ),
+                        ),
+                        const SizedBox(height: 10),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: TextField(
+                                controller: _addController,
+                                textCapitalization: TextCapitalization.sentences,
+                                onSubmitted: (_) => _addIngredient(),
+                                decoration: InputDecoration(
+                                  hintText: 'ej: tomates, queso, cebolla...',
+                                  hintStyle: GoogleFonts.manrope(
+                                    color: AppColors.onSurfaceVariant,
+                                    fontSize: 14,
+                                  ),
+                                  filled: true,
+                                  fillColor: AppColors.surfaceContainerLowest,
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(
+                                      AppConstants.borderRadiusMd,
+                                    ),
+                                    borderSide:
+                                        const BorderSide(color: AppColors.outline),
+                                  ),
+                                  enabledBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(
+                                      AppConstants.borderRadiusMd,
+                                    ),
+                                    borderSide:
+                                        const BorderSide(color: AppColors.outline),
+                                  ),
+                                  focusedBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(
+                                      AppConstants.borderRadiusMd,
+                                    ),
+                                    borderSide: const BorderSide(
+                                      color: AppColors.primary,
+                                      width: 2,
+                                    ),
+                                  ),
+                                  contentPadding: const EdgeInsets.symmetric(
+                                    horizontal: 14,
+                                    vertical: 14,
+                                  ),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 10),
+                            SizedBox(
+                              height: 52,
+                              child: ElevatedButton(
+                                onPressed: _addIngredient,
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: AppColors.primaryContainer,
+                                  foregroundColor: AppColors.onPrimaryContainer,
+                                  elevation: 0,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(
+                                      AppConstants.borderRadiusMd,
+                                    ),
+                                  ),
+                                ),
+                                child: const Icon(Icons.add_rounded),
+                              ),
+                            ),
+                          ],
+                        ),
                         if (_errorMessage != null) ...[
                           const SizedBox(height: 16),
                           _ErrorBanner(message: _errorMessage!),
@@ -363,7 +468,7 @@ class _EmptyIngredients extends StatelessWidget {
             ),
           ),
           Text(
-            'Prueba a escanear otra imagen para detectar nuevos alimentos.',
+            'Anade ingredientes usando el campo de abajo.',
             style: GoogleFonts.manrope(
               fontSize: 12,
               color: AppColors.onSurfaceVariant,
