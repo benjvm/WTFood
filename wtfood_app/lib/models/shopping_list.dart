@@ -5,35 +5,48 @@ class ShoppingListItem {
     required this.id,
     required this.rawText,
     this.isChecked = false,
+    this.isFromPantry = false,
+    this.sourceTag,
   });
 
   final String id;
   final String rawText;
   final bool isChecked;
+  final bool isFromPantry;
+  final String? sourceTag;
 
   factory ShoppingListItem.fromMap(Map<String, dynamic> data) {
     return ShoppingListItem(
       id: data['id'] as String? ?? '',
       rawText: data['rawText'] as String? ?? '',
       isChecked: data['isChecked'] as bool? ?? false,
+      isFromPantry: data['isFromPantry'] as bool? ?? false,
+      sourceTag: data['sourceTag'] as String?,
     );
   }
 
   Map<String, dynamic> toMap() => {
-        'id': id,
-        'rawText': rawText,
-        'isChecked': isChecked,
-      };
+    'id': id,
+    'rawText': rawText,
+    'isChecked': isChecked,
+    'isFromPantry': isFromPantry,
+    'sourceTag': sourceTag,
+  };
 
   ShoppingListItem copyWith({
     String? id,
     String? rawText,
     bool? isChecked,
+    bool? isFromPantry,
+    String? sourceTag,
+    bool clearSourceTag = false,
   }) {
     return ShoppingListItem(
       id: id ?? this.id,
       rawText: rawText ?? this.rawText,
       isChecked: isChecked ?? this.isChecked,
+      isFromPantry: isFromPantry ?? this.isFromPantry,
+      sourceTag: clearSourceTag ? null : sourceTag ?? this.sourceTag,
     );
   }
 }
@@ -68,15 +81,15 @@ class ShoppingList {
     final resolvedItems = items.isNotEmpty
         ? items
         : recipe.ingredients
-            .asMap()
-            .entries
-            .map(
-              (entry) => ShoppingListItem(
-                id: '${recipe.id}_${entry.key}',
-                rawText: entry.value,
-              ),
-            )
-            .toList();
+              .asMap()
+              .entries
+              .map(
+                (entry) => ShoppingListItem(
+                  id: '${recipe.id}_${entry.key}',
+                  rawText: entry.value,
+                ),
+              )
+              .toList();
 
     return ShoppingList(
       id: recipe.id,
@@ -93,13 +106,12 @@ class ShoppingList {
     final rawItems = data['items'];
     final mappedItems = rawItems is List
         ? rawItems
-            .whereType<Map>()
-            .map(
-              (item) => ShoppingListItem.fromMap(
-                Map<String, dynamic>.from(item),
-              ),
-            )
-            .toList()
+              .whereType<Map>()
+              .map(
+                (item) =>
+                    ShoppingListItem.fromMap(Map<String, dynamic>.from(item)),
+              )
+              .toList()
         : const <ShoppingListItem>[];
 
     return ShoppingList(
@@ -108,21 +120,21 @@ class ShoppingList {
       title: data['title'] as String? ?? '',
       photoUrl: data['photoUrl'] as String? ?? '',
       category: data['category'] as String? ?? '',
-      savedAt: DateTime.tryParse(data['savedAt'] as String? ?? '') ??
-          DateTime.now(),
+      savedAt:
+          DateTime.tryParse(data['savedAt'] as String? ?? '') ?? DateTime.now(),
       items: mappedItems,
     );
   }
 
   Map<String, dynamic> toMap() => {
-        'id': id,
-        'recipeId': recipeId,
-        'title': title,
-        'photoUrl': photoUrl,
-        'category': category,
-        'savedAt': savedAt.toIso8601String(),
-        'items': items.map((item) => item.toMap()).toList(),
-      };
+    'id': id,
+    'recipeId': recipeId,
+    'title': title,
+    'photoUrl': photoUrl,
+    'category': category,
+    'savedAt': savedAt.toIso8601String(),
+    'items': items.map((item) => item.toMap()).toList(),
+  };
 
   ShoppingList copyWith({
     String? id,

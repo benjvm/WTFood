@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import 'package:wtfood_app/core/utils/ingredient_normalizer.dart';
 
 class FridgeProvider extends ChangeNotifier {
   final List<String> _ingredients = <String>[];
@@ -43,7 +44,8 @@ class FridgeProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  static String _normalize(String value) => value.trim().toLowerCase();
+  static String _normalize(String value) =>
+      IngredientNormalizer.normalizeIngredient(value);
 
   static String _formatIngredient(String value) {
     if (value.isEmpty) {

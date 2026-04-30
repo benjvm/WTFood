@@ -296,7 +296,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
             Center(
               child: Text(
-                'My Profile',
+                'Mi Perfil',
                 style: Theme.of(context).textTheme.headlineLarge?.copyWith(
                   fontWeight: FontWeight.w800,
                   color: _ProfilePalette.primaryDark,
@@ -306,7 +306,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             const SizedBox(height: 6),
             Center(
               child: Text(
-                'Manage your personal information',
+                'Gestiona tu información personal',
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                   color: _ProfilePalette.textSecondary,
                   fontWeight: FontWeight.w600,
@@ -318,7 +318,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
             // Nombre
             _EditableField(
-              label: 'FULL NAME',
+              label: 'NOMBRE COMPLETO',
               controller: _nameController,
               keyboardType: TextInputType.name,
               icon: Icons.person_outline_rounded,
@@ -338,7 +338,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             // Cambiar contraseña
             _ActionRow(
               icon: Icons.lock_outline_rounded,
-              label: 'Change Password',
+              label: 'Cambiar contraseña',
               useTertiary: true,
               onTap: _showChangePasswordSheet,
             ),
@@ -379,7 +379,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             ),
                           )
                         : Text(
-                            'Save Changes',
+                            'Guardar cambios',
                             style: Theme.of(context).textTheme.titleMedium
                                 ?.copyWith(
                                   color: _ProfilePalette.onPrimary,
@@ -398,7 +398,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               onTap: _signOut,
               child: Center(
                 child: Text(
-                  'SIGN OUT',
+                  'Cerrar sesión',
                   style: Theme.of(context).textTheme.labelLarge?.copyWith(
                     color: _ProfilePalette.accent,
                     letterSpacing: 1.2,
@@ -453,7 +453,7 @@ class _BackToSettingsButton extends StatelessWidget {
             ),
             const SizedBox(width: 8),
             Text(
-              'Back to settings',
+              'Volver a configuración',
               style: Theme.of(context).textTheme.labelLarge?.copyWith(
                 color: _ProfilePalette.primaryDark,
                 fontWeight: FontWeight.w700,
@@ -762,7 +762,7 @@ class _ChangePasswordSheetState extends State<_ChangePasswordSheet> {
           ),
           const SizedBox(height: 20),
           Text(
-            'Change Password',
+            'Cambiar contraseña',
             style: Theme.of(
               context,
             ).textTheme.titleLarge?.copyWith(
@@ -847,7 +847,7 @@ class _ChangePasswordSheetState extends State<_ChangePasswordSheet> {
                       ),
                     )
                   : const Text(
-                      'Update Password',
+                      'Actualizar contraseña',
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,

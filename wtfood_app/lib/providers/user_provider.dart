@@ -1,5 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
+import 'package:wtfood_app/core/utils/ingredient_normalizer.dart';
+import 'package:wtfood_app/features/shopping_list/domain/ingredient_matcher.dart';
 import 'package:wtfood_app/models/recipe.dart';
 import 'package:wtfood_app/models/shopping_list.dart';
 import 'package:wtfood_app/models/user_model.dart';
@@ -95,7 +97,43 @@ class UserProvider extends ChangeNotifier {
     return null;
   }
 
-  Future<bool> saveShoppingList(String uid, Recipe recipe) async {
+  Future<bool> refreshShoppingListAvailability(
+    String uid,
+    String listId, {
+    List<String> pantryItems = const <String>[],
+  }) async {
+    if (_user == null) {
+      return false;
+    }
+
+    final previousUser = _user!;
+    final updatedLists = previousUser.shoppingLists.map((shoppingList) {
+      if (shoppingList.id != listId) {
+        return shoppingList;
+      }
+
+      return shoppingList.copyWith(
+        items: _syncItemsWithPantry(shoppingList.items, pantryItems),
+      );
+    }).toList();
+
+    updateUser(previousUser.copyWith(shoppingLists: updatedLists));
+
+    try {
+      await _saveShoppingLists(uid, updatedLists);
+      return true;
+    } catch (e) {
+      updateUser(previousUser);
+      debugPrint('[UserProvider] Error al refrescar disponibilidad: $e');
+      return false;
+    }
+  }
+
+  Future<bool> saveShoppingList(
+    String uid,
+    Recipe recipe, {
+    List<String> pantryItems = const <String>[],
+  }) async {
     if (_user == null) {
       return false;
     }
@@ -104,25 +142,27 @@ class UserProvider extends ChangeNotifier {
     final existingIndex = previousUser.shoppingLists.indexWhere(
       (shoppingList) => shoppingList.recipeId == recipe.id,
     );
-    final existingList =
-        existingIndex >= 0 ? previousUser.shoppingLists[existingIndex] : null;
+    final existingList = existingIndex >= 0
+        ? previousUser.shoppingLists[existingIndex]
+        : null;
     final preservedItems = <String, ShoppingListItem>{
       for (final item in existingList?.items ?? const <ShoppingListItem>[])
-        item.rawText.trim().toLowerCase(): item,
+        IngredientNormalizer.normalizeIngredient(item.rawText): item,
     };
     final rebuiltItems = recipe.ingredients.asMap().entries.map((entry) {
-      final preservedItem = preservedItems[entry.value.trim().toLowerCase()];
+      final normalizedIngredient = IngredientNormalizer.normalizeIngredient(
+        entry.value,
+      );
+      final preservedItem = preservedItems[normalizedIngredient];
 
-      return ShoppingListItem(
-        id: preservedItem?.id ?? '${recipe.id}_${entry.key}',
-        rawText: entry.value,
-        isChecked: preservedItem?.isChecked ?? false,
+      return _mergeShoppingListItemWithPantry(
+        recipeIngredient: entry.value,
+        pantryItems: pantryItems,
+        itemId: preservedItem?.id ?? '${recipe.id}_${entry.key}',
+        previousItem: preservedItem,
       );
     }).toList();
-    final updatedList = ShoppingList.fromRecipe(
-      recipe,
-      items: rebuiltItems,
-    );
+    final updatedList = ShoppingList.fromRecipe(recipe, items: rebuiltItems);
     final updatedLists = [
       updatedList,
       ...previousUser.shoppingLists.where(
@@ -207,5 +247,45 @@ class UserProvider extends ChangeNotifier {
     return _db.collection('users').doc(uid).update({
       'shoppingLists': shoppingLists.map((list) => list.toMap()).toList(),
     });
+  }
+
+  List<ShoppingListItem> _syncItemsWithPantry(
+    List<ShoppingListItem> items,
+    List<String> pantryItems,
+  ) {
+    return items
+        .map(
+          (item) => _mergeShoppingListItemWithPantry(
+            recipeIngredient: item.rawText,
+            pantryItems: pantryItems,
+            itemId: item.id,
+            previousItem: item,
+          ),
+        )
+        .toList();
+  }
+
+  ShoppingListItem _mergeShoppingListItemWithPantry({
+    required String recipeIngredient,
+    required List<String> pantryItems,
+    required String itemId,
+    ShoppingListItem? previousItem,
+  }) {
+    final isFromPantry = IngredientMatcher.isIngredientAvailable(
+      recipeIngredient: recipeIngredient,
+      pantryItems: pantryItems,
+    );
+    final sourceTag = isFromPantry ? 'Ya lo tengo' : null;
+    final wasCheckedManually =
+        (previousItem?.isChecked ?? false) &&
+        !(previousItem?.isFromPantry ?? false);
+
+    return ShoppingListItem(
+      id: itemId,
+      rawText: recipeIngredient,
+      isChecked: isFromPantry || wasCheckedManually,
+      isFromPantry: isFromPantry,
+      sourceTag: sourceTag,
+    );
   }
 }

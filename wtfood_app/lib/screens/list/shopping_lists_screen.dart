@@ -2,14 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:wtfood_app/core/constants.dart';
 import 'package:wtfood_app/models/shopping_list.dart';
+import 'package:wtfood_app/providers/fridge_provider.dart';
 import 'package:wtfood_app/providers/user_provider.dart';
 import 'package:wtfood_app/screens/list/shopping_list_detail_screen.dart';
 
 class ShoppingListsScreen extends StatelessWidget {
-  const ShoppingListsScreen({
-    super.key,
-    required this.onGoToRecipes,
-  });
+  const ShoppingListsScreen({super.key, required this.onGoToRecipes});
 
   final VoidCallback onGoToRecipes;
 
@@ -67,7 +65,9 @@ class ShoppingListsScreen extends StatelessWidget {
                         ...shoppingLists.map(
                           (shoppingList) => Padding(
                             padding: const EdgeInsets.only(bottom: 20),
-                            child: _ShoppingListCard(shoppingList: shoppingList),
+                            child: _ShoppingListCard(
+                              shoppingList: shoppingList,
+                            ),
                           ),
                         ),
                       ],
@@ -178,7 +178,21 @@ class _ShoppingListCard extends StatelessWidget {
                   SizedBox(
                     width: double.infinity,
                     child: FilledButton(
-                      onPressed: () {
+                      onPressed: () async {
+                        if (uid.isNotEmpty) {
+                          await userProvider.refreshShoppingListAvailability(
+                            uid,
+                            shoppingList.id,
+                            pantryItems: context
+                                .read<FridgeProvider>()
+                                .ingredients,
+                          );
+                        }
+
+                        if (!context.mounted) {
+                          return;
+                        }
+
                         Navigator.push(
                           context,
                           MaterialPageRoute(
@@ -300,10 +314,7 @@ class _ShoppingListCardImage extends StatelessWidget {
           gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors: [
-              Color(0xFFFFA14A),
-              Color(0xFFDB5A2A),
-            ],
+            colors: [Color(0xFFFFA14A), Color(0xFFDB5A2A)],
           ),
         ),
         child: Icon(

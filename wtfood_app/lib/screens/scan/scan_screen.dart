@@ -334,7 +334,7 @@ class _ImagePreviewCard extends StatelessWidget {
                   ),
                   const SizedBox(height: 12),
                   Text(
-                    'Toca para añadir imagen',
+                    'Toca para añadir una imagen',
                     style: GoogleFonts.manrope(
                       fontSize: 14,
                       fontWeight: FontWeight.w600,

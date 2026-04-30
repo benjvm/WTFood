@@ -141,7 +141,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Settings',
+              'Configuración',
               style: theme.textTheme.headlineMedium?.copyWith(
                 fontWeight: FontWeight.w800,
                 color: AppColors.onSurface,
@@ -156,7 +156,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ),
             const SizedBox(height: AppConstants.paddingXl),
             Text(
-              'Account',
+              'Cuenta',
               style: theme.textTheme.titleLarge?.copyWith(
                 fontWeight: FontWeight.w800,
               ),
@@ -182,7 +182,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ),
             const SizedBox(height: AppConstants.paddingXl),
             Text(
-              'Settings',
+              'Configuración',
               style: theme.textTheme.titleLarge?.copyWith(
                 fontWeight: FontWeight.w800,
               ),
@@ -200,7 +200,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   _SettingsDivider(color: colorScheme.outlineVariant),
                   _SettingsTile(
                     icon: Icons.kitchen_outlined,
-                    title: 'Actualizacion de despensa',
+                    title: 'Actualización de despensa',
                     subtitle: 'Revisa y ajusta tus ingredientes',
                     onTap: _openPantryUpdate,
                   ),
