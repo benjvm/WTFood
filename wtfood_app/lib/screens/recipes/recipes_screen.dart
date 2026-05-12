@@ -941,7 +941,7 @@ List<_ExploreCollection> _buildExploreCollections({
         isFavorites: true,
       ),
     _ExploreCollection(
-      title: 'Desayunos',
+      title: 'Desayuno',
       description: 'Ideas ligeras y rápidas para arrancar el día.',
       filterKey: 'desayuno',
       icon: Icons.free_breakfast_rounded,
