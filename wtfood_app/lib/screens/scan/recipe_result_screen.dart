@@ -161,23 +161,23 @@ class _RecipeResultScreenState extends State<RecipeResultScreen> {
                       _InfoPill(
                         icon: Icons.schedule_rounded,
                         label: prepTime,
-                        backgroundColor: AppColors.secondaryContainer,
-                        iconColor: AppColors.secondary,
-                        textColor: AppColors.onSecondaryContainer,
+                        backgroundColor: colorScheme.secondaryContainer,
+                        iconColor: colorScheme.secondary,
+                        textColor: colorScheme.onSecondaryContainer,
                       ),
                       _InfoPill(
                         icon: Icons.local_fire_department_rounded,
                         label: cookTime,
-                        backgroundColor: AppColors.primaryContainer,
-                        iconColor: AppColors.primary,
-                        textColor: AppColors.onPrimaryContainer,
+                        backgroundColor: colorScheme.primaryContainer,
+                        iconColor: colorScheme.primary,
+                        textColor: colorScheme.onPrimaryContainer,
                       ),
                       _InfoPill(
                         icon: Icons.people_alt_rounded,
                         label: '$servings porciones',
-                        backgroundColor: AppColors.tertiaryContainer,
-                        iconColor: AppColors.tertiary,
-                        textColor: AppColors.onTertiaryContainer,
+                        backgroundColor: colorScheme.tertiaryContainer,
+                        iconColor: colorScheme.tertiary,
+                        textColor: colorScheme.onTertiaryContainer,
                       ),
                       _InfoPill(
                         icon: Icons.bar_chart_rounded,
@@ -691,19 +691,21 @@ class _UsedIngredientChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
-        color: AppColors.primaryContainer,
+        color: colorScheme.primaryContainer,
         borderRadius: BorderRadius.circular(AppConstants.borderRadiusSm + 4),
         border: Border.all(
-          color: AppColors.primary.withValues(alpha: 0.2),
+          color: colorScheme.primary.withValues(alpha: 0.2),
         ),
       ),
       child: Text(
         label,
         style: Theme.of(context).textTheme.labelLarge?.copyWith(
-              color: AppColors.onPrimaryContainer,
+              color: colorScheme.onPrimaryContainer,
               fontWeight: FontWeight.w700,
             ),
       ),
@@ -718,6 +720,8 @@ class _BottomActionBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     return Container(
       padding: EdgeInsets.fromLTRB(
         AppConstants.paddingLg,
@@ -726,10 +730,10 @@ class _BottomActionBar extends StatelessWidget {
         AppConstants.paddingMd + MediaQuery.of(context).padding.bottom,
       ),
       decoration: BoxDecoration(
-        color: AppColors.surfaceContainerLowest,
+        color: colorScheme.surfaceContainerLowest,
         boxShadow: [
           BoxShadow(
-            color: AppColors.onSurface.withValues(alpha: 0.06),
+            color: colorScheme.onSurface.withValues(alpha: 0.06),
             blurRadius: 16,
             offset: const Offset(0, -4),
           ),

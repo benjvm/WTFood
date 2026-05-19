@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../core/constants.dart';
+import '../../core/theme.dart';
 import '../../models/recipe.dart';
 import '../../providers/user_provider.dart';
 import '../../services/recipe_service.dart';
@@ -18,6 +19,7 @@ class HomeScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
+    final palette = context.appPalette;
     final user = context.watch<UserProvider>().user;
     final displayName = _displayNameFromUser(user?.name);
 
@@ -47,6 +49,7 @@ class HomeScreen extends StatelessWidget {
                       _HomeIntro(displayName: displayName),
                       const SizedBox(height: AppConstants.paddingXl),
                       _ScanCallToAction(
+                        brandPrimaryStrong: palette.brandPrimaryStrong,
                         onTap: () {
                           if (onTabSelected != null) {
                             onTabSelected!(2);
@@ -160,9 +163,13 @@ class _HomeIntro extends StatelessWidget {
 }
 
 class _ScanCallToAction extends StatelessWidget {
-  const _ScanCallToAction({required this.onTap});
+  const _ScanCallToAction({
+    required this.onTap,
+    required this.brandPrimaryStrong,
+  });
 
   final VoidCallback onTap;
+  final Color brandPrimaryStrong;
 
   @override
   Widget build(BuildContext context) {
@@ -180,7 +187,7 @@ class _ScanCallToAction extends StatelessWidget {
             gradient: LinearGradient(
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
-              colors: [colorScheme.primary, AppColors.primaryDim],
+              colors: [colorScheme.primary, brandPrimaryStrong],
             ),
             boxShadow: [
               BoxShadow(
@@ -352,13 +359,13 @@ class _RecipeOfTheDayCard extends StatelessWidget {
                       vertical: 7,
                     ),
                     decoration: BoxDecoration(
-                      color: AppColors.errorContainer,
+                      color: colorScheme.secondaryContainer,
                       borderRadius: BorderRadius.circular(999),
                     ),
                     child: Text(
                       'Receta del día',
                       style: theme.textTheme.labelMedium?.copyWith(
-                        color: AppColors.onErrorContainer,
+                        color: colorScheme.onSecondaryContainer,
                         letterSpacing: 1.5,
                         fontWeight: FontWeight.w800,
                       ),
@@ -683,19 +690,25 @@ class _RecipeImagePlaceholder extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final palette = context.appPalette;
+    final colorScheme = Theme.of(context).colorScheme;
+
     return Container(
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [Color(0xFFEAF4EC), Color(0xFFD8E8DB)],
+          colors: [
+            palette.imagePlaceholderStart,
+            palette.imagePlaceholderEnd,
+          ],
         ),
       ),
       alignment: Alignment.center,
       child: Icon(
         Icons.restaurant_rounded,
         size: iconSize,
-        color: AppColors.primary.withValues(alpha: 0.4),
+        color: colorScheme.primary.withValues(alpha: 0.4),
       ),
     );
   }

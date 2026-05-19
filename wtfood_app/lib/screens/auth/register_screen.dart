@@ -1,6 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:wtfood_app/core/constants.dart';
+import 'package:wtfood_app/core/theme.dart';
 import 'package:wtfood_app/screens/auth/auth_screen_shell.dart';
 import 'package:wtfood_app/services/auth_service.dart';
 
@@ -34,7 +34,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
   }
 
   Future<void> _register() async {
-    if (!_formKey.currentState!.validate()) return;
+    if (!_formKey.currentState!.validate()) {
+      return;
+    }
 
     setState(() {
       _isLoading = true;
@@ -47,14 +49,16 @@ class _RegisterScreenState extends State<RegisterScreen> {
         password: _passwordController.text,
         name: _nameController.text.trim(),
       );
-      if (mounted) Navigator.pop(context);
+      if (mounted) {
+        Navigator.pop(context);
+      }
     } on FirebaseAuthException catch (e) {
       setState(() {
         _errorMessage = _getErrorMessage(e.code);
       });
     } catch (_) {
       setState(() {
-        _errorMessage = 'Ocurrió un error inesperado. Inténtalo de nuevo.';
+        _errorMessage = 'Ocurrio un error inesperado. Intentalo de nuevo.';
       });
     } finally {
       if (mounted) {
@@ -68,43 +72,48 @@ class _RegisterScreenState extends State<RegisterScreen> {
       case 'email-already-in-use':
         return 'Ya existe una cuenta con ese correo.';
       case 'invalid-email':
-        return 'El correo electrónico no es válido.';
+        return 'El correo electronico no es valido.';
       case 'weak-password':
-        return 'La contraseña es muy débil. Usa al menos 6 caracteres.';
+        return 'La contrasena es muy debil. Usa al menos 6 caracteres.';
       case 'operation-not-allowed':
-        return 'El registro con email no está habilitado.';
+        return 'El registro con email no esta habilitado.';
       default:
-        return 'Error al crear la cuenta. Inténtalo de nuevo.';
+        return 'Error al crear la cuenta. Intentalo de nuevo.';
     }
   }
 
-  InputDecoration _inputDecoration({
+  InputDecoration _inputDecoration(
+    BuildContext context, {
     required String label,
     required IconData icon,
     Widget? suffixIcon,
   }) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final palette = context.appPalette;
+
     return InputDecoration(
       labelText: label,
-      prefixIcon: Icon(icon, color: const Color(0xFF8EB292), size: 20),
+      prefixIcon: Icon(icon, color: palette.authFieldIcon, size: 20),
       suffixIcon: suffixIcon,
-      floatingLabelStyle: const TextStyle(
-        color: AppColors.primary,
+      floatingLabelStyle: TextStyle(
+        color: colorScheme.primary,
         fontWeight: FontWeight.w600,
       ),
-      labelStyle: const TextStyle(color: Color(0xFF8C938A)),
+      labelStyle: TextStyle(color: colorScheme.onSurfaceVariant),
       isDense: true,
+      filled: false,
       contentPadding: const EdgeInsets.only(top: 18, bottom: 12),
-      enabledBorder: const UnderlineInputBorder(
-        borderSide: BorderSide(color: Color(0xFFD7DDD2)),
+      enabledBorder: UnderlineInputBorder(
+        borderSide: BorderSide(color: palette.authFieldBorder),
       ),
-      focusedBorder: const UnderlineInputBorder(
-        borderSide: BorderSide(color: AppColors.primary, width: 1.5),
+      focusedBorder: UnderlineInputBorder(
+        borderSide: BorderSide(color: colorScheme.primary, width: 1.5),
       ),
-      errorBorder: const UnderlineInputBorder(
-        borderSide: BorderSide(color: AppColors.error),
+      errorBorder: UnderlineInputBorder(
+        borderSide: BorderSide(color: colorScheme.error),
       ),
-      focusedErrorBorder: const UnderlineInputBorder(
-        borderSide: BorderSide(color: AppColors.error, width: 1.5),
+      focusedErrorBorder: UnderlineInputBorder(
+        borderSide: BorderSide(color: colorScheme.error, width: 1.5),
       ),
     );
   }
@@ -112,6 +121,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final palette = context.appPalette;
 
     return AuthScreenShell(
       topPadding: 5,
@@ -128,7 +139,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 child: IconButton(
                   onPressed: () => Navigator.pop(context),
                   icon: const Icon(Icons.arrow_back_ios_new),
-                  color: AppColors.primary,
+                  color: colorScheme.primary,
                   padding: EdgeInsets.zero,
                   constraints: const BoxConstraints(),
                   splashRadius: 22,
@@ -145,14 +156,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 'Crear cuenta',
                 style: theme.textTheme.headlineMedium?.copyWith(
                   fontWeight: FontWeight.w700,
-                  color: const Color(0xFF1A1E17),
+                  color: palette.authHeading,
                 ),
               ),
               const SizedBox(height: 8),
               Text(
                 'Rellena los datos para registrarte',
                 style: theme.textTheme.bodyMedium?.copyWith(
-                  color: const Color(0xFF7E857B),
+                  color: palette.authBody,
                 ),
               ),
               const SizedBox(height: 28),
@@ -160,24 +171,24 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: AppColors.errorContainer.withValues(alpha: 0.1),
+                    color: colorScheme.errorContainer.withValues(alpha: 0.18),
                     borderRadius: BorderRadius.circular(14),
                     border: Border.all(
-                      color: AppColors.error.withValues(alpha: 0.16),
+                      color: colorScheme.error.withValues(alpha: 0.18),
                     ),
                   ),
                   child: Row(
                     children: [
-                      const Icon(
+                      Icon(
                         Icons.error_outline,
-                        color: AppColors.error,
+                        color: colorScheme.error,
                         size: 20,
                       ),
                       const SizedBox(width: 8),
                       Expanded(
                         child: Text(
                           _errorMessage!,
-                          style: const TextStyle(color: AppColors.error),
+                          style: TextStyle(color: colorScheme.error),
                         ),
                       ),
                     ],
@@ -190,6 +201,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 textInputAction: TextInputAction.next,
                 textCapitalization: TextCapitalization.words,
                 decoration: _inputDecoration(
+                  context,
                   label: 'Nombre completo',
                   icon: Icons.person_outline,
                 ),
@@ -209,7 +221,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 keyboardType: TextInputType.emailAddress,
                 textInputAction: TextInputAction.next,
                 decoration: _inputDecoration(
-                  label: 'Correo electrónico',
+                  context,
+                  label: 'Correo electronico',
                   icon: Icons.email_outlined,
                 ),
                 validator: (value) {
@@ -217,7 +230,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     return 'Por favor ingresa tu correo.';
                   }
                   if (!RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(value)) {
-                    return 'Ingresa un correo válido.';
+                    return 'Ingresa un correo valido.';
                   }
                   return null;
                 },
@@ -228,10 +241,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 obscureText: _obscurePassword,
                 textInputAction: TextInputAction.next,
                 decoration: _inputDecoration(
-                  label: 'Contraseña',
+                  context,
+                  label: 'Contrasena',
                   icon: Icons.lock_outline,
                   suffixIcon: IconButton(
-                    color: const Color(0xFF8EB292),
+                    color: palette.authFieldIcon,
                     icon: Icon(
                       _obscurePassword
                           ? Icons.visibility_off_outlined
@@ -244,10 +258,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 ),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
-                    return 'Por favor ingresa una contraseña.';
+                    return 'Por favor ingresa una contrasena.';
                   }
                   if (value.length < 6) {
-                    return 'La contraseña debe tener al menos 6 caracteres.';
+                    return 'La contrasena debe tener al menos 6 caracteres.';
                   }
                   return null;
                 },
@@ -259,10 +273,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 textInputAction: TextInputAction.done,
                 onFieldSubmitted: (_) => _register(),
                 decoration: _inputDecoration(
-                  label: 'Confirmar contraseña',
+                  context,
+                  label: 'Confirmar contrasena',
                   icon: Icons.lock_outline,
                   suffixIcon: IconButton(
-                    color: const Color(0xFF8EB292),
+                    color: palette.authFieldIcon,
                     icon: Icon(
                       _obscureConfirm
                           ? Icons.visibility_off_outlined
@@ -275,10 +290,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 ),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
-                    return 'Por favor confirma tu contraseña.';
+                    return 'Por favor confirma tu contrasena.';
                   }
                   if (value != _passwordController.text) {
-                    return 'Las contraseñas no coinciden.';
+                    return 'Las contrasenas no coinciden.';
                   }
                   return null;
                 },
@@ -289,8 +304,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 child: ElevatedButton(
                   onPressed: _isLoading ? null : _register,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF67DB6C),
-                    foregroundColor: Colors.white,
+                    backgroundColor: colorScheme.primary,
+                    foregroundColor: colorScheme.onPrimary,
                     elevation: 0,
                     shadowColor: Colors.transparent,
                     shape: RoundedRectangleBorder(
@@ -298,11 +313,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     ),
                   ),
                   child: _isLoading
-                      ? const SizedBox(
+                      ? SizedBox(
                           width: 22,
                           height: 22,
                           child: CircularProgressIndicator(
-                            color: Colors.white,
+                            color: colorScheme.onPrimary,
                             strokeWidth: 2.5,
                           ),
                         )
@@ -319,16 +334,16 @@ class _RegisterScreenState extends State<RegisterScreen> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Text(
-                    '¿Ya tienes cuenta?',
-                    style: TextStyle(color: Color(0xFF6F756C)),
+                  Text(
+                    'Ya tienes cuenta?',
+                    style: TextStyle(color: palette.authBody),
                   ),
                   TextButton(
                     onPressed: () => Navigator.pop(context),
-                    child: const Text(
-                      'Iniciar sesión',
+                    child: Text(
+                      'Iniciar sesion',
                       style: TextStyle(
-                        color: AppColors.primary,
+                        color: colorScheme.primary,
                         fontWeight: FontWeight.w700,
                       ),
                     ),

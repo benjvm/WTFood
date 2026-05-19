@@ -128,13 +128,13 @@ class _ShoppingListCard extends StatelessWidget {
                           vertical: 8,
                         ),
                         decoration: BoxDecoration(
-                          color: AppColors.errorContainer,
+                          color: colorScheme.errorContainer,
                           borderRadius: BorderRadius.circular(999),
                         ),
                         child: Text(
                           'LISTA DE COMPRA',
                           style: theme.textTheme.labelMedium?.copyWith(
-                            color: AppColors.onErrorContainer,
+                            color: colorScheme.onErrorContainer,
                             fontWeight: FontWeight.w800,
                             letterSpacing: 1.2,
                           ),
@@ -385,13 +385,13 @@ class _EmptyShoppingListState extends StatelessWidget {
                   width: 80,
                   height: 80,
                   decoration: BoxDecoration(
-                    color: AppColors.primaryContainer,
+                    color: colorScheme.primaryContainer,
                     borderRadius: BorderRadius.circular(24),
                   ),
-                  child: const Icon(
+                  child: Icon(
                     Icons.playlist_add_check_circle_rounded,
                     size: 40,
-                    color: AppColors.primary,
+                    color: colorScheme.primary,
                   ),
                 ),
                 const SizedBox(height: AppConstants.paddingLg),

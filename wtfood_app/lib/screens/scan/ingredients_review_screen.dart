@@ -38,14 +38,14 @@ class _IngredientsReviewScreenState extends State<IngredientsReviewScreen> {
     _ingredients = List<String>.from(widget.ingredients);
   }
 
-  void _removeIngredient(int index) {
-    setState(() => _ingredients.removeAt(index));
-  }
-
   @override
   void dispose() {
     _addController.dispose();
     super.dispose();
+  }
+
+  void _removeIngredient(int index) {
+    setState(() => _ingredients.removeAt(index));
   }
 
   void _addIngredient() {
@@ -55,10 +55,11 @@ class _IngredientsReviewScreenState extends State<IngredientsReviewScreen> {
     }
 
     if (_ingredients.any((ingredient) => ingredient.toLowerCase() == text.toLowerCase())) {
+      final colorScheme = Theme.of(context).colorScheme;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('"$text" ya esta en la lista'),
-          backgroundColor: AppColors.secondary,
+          backgroundColor: colorScheme.secondary,
         ),
       );
       return;
@@ -82,18 +83,17 @@ class _IngredientsReviewScreenState extends State<IngredientsReviewScreen> {
     final addedIngredients =
         context.read<FridgeProvider>().addIngredients(_ingredients);
 
-    setState(() {
-      _errorMessage = null;
-    });
+    setState(() => _errorMessage = null);
 
     final message = addedIngredients == 0
         ? 'Estos ingredientes ya estaban guardados en tu nevera.'
         : '$addedIngredients ingrediente${addedIngredients == 1 ? '' : 's'} guardado${addedIngredients == 1 ? '' : 's'} en tu nevera.';
 
+    final colorScheme = Theme.of(context).colorScheme;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(message),
-        backgroundColor: AppColors.secondary,
+        backgroundColor: colorScheme.secondary,
       ),
     );
   }
@@ -101,7 +101,7 @@ class _IngredientsReviewScreenState extends State<IngredientsReviewScreen> {
   Future<void> _generateRecipe() async {
     if (_ingredients.isEmpty) {
       setState(() {
-        _errorMessage = 'A\u00f1ade al menos un ingrediente para continuar.';
+        _errorMessage = 'Anade al menos un ingrediente para continuar.';
       });
       return;
     }
@@ -114,7 +114,7 @@ class _IngredientsReviewScreenState extends State<IngredientsReviewScreen> {
     try {
       final ingredientsList = _ingredients.join(', ');
       final recipe = await AiService.instance.generateRecipe(ingredientsList);
-      final recipeName = (recipe['nombre']?.toString().trim() ?? '');
+      final recipeName = recipe['nombre']?.toString().trim() ?? '';
       final recipePhoto = await const PixabayService().findRecipePhoto(
         recipeName,
       );
@@ -160,13 +160,16 @@ class _IngredientsReviewScreenState extends State<IngredientsReviewScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: colorScheme.surface,
       appBar: _isGenerating
           ? null
           : AppBar(
               title: const Text('Ingredientes detectados'),
-              backgroundColor: AppColors.surfaceContainerLowest,
+              backgroundColor: colorScheme.surfaceContainerLowest,
               elevation: 0,
             ),
       body: SafeArea(
@@ -190,7 +193,7 @@ class _IngredientsReviewScreenState extends State<IngredientsReviewScreen> {
                           style: GoogleFonts.plusJakartaSans(
                             fontSize: 18,
                             fontWeight: FontWeight.w700,
-                            color: AppColors.onSurface,
+                            color: colorScheme.onSurface,
                           ),
                         ),
                         const SizedBox(height: 4),
@@ -198,7 +201,7 @@ class _IngredientsReviewScreenState extends State<IngredientsReviewScreen> {
                           'Elimina los incorrectos antes de guardar o generar la receta.',
                           style: GoogleFonts.manrope(
                             fontSize: 13,
-                            color: AppColors.onSurfaceVariant,
+                            color: colorScheme.onSurfaceVariant,
                           ),
                         ),
                         const SizedBox(height: 16),
@@ -222,7 +225,7 @@ class _IngredientsReviewScreenState extends State<IngredientsReviewScreen> {
                           style: GoogleFonts.plusJakartaSans(
                             fontSize: 16,
                             fontWeight: FontWeight.w700,
-                            color: AppColors.onSurface,
+                            color: colorScheme.onSurface,
                           ),
                         ),
                         const SizedBox(height: 10),
@@ -235,35 +238,6 @@ class _IngredientsReviewScreenState extends State<IngredientsReviewScreen> {
                                 onSubmitted: (_) => _addIngredient(),
                                 decoration: InputDecoration(
                                   hintText: 'ej: tomates, queso, cebolla...',
-                                  hintStyle: GoogleFonts.manrope(
-                                    color: AppColors.onSurfaceVariant,
-                                    fontSize: 14,
-                                  ),
-                                  filled: true,
-                                  fillColor: AppColors.surfaceContainerLowest,
-                                  border: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(
-                                      AppConstants.borderRadiusMd,
-                                    ),
-                                    borderSide:
-                                        const BorderSide(color: AppColors.outline),
-                                  ),
-                                  enabledBorder: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(
-                                      AppConstants.borderRadiusMd,
-                                    ),
-                                    borderSide:
-                                        const BorderSide(color: AppColors.outline),
-                                  ),
-                                  focusedBorder: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(
-                                      AppConstants.borderRadiusMd,
-                                    ),
-                                    borderSide: const BorderSide(
-                                      color: AppColors.primary,
-                                      width: 2,
-                                    ),
-                                  ),
                                   contentPadding: const EdgeInsets.symmetric(
                                     horizontal: 14,
                                     vertical: 14,
@@ -277,8 +251,9 @@ class _IngredientsReviewScreenState extends State<IngredientsReviewScreen> {
                               child: ElevatedButton(
                                 onPressed: _addIngredient,
                                 style: ElevatedButton.styleFrom(
-                                  backgroundColor: AppColors.primaryContainer,
-                                  foregroundColor: AppColors.onPrimaryContainer,
+                                  backgroundColor: colorScheme.primaryContainer,
+                                  foregroundColor:
+                                      colorScheme.onPrimaryContainer,
                                   elevation: 0,
                                   shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(
@@ -307,10 +282,7 @@ class _IngredientsReviewScreenState extends State<IngredientsReviewScreen> {
                   ),
               ],
             ),
-            if (_isGenerating)
-              const Positioned.fill(
-                child: _GeneratingRecipeOverlay(),
-              ),
+            if (_isGenerating) const Positioned.fill(child: _GeneratingRecipeOverlay()),
           ],
         ),
       ),
@@ -326,6 +298,8 @@ class _HeaderSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     return Row(
       children: [
         ClipRRect(
@@ -343,10 +317,9 @@ class _HeaderSection extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                 decoration: BoxDecoration(
-                  color: AppColors.primaryContainer,
+                  color: colorScheme.primaryContainer,
                   borderRadius: BorderRadius.circular(
                     AppConstants.borderRadiusSm,
                   ),
@@ -356,7 +329,7 @@ class _HeaderSection extends StatelessWidget {
                   style: GoogleFonts.manrope(
                     fontSize: 12,
                     fontWeight: FontWeight.w700,
-                    color: AppColors.onPrimaryContainer,
+                    color: colorScheme.onPrimaryContainer,
                   ),
                 ),
               ),
@@ -366,14 +339,14 @@ class _HeaderSection extends StatelessWidget {
                 style: GoogleFonts.plusJakartaSans(
                   fontSize: 20,
                   fontWeight: FontWeight.w800,
-                  color: AppColors.onSurface,
+                  color: colorScheme.onSurface,
                 ),
               ),
               Text(
                 'Revisa la lista antes de guardarla en tu nevera.',
                 style: GoogleFonts.manrope(
                   fontSize: 12,
-                  color: AppColors.onSurfaceVariant,
+                  color: colorScheme.onSurfaceVariant,
                 ),
               ),
             ],
@@ -392,13 +365,15 @@ class _IngredientChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
-        color: AppColors.primaryContainer,
+        color: colorScheme.primaryContainer,
         borderRadius: BorderRadius.circular(AppConstants.borderRadiusSm + 4),
         border: Border.all(
-          color: AppColors.primary.withValues(alpha: 0.25),
+          color: colorScheme.primary.withValues(alpha: 0.25),
         ),
       ),
       child: Row(
@@ -409,16 +384,16 @@ class _IngredientChip extends StatelessWidget {
             style: GoogleFonts.manrope(
               fontSize: 14,
               fontWeight: FontWeight.w600,
-              color: AppColors.onPrimaryContainer,
+              color: colorScheme.onPrimaryContainer,
             ),
           ),
           const SizedBox(width: 6),
           GestureDetector(
             onTap: onDelete,
-            child: const Icon(
+            child: Icon(
               Icons.close_rounded,
               size: 16,
-              color: AppColors.primary,
+              color: colorScheme.primary,
             ),
           ),
         ],
@@ -440,30 +415,29 @@ class _EmptyIngredients extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(AppConstants.paddingLg),
       decoration: BoxDecoration(
-        color: AppColors.surfaceContainerLowest,
+        color: colorScheme.surfaceContainerLowest,
         borderRadius: BorderRadius.circular(AppConstants.borderRadiusMd),
-        border: Border.all(
-          color: AppColors.outlineVariant,
-          style: BorderStyle.solid,
-        ),
+        border: Border.all(color: colorScheme.outlineVariant),
       ),
       child: Column(
         children: [
-          const Icon(
+          Icon(
             Icons.inbox_rounded,
             size: 36,
-            color: AppColors.onSurfaceVariant,
+            color: colorScheme.onSurfaceVariant,
           ),
           const SizedBox(height: 8),
           Text(
             'Sin ingredientes',
             style: GoogleFonts.manrope(
               fontSize: 14,
-              color: AppColors.onSurfaceVariant,
+              color: colorScheme.onSurfaceVariant,
               fontWeight: FontWeight.w600,
             ),
           ),
@@ -471,7 +445,7 @@ class _EmptyIngredients extends StatelessWidget {
             'Anade ingredientes usando el campo de abajo.',
             style: GoogleFonts.manrope(
               fontSize: 12,
-              color: AppColors.onSurfaceVariant,
+              color: colorScheme.onSurfaceVariant,
             ),
             textAlign: TextAlign.center,
           ),
@@ -488,17 +462,19 @@ class _ErrorBanner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     return Container(
       padding: const EdgeInsets.all(AppConstants.paddingMd),
       decoration: BoxDecoration(
-        color: AppColors.errorContainer,
+        color: colorScheme.errorContainer,
         borderRadius: BorderRadius.circular(AppConstants.borderRadiusMd),
       ),
       child: Row(
         children: [
-          const Icon(
+          Icon(
             Icons.error_outline_rounded,
-            color: AppColors.error,
+            color: colorScheme.error,
             size: 20,
           ),
           const SizedBox(width: 10),
@@ -507,7 +483,7 @@ class _ErrorBanner extends StatelessWidget {
               message,
               style: GoogleFonts.manrope(
                 fontSize: 13,
-                color: AppColors.onErrorContainer,
+                color: colorScheme.onErrorContainer,
                 fontWeight: FontWeight.w500,
               ),
             ),
@@ -531,6 +507,8 @@ class _BottomBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     return Container(
       padding: EdgeInsets.fromLTRB(
         AppConstants.paddingLg,
@@ -538,8 +516,8 @@ class _BottomBar extends StatelessWidget {
         AppConstants.paddingLg,
         AppConstants.paddingMd + MediaQuery.of(context).padding.bottom,
       ),
-      decoration: const BoxDecoration(
-        color: AppColors.background,
+      decoration: BoxDecoration(
+        color: colorScheme.surface,
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -558,12 +536,12 @@ class _BottomBar extends StatelessWidget {
                 ),
               ),
               style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.secondaryContainer,
-                foregroundColor: AppColors.onSecondaryContainer,
+                backgroundColor: colorScheme.secondaryContainer,
+                foregroundColor: colorScheme.onSecondaryContainer,
                 disabledBackgroundColor:
-                    AppColors.secondaryContainer.withValues(alpha: 0.5),
+                    colorScheme.secondaryContainer.withValues(alpha: 0.5),
                 disabledForegroundColor:
-                    AppColors.onSecondaryContainer.withValues(alpha: 0.7),
+                    colorScheme.onSecondaryContainer.withValues(alpha: 0.7),
                 shape: RoundedRectangleBorder(
                   borderRadius:
                       BorderRadius.circular(AppConstants.borderRadiusMd),
@@ -587,11 +565,11 @@ class _BottomBar extends StatelessWidget {
                 ),
               ),
               style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.primary,
-                foregroundColor: AppColors.onPrimary,
+                backgroundColor: colorScheme.primary,
+                foregroundColor: colorScheme.onPrimary,
                 disabledBackgroundColor:
-                    AppColors.primary.withValues(alpha: 0.4),
-                disabledForegroundColor: AppColors.onPrimary,
+                    colorScheme.primary.withValues(alpha: 0.4),
+                disabledForegroundColor: colorScheme.onPrimary,
                 shape: RoundedRectangleBorder(
                   borderRadius:
                       BorderRadius.circular(AppConstants.borderRadiusMd),
@@ -611,8 +589,10 @@ class _GeneratingRecipeOverlay extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     return ColoredBox(
-      color: AppColors.background,
+      color: colorScheme.surface,
       child: Center(
         child: Padding(
           padding: const EdgeInsets.symmetric(
@@ -636,7 +616,7 @@ class _GeneratingRecipeOverlay extends StatelessWidget {
                 style: GoogleFonts.plusJakartaSans(
                   fontSize: 22,
                   fontWeight: FontWeight.w800,
-                  color: AppColors.onSurface,
+                  color: colorScheme.onSurface,
                 ),
                 textAlign: TextAlign.center,
               ),
@@ -646,7 +626,7 @@ class _GeneratingRecipeOverlay extends StatelessWidget {
                 style: GoogleFonts.manrope(
                   fontSize: 14,
                   fontWeight: FontWeight.w500,
-                  color: AppColors.onSurfaceVariant,
+                  color: colorScheme.onSurfaceVariant,
                 ),
                 textAlign: TextAlign.center,
               ),

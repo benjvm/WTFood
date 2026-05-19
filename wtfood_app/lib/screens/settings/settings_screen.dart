@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:wtfood_app/core/constants.dart';
+import 'package:wtfood_app/core/theme_controller.dart';
 import 'package:wtfood_app/providers/user_provider.dart';
 import 'package:wtfood_app/screens/profile/profile_screen.dart';
 import 'package:wtfood_app/services/auth_service.dart';
@@ -27,8 +28,58 @@ class _SettingsScreenState extends State<SettingsScreen> {
     await Navigator.of(context).pushNamed('/fridge');
   }
 
-  void _showAppearanceMessage() {
-    _showSnackBar('Apariencia estara disponible proximamente.');
+  Future<void> _openAppearanceSheet() async {
+    await showModalBottomSheet<void>(
+      context: context,
+      builder: (sheetContext) {
+        final theme = Theme.of(sheetContext);
+        final colorScheme = theme.colorScheme;
+        final themeController = sheetContext.watch<ThemeController>();
+
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(
+              AppConstants.paddingLg,
+              AppConstants.paddingLg,
+              AppConstants.paddingLg,
+              AppConstants.paddingXl,
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Apariencia',
+                  style: theme.textTheme.titleLarge?.copyWith(
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Elige como quieres ver WTFood durante el dia y la noche.',
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: colorScheme.onSurfaceVariant,
+                  ),
+                ),
+                const SizedBox(height: AppConstants.paddingLg),
+                ...AppThemePreference.values.map(
+                  (preference) => Padding(
+                    padding: const EdgeInsets.only(bottom: 12),
+                    child: _AppearanceOptionTile(
+                      title: _appearanceTitle(preference),
+                      subtitle: _appearanceDescription(preference),
+                      icon: _appearanceIcon(preference),
+                      selected: themeController.preference == preference,
+                      onTap: () => themeController.setPreference(preference),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
   }
 
   Future<void> _confirmLogout() async {
@@ -105,12 +156,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
       return;
     }
 
+    final colorScheme = Theme.of(context).colorScheme;
+
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(message),
-        backgroundColor: isError
-            ? Theme.of(context).colorScheme.error
-            : AppColors.primary,
+        backgroundColor: isError ? colorScheme.error : colorScheme.primary,
       ),
     );
   }
@@ -119,6 +170,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
+    final themePreference = context.watch<ThemeController>().preference;
     final user = context.watch<UserProvider>().user;
     final photoUrl = user?.photoUrl;
     final hasPhoto = photoUrl != null && photoUrl.isNotEmpty;
@@ -141,17 +193,17 @@ class _SettingsScreenState extends State<SettingsScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Configuración',
+              'Configuracion',
               style: theme.textTheme.headlineMedium?.copyWith(
                 fontWeight: FontWeight.w800,
-                color: AppColors.onSurface,
+                color: colorScheme.onSurface,
               ),
             ),
             const SizedBox(height: 8),
             Text(
               'Gestiona tu cuenta y las preferencias de la app.',
               style: theme.textTheme.bodyLarge?.copyWith(
-                color: AppColors.onSurfaceVariant,
+                color: colorScheme.onSurfaceVariant,
               ),
             ),
             const SizedBox(height: AppConstants.paddingXl),
@@ -168,13 +220,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 subtitle: subtitle,
                 customLeading: CircleAvatar(
                   radius: 26,
-                  backgroundColor: AppColors.secondaryContainer,
+                  backgroundColor: colorScheme.secondaryContainer,
                   backgroundImage: hasPhoto ? NetworkImage(photoUrl) : null,
                   child: hasPhoto
                       ? null
-                      : const Icon(
+                      : Icon(
                           Icons.person_rounded,
-                          color: AppColors.secondary,
+                          color: colorScheme.secondary,
                         ),
                 ),
                 onTap: _openProfile,
@@ -182,7 +234,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ),
             const SizedBox(height: AppConstants.paddingXl),
             Text(
-              'Configuración',
+              'Configuracion',
               style: theme.textTheme.titleLarge?.copyWith(
                 fontWeight: FontWeight.w800,
               ),
@@ -194,13 +246,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   _SettingsTile(
                     icon: Icons.palette_outlined,
                     title: 'Apariencia',
-                    subtitle: 'Personaliza el aspecto de la app',
-                    onTap: _showAppearanceMessage,
+                    subtitle: _appearanceSummary(themePreference),
+                    onTap: _openAppearanceSheet,
                   ),
                   _SettingsDivider(color: colorScheme.outlineVariant),
                   _SettingsTile(
                     icon: Icons.kitchen_outlined,
-                    title: 'Actualización de despensa',
+                    title: 'Actualizacion de despensa',
                     subtitle: 'Revisa y ajusta tus ingredientes',
                     onTap: _openPantryUpdate,
                   ),
@@ -245,24 +297,26 @@ class _SettingsScreenState extends State<SettingsScreen> {
 class _SettingsCard extends StatelessWidget {
   const _SettingsCard({
     required this.child,
-    this.backgroundColor = AppColors.surfaceContainerLowest,
-    this.borderColor = AppColors.outlineVariant,
+    this.backgroundColor,
+    this.borderColor,
   });
 
   final Widget child;
-  final Color backgroundColor;
-  final Color borderColor;
+  final Color? backgroundColor;
+  final Color? borderColor;
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     return Container(
       decoration: BoxDecoration(
-        color: backgroundColor,
+        color: backgroundColor ?? colorScheme.surfaceContainerLowest,
         borderRadius: BorderRadius.circular(AppConstants.borderRadiusLg),
-        border: Border.all(color: borderColor),
+        border: Border.all(color: borderColor ?? colorScheme.outlineVariant),
         boxShadow: [
           BoxShadow(
-            color: AppColors.onSurface.withValues(alpha: 0.05),
+            color: colorScheme.onSurface.withValues(alpha: 0.05),
             blurRadius: 18,
             offset: const Offset(0, 8),
           ),
@@ -280,25 +334,26 @@ class _SettingsTile extends StatelessWidget {
     this.subtitle,
     this.icon,
     this.customLeading,
-    this.iconColor = AppColors.primary,
-    this.iconBackground = AppColors.primaryContainer,
-    this.titleColor = AppColors.onSurface,
-    this.trailingColor = AppColors.onSurfaceVariant,
+    this.iconColor,
+    this.iconBackground,
+    this.titleColor,
+    this.trailingColor,
   });
 
   final String title;
   final String? subtitle;
   final IconData? icon;
   final Widget? customLeading;
-  final Color iconColor;
-  final Color iconBackground;
-  final Color titleColor;
-  final Color trailingColor;
+  final Color? iconColor;
+  final Color? iconBackground;
+  final Color? titleColor;
+  final Color? trailingColor;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
 
     return InkWell(
       onTap: onTap,
@@ -312,10 +367,10 @@ class _SettingsTile extends StatelessWidget {
                   width: 44,
                   height: 44,
                   decoration: BoxDecoration(
-                    color: iconBackground,
+                    color: iconBackground ?? colorScheme.primaryContainer,
                     borderRadius: BorderRadius.circular(14),
                   ),
-                  child: Icon(icon, color: iconColor),
+                  child: Icon(icon, color: iconColor ?? colorScheme.primary),
                 ),
             const SizedBox(width: AppConstants.paddingMd),
             Expanded(
@@ -325,7 +380,7 @@ class _SettingsTile extends StatelessWidget {
                   Text(
                     title,
                     style: theme.textTheme.titleMedium?.copyWith(
-                      color: titleColor,
+                      color: titleColor ?? colorScheme.onSurface,
                       fontWeight: FontWeight.w700,
                     ),
                   ),
@@ -334,7 +389,7 @@ class _SettingsTile extends StatelessWidget {
                     Text(
                       subtitle!,
                       style: theme.textTheme.bodyMedium?.copyWith(
-                        color: AppColors.onSurfaceVariant,
+                        color: colorScheme.onSurfaceVariant,
                       ),
                     ),
                   ],
@@ -343,7 +398,7 @@ class _SettingsTile extends StatelessWidget {
             ),
             Icon(
               Icons.chevron_right_rounded,
-              color: trailingColor,
+              color: trailingColor ?? colorScheme.onSurfaceVariant,
             ),
           ],
         ),
@@ -366,14 +421,151 @@ class _SettingsDivider extends StatelessWidget {
   }
 }
 
+class _AppearanceOptionTile extends StatelessWidget {
+  const _AppearanceOptionTile({
+    required this.title,
+    required this.subtitle,
+    required this.icon,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final String title;
+  final String subtitle;
+  final IconData icon;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(AppConstants.borderRadiusLg),
+        onTap: onTap,
+        child: Ink(
+          padding: const EdgeInsets.all(AppConstants.paddingMd),
+          decoration: BoxDecoration(
+            color: selected
+                ? colorScheme.primaryContainer.withValues(alpha: 0.75)
+                : colorScheme.surfaceContainerLow,
+            borderRadius: BorderRadius.circular(AppConstants.borderRadiusLg),
+            border: Border.all(
+              color: selected
+                  ? colorScheme.primary.withValues(alpha: 0.28)
+                  : colorScheme.outlineVariant,
+            ),
+          ),
+          child: Row(
+            children: [
+              Container(
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(
+                  color: selected
+                      ? colorScheme.primary.withValues(alpha: 0.14)
+                      : colorScheme.surfaceContainerHighest,
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                child: Icon(
+                  icon,
+                  color: selected
+                      ? colorScheme.onPrimaryContainer
+                      : colorScheme.onSurfaceVariant,
+                ),
+              ),
+              const SizedBox(width: AppConstants.paddingMd),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      subtitle,
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Icon(
+                selected
+                    ? Icons.radio_button_checked_rounded
+                    : Icons.radio_button_off_rounded,
+                color: selected
+                    ? colorScheme.primary
+                    : colorScheme.onSurfaceVariant,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 class _ProfileRouteScreen extends StatelessWidget {
   const _ProfileRouteScreen();
 
   @override
   Widget build(BuildContext context) {
-    return const Scaffold(
-      backgroundColor: AppColors.background,
-      body: ProfileScreen(showBackButton: true),
+    return Scaffold(
+      backgroundColor: Theme.of(context).colorScheme.surface,
+      body: const ProfileScreen(showBackButton: true),
     );
+  }
+}
+
+String _appearanceSummary(AppThemePreference preference) {
+  switch (preference) {
+    case AppThemePreference.system:
+      return 'Sigue la configuracion del dispositivo';
+    case AppThemePreference.light:
+      return 'Tema claro con la paleta original de WTFood';
+    case AppThemePreference.dark:
+      return 'Tema oscuro calido con verdes y naranjas de la marca';
+  }
+}
+
+String _appearanceTitle(AppThemePreference preference) {
+  switch (preference) {
+    case AppThemePreference.system:
+      return 'Automatico';
+    case AppThemePreference.light:
+      return 'Claro';
+    case AppThemePreference.dark:
+      return 'Oscuro';
+  }
+}
+
+String _appearanceDescription(AppThemePreference preference) {
+  switch (preference) {
+    case AppThemePreference.system:
+      return 'Usa el modo claro u oscuro segun el sistema.';
+    case AppThemePreference.light:
+      return 'Mantiene la version luminosa clasica de la app.';
+    case AppThemePreference.dark:
+      return 'Prioriza confort nocturno sin perder la identidad visual.';
+  }
+}
+
+IconData _appearanceIcon(AppThemePreference preference) {
+  switch (preference) {
+    case AppThemePreference.system:
+      return Icons.brightness_auto_rounded;
+    case AppThemePreference.light:
+      return Icons.light_mode_rounded;
+    case AppThemePreference.dark:
+      return Icons.dark_mode_rounded;
   }
 }

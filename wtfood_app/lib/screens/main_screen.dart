@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:wtfood_app/core/constants.dart';
+import 'package:wtfood_app/core/theme.dart';
 import 'package:wtfood_app/providers/user_provider.dart';
 import 'package:wtfood_app/screens/home/home_screen.dart';
 import 'package:wtfood_app/screens/list/shopping_lists_screen.dart';
@@ -82,9 +82,11 @@ class _MainScreenState extends State<MainScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final palette = context.appPalette;
     final user = context.watch<UserProvider>().user;
     final photoUrl = user?.photoUrl;
-    final colorScheme = Theme.of(context).colorScheme;
     final isSettingsTab = _currentIndex == 4;
     final pages = [
       HomeScreen(onTabSelected: _selectTab),
@@ -95,7 +97,7 @@ class _MainScreenState extends State<MainScreen> {
     ];
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: colorScheme.surface,
       appBar: isSettingsTab ? null : _buildAppBar(photoUrl),
       body: AnimatedSwitcher(
         duration: const Duration(milliseconds: 300),
@@ -105,12 +107,12 @@ class _MainScreenState extends State<MainScreen> {
       bottomNavigationBar: Container(
         margin: const EdgeInsets.only(left: 24, right: 24, bottom: 24),
         decoration: BoxDecoration(
-          color: AppColors.surfaceContainerLowest.withValues(alpha: 0.98),
+          color: colorScheme.surfaceContainerLowest.withValues(alpha: 0.98),
           borderRadius: BorderRadius.circular(40),
-          border: Border.all(color: AppColors.outlineVariant),
+          border: Border.all(color: colorScheme.outlineVariant),
           boxShadow: [
             BoxShadow(
-              color: AppColors.onSurface.withValues(alpha: 0.08),
+              color: palette.shadowStrong,
               blurRadius: 30,
               offset: const Offset(0, 10),
             ),
@@ -171,10 +173,14 @@ class _MainScreenState extends State<MainScreen> {
   }
 
   PreferredSizeWidget _buildAppBar(String? photoUrl) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final palette = context.appPalette;
+
     return AppBar(
-      backgroundColor: AppColors.surfaceContainerLowest,
+      backgroundColor: colorScheme.surfaceContainerLowest,
       surfaceTintColor: Colors.transparent,
-      shadowColor: AppColors.onSurface.withValues(alpha: 0.05),
+      shadowColor: palette.shadowSoft,
       elevation: 0,
       titleSpacing: 18,
       centerTitle: false,
@@ -183,15 +189,15 @@ class _MainScreenState extends State<MainScreen> {
           children: [
             TextSpan(
               text: 'WT',
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                color: AppColors.primaryDark,
+              style: theme.textTheme.titleLarge?.copyWith(
+                color: colorScheme.primary,
                 fontWeight: FontWeight.w800,
               ),
             ),
             TextSpan(
               text: 'Food',
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                color: AppColors.secondary,
+              style: theme.textTheme.titleLarge?.copyWith(
+                color: colorScheme.secondary,
                 fontWeight: FontWeight.w800,
               ),
             ),
@@ -228,7 +234,7 @@ class _MainScreenState extends State<MainScreen> {
               child: ListTile(
                 contentPadding: EdgeInsets.zero,
                 leading: Icon(Icons.settings_outlined),
-                title: Text('Configuración'),
+                title: Text('Configuracion'),
               ),
             ),
             PopupMenuItem<_MainMenuAction>(
@@ -248,8 +254,8 @@ class _MainScreenState extends State<MainScreen> {
                 Container(
                   width: 38,
                   height: 38,
-                  decoration: const BoxDecoration(
-                    color: AppColors.tertiary,
+                  decoration: BoxDecoration(
+                    color: colorScheme.tertiaryContainer,
                     shape: BoxShape.circle,
                   ),
                   child: CircleAvatar(
@@ -261,7 +267,7 @@ class _MainScreenState extends State<MainScreen> {
                     child: photoUrl == null || photoUrl.isEmpty
                         ? const Icon(
                             Icons.menu_rounded,
-                            color: AppColors.surfaceContainerLowest,
+                            color: Colors.white,
                           )
                         : null,
                   ),
@@ -287,9 +293,9 @@ class _ProfileRouteScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Scaffold(
-      backgroundColor: AppColors.background,
-      body: ProfileScreen(showBackButton: true),
+    return Scaffold(
+      backgroundColor: Theme.of(context).colorScheme.surface,
+      body: const ProfileScreen(showBackButton: true),
     );
   }
 }
@@ -300,11 +306,11 @@ class _SettingsRouteScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: Theme.of(context).colorScheme.surface,
       appBar: AppBar(
-        backgroundColor: AppColors.surfaceContainerLowest,
+        backgroundColor: Theme.of(context).colorScheme.surfaceContainerLowest,
         surfaceTintColor: Colors.transparent,
-        title: const Text('Configuración'),
+        title: const Text('Configuracion'),
       ),
       body: const SettingsScreen(),
     );

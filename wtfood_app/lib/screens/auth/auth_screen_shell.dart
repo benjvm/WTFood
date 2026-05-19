@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import 'package:wtfood_app/core/theme.dart';
+
 class AuthScreenShell extends StatelessWidget {
   const AuthScreenShell({
     super.key,
@@ -18,8 +20,10 @@ class AuthScreenShell extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final palette = context.appPalette;
+
     return Scaffold(
-      backgroundColor: const Color(0xFFFFFCF7),
+      backgroundColor: palette.authBackground,
       appBar: appBar,
       body: Stack(
         children: [
@@ -48,15 +52,17 @@ class _AuthBackgroundDecorations extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final palette = context.appPalette;
+
     return IgnorePointer(
       child: Stack(
-        children: const [
+        children: [
           Positioned(
             top: -56,
             right: -48,
             child: _AccentCircle(
               size: 128,
-              color: Color(0xFF66DB6A),
+              color: palette.authGreenAccent,
             ),
           ),
           Positioned(
@@ -64,7 +70,7 @@ class _AuthBackgroundDecorations extends StatelessWidget {
             right: 38,
             child: _AccentCircle(
               size: 102,
-              color: Color(0xFFF4CC58),
+              color: palette.authOrangeAccent,
             ),
           ),
           Positioned(
@@ -72,7 +78,7 @@ class _AuthBackgroundDecorations extends StatelessWidget {
             left: 34,
             child: _AccentCircle(
               size: 110,
-              color: Color(0xFFF4CC58),
+              color: palette.authOrangeAccent,
             ),
           ),
           Positioned(
@@ -80,7 +86,7 @@ class _AuthBackgroundDecorations extends StatelessWidget {
             left: -20,
             child: _AccentCircle(
               size: 136,
-              color: Color(0xFF66DB6A),
+              color: palette.authGreenAccent,
             ),
           ),
         ],
