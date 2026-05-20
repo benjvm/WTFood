@@ -18,9 +18,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   Future<void> _openProfile() async {
     await Navigator.of(context).push(
-      MaterialPageRoute<void>(
-        builder: (_) => const _ProfileRouteScreen(),
-      ),
+      MaterialPageRoute<void>(builder: (_) => const _ProfileRouteScreen()),
     );
   }
 
@@ -31,18 +29,20 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Future<void> _openAppearanceSheet() async {
     await showModalBottomSheet<void>(
       context: context,
+      isScrollControlled: true,
       builder: (sheetContext) {
         final theme = Theme.of(sheetContext);
         final colorScheme = theme.colorScheme;
         final themeController = sheetContext.watch<ThemeController>();
+        final viewInsets = MediaQuery.of(sheetContext).viewInsets;
 
         return SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(
+          child: SingleChildScrollView(
+            padding: EdgeInsets.fromLTRB(
               AppConstants.paddingLg,
               AppConstants.paddingLg,
               AppConstants.paddingLg,
-              AppConstants.paddingXl,
+              AppConstants.paddingXl + viewInsets.bottom,
             ),
             child: Column(
               mainAxisSize: MainAxisSize.min,
@@ -272,7 +272,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ),
             const SizedBox(height: AppConstants.paddingLg),
             _SettingsCard(
-              backgroundColor: colorScheme.errorContainer.withValues(alpha: 0.22),
+              backgroundColor: colorScheme.errorContainer.withValues(
+                alpha: 0.22,
+              ),
               borderColor: colorScheme.errorContainer,
               child: _SettingsTile(
                 icon: Icons.delete_forever_outlined,

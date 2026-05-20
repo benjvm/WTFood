@@ -84,7 +84,7 @@ class _InitialAnimationGateState extends State<InitialAnimationGate>
     if (_fallbackScheduled) return;
     _fallbackScheduled = true;
 
-    Future<void>.delayed(const Duration(seconds: 4), () {
+    Future<void>.delayed(const Duration(seconds: 3), () {
       if (!mounted || _hasFinished) return;
       _finishAnimation();
     });

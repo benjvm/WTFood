@@ -4,18 +4,9 @@ import 'package:wtfood_app/screens/recipes/recipe_detail_screen.dart';
 import '../core/constants.dart';
 import '../models/recipe.dart';
 
-enum RecipeCardLayout {
-  portrait,
-  square,
-  landscape,
-}
+enum RecipeCardLayout { portrait, square, landscape }
 
-enum RecipeCardAccent {
-  healthyChoice,
-  highEnergy,
-  breakfastFavorite,
-  tested,
-}
+enum RecipeCardAccent { healthyChoice, highEnergy, breakfastFavorite, tested }
 
 class RecipeCard extends StatelessWidget {
   const RecipeCard({
@@ -37,6 +28,16 @@ class RecipeCard extends StatelessWidget {
     final colorScheme = theme.colorScheme;
     final accentMeta = _accentMeta(colorScheme);
     final hasPhoto = recipe.photoUrl.trim().isNotEmpty;
+    final isDarkMode = theme.brightness == Brightness.dark;
+    final durationBadgeColor = isDarkMode
+        ? colorScheme.primaryContainer.withValues(alpha: 0.9)
+        : Colors.white.withValues(alpha: 0.84);
+    final durationBadgeIconColor = isDarkMode
+        ? colorScheme.onPrimaryContainer
+        : colorScheme.primary;
+    final durationBadgeTextColor = isDarkMode
+        ? colorScheme.onPrimaryContainer
+        : colorScheme.onSurface;
 
     return GestureDetector(
       onTap: onTap ?? () => _showRecipeDetail(context),
@@ -69,8 +70,8 @@ class RecipeCard extends StatelessWidget {
                             fit: BoxFit.cover,
                             errorBuilder: (context, error, stackTrace) =>
                                 _RecipeCardPlaceholder(
-                              colorScheme: colorScheme,
-                            ),
+                                  colorScheme: colorScheme,
+                                ),
                             loadingBuilder: (context, child, loadingProgress) {
                               if (loadingProgress == null) {
                                 return child;
@@ -93,7 +94,7 @@ class RecipeCard extends StatelessWidget {
                         vertical: 6,
                       ),
                       decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.84),
+                        color: durationBadgeColor,
                         borderRadius: BorderRadius.circular(999),
                       ),
                       child: Row(
@@ -102,13 +103,13 @@ class RecipeCard extends StatelessWidget {
                           Icon(
                             Icons.schedule_rounded,
                             size: 14,
-                            color: colorScheme.primary,
+                            color: durationBadgeIconColor,
                           ),
                           const SizedBox(width: 4),
                           Text(
                             recipe.duration,
                             style: theme.textTheme.labelMedium?.copyWith(
-                              color: colorScheme.onSurface,
+                              color: durationBadgeTextColor,
                               fontWeight: FontWeight.w700,
                             ),
                           ),
@@ -263,9 +264,13 @@ class RecipeCard extends StatelessWidget {
                 children: [
                   Container(
                     padding: const EdgeInsets.symmetric(
-                        horizontal: 12, vertical: 6),
+                      horizontal: 12,
+                      vertical: 6,
+                    ),
                     decoration: BoxDecoration(
-                      color: colorScheme.primaryContainer.withValues(alpha: 0.9),
+                      color: colorScheme.primaryContainer.withValues(
+                        alpha: 0.9,
+                      ),
                       borderRadius: BorderRadius.circular(999),
                     ),
                     child: Text(
@@ -277,8 +282,11 @@ class RecipeCard extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(width: 8),
-                  Icon(Icons.schedule_rounded,
-                      size: 16, color: colorScheme.primary),
+                  Icon(
+                    Icons.schedule_rounded,
+                    size: 16,
+                    color: colorScheme.primary,
+                  ),
                   const SizedBox(width: 4),
                   Text(
                     recipe.duration,
@@ -361,7 +369,9 @@ class RecipeCard extends StatelessWidget {
                   style: FilledButton.styleFrom(
                     padding: const EdgeInsets.symmetric(vertical: 16),
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(AppConstants.borderRadiusLg),
+                      borderRadius: BorderRadius.circular(
+                        AppConstants.borderRadiusLg,
+                      ),
                     ),
                   ),
                 ),
