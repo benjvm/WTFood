@@ -34,20 +34,16 @@ class PixabayService {
         return null;
       }
 
-      final uri = Uri.https(
-        'pixabay.com',
-        '/api/',
-        {
-          'key': AppEnv.pixabayApiKey,
-          'q': query,
-          'lang': 'es',
-          'image_type': 'photo',
-          'category': 'food',
-          'safesearch': 'true',
-          'per_page': '3',
-          'order': 'popular',
-        },
-      );
+      final uri = Uri.https('pixabay.com', '/api/', {
+        'key': AppEnv.pixabayApiKey,
+        'q': query,
+        'lang': 'es',
+        'image_type': 'photo',
+        'category': 'food',
+        'safesearch': 'true',
+        'per_page': '3',
+        'order': 'popular',
+      });
 
       final response = await http.get(uri);
       if (response.statusCode != 200) {

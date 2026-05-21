@@ -12,9 +12,7 @@ class AppEnv {
   static String _require(String key) {
     final value = dotenv.env[key]?.trim() ?? '';
     if (value.isEmpty) {
-      throw StateError(
-        'Falta configurar $key en el archivo .env.',
-      );
+      throw StateError('Falta configurar $key en el archivo .env.');
     }
     return value;
   }

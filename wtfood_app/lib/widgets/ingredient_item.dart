@@ -16,8 +16,9 @@ class IngredientItem extends StatelessWidget {
         borderRadius: BorderRadius.circular(AppConstants.borderRadiusMd),
         boxShadow: [
           BoxShadow(
-            color:
-                Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.04),
+            color: Theme.of(
+              context,
+            ).colorScheme.onSurface.withValues(alpha: 0.04),
             blurRadius: 20,
             offset: const Offset(0, 4),
           ),
@@ -38,7 +39,8 @@ class IngredientItem extends StatelessWidget {
                 placeholder: (context, url) => Container(
                   color: Theme.of(context).colorScheme.surfaceContainerHigh,
                 ),
-                errorWidget: (context, url, error) => const Icon(Icons.icecream),
+                errorWidget: (context, url, error) =>
+                    const Icon(Icons.icecream),
               ),
             ),
           ),
@@ -58,8 +60,8 @@ class IngredientItem extends StatelessWidget {
                 Text(
                   '${ingredient.quantity} ${ingredient.unit}',
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: Theme.of(context).colorScheme.onSurfaceVariant,
-                      ),
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
                 ),
               ],
             ),

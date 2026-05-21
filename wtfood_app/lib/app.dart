@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import 'core/theme.dart';
 import 'screens/main_screen.dart';
 
@@ -11,6 +12,8 @@ class WTFoodApp extends StatelessWidget {
       title: 'WTFood',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
+      darkTheme: AppTheme.darkTheme,
+      themeMode: ThemeMode.system,
       home: const MainScreen(),
     );
   }

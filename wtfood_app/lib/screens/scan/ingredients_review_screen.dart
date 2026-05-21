@@ -2,9 +2,14 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:lottie/lottie.dart';
+import 'package:provider/provider.dart';
 
 import '../../../core/constants.dart';
+import '../../../providers/fridge_provider.dart';
+import '../../../providers/user_provider.dart';
 import '../../../services/ai_service.dart';
+import '../../../services/pixabay_service.dart';
 import 'recipe_result_screen.dart';
 
 class IngredientsReviewScreen extends StatefulWidget {
@@ -46,13 +51,18 @@ class _IngredientsReviewScreenState extends State<IngredientsReviewScreen> {
 
   void _addIngredient() {
     final text = _addController.text.trim();
-    if (text.isEmpty) return;
+    if (text.isEmpty) {
+      return;
+    }
 
-    if (_ingredients.any((i) => i.toLowerCase() == text.toLowerCase())) {
+    if (_ingredients.any(
+      (ingredient) => ingredient.toLowerCase() == text.toLowerCase(),
+    )) {
+      final colorScheme = Theme.of(context).colorScheme;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('"$text" ya está en la lista'),
-          backgroundColor: AppColors.secondary,
+          content: Text('"$text" ya esta en la lista'),
+          backgroundColor: colorScheme.secondary,
         ),
       );
       return;
@@ -61,14 +71,47 @@ class _IngredientsReviewScreenState extends State<IngredientsReviewScreen> {
     setState(() {
       _ingredients.add(text);
       _addController.clear();
+      _errorMessage = null;
     });
   }
 
-  // ── Lógica delegada a AiService ────────────────────────────────────────────
+  Future<void> _saveIngredientsToFridge() async {
+    if (_ingredients.isEmpty) {
+      setState(() {
+        _errorMessage = 'Necesitas al menos un ingrediente para guardarlo.';
+      });
+      return;
+    }
+
+    final addedIngredients = context.read<FridgeProvider>().addIngredients(
+      _ingredients,
+    );
+    final user = context.read<UserProvider>().user;
+
+    if (user != null) {
+      await context.read<UserProvider>().registerPantryScan(user.uid);
+    }
+
+    if (!mounted) {
+      return;
+    }
+
+    setState(() => _errorMessage = null);
+
+    final message = addedIngredients == 0
+        ? 'Estos ingredientes ya estaban guardados en tu nevera.'
+        : '$addedIngredients ingrediente${addedIngredients == 1 ? '' : 's'} guardado${addedIngredients == 1 ? '' : 's'} en tu nevera.';
+
+    final colorScheme = Theme.of(context).colorScheme;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message), backgroundColor: colorScheme.secondary),
+    );
+  }
+
   Future<void> _generateRecipe() async {
     if (_ingredients.isEmpty) {
       setState(() {
-        _errorMessage = 'Añade al menos un ingrediente para continuar.';
+        _errorMessage = 'Anade al menos un ingrediente para continuar.';
       });
       return;
     }
@@ -81,8 +124,24 @@ class _IngredientsReviewScreenState extends State<IngredientsReviewScreen> {
     try {
       final ingredientsList = _ingredients.join(', ');
       final recipe = await AiService.instance.generateRecipe(ingredientsList);
+      final recipeName = recipe['nombre']?.toString().trim() ?? '';
+      final recipePhoto = await const PixabayService().findRecipePhoto(
+        recipeName,
+      );
 
-      if (!mounted) return;
+      if (mounted && recipePhoto != null) {
+        try {
+          await precacheImage(NetworkImage(recipePhoto.imageUrl), context);
+        } catch (error, stackTrace) {
+          debugPrint('No se pudo precargar la imagen de Pixabay: $error');
+          debugPrintStack(stackTrace: stackTrace);
+        }
+      }
+
+      if (!mounted) {
+        return;
+      }
+
       setState(() => _isGenerating = false);
 
       Navigator.push(
@@ -91,11 +150,15 @@ class _IngredientsReviewScreenState extends State<IngredientsReviewScreen> {
           builder: (_) => RecipeResultScreen(
             recipe: recipe,
             usedIngredients: _ingredients,
+            recipePhoto: recipePhoto,
           ),
         ),
       );
     } catch (error, stackTrace) {
-      if (!mounted) return;
+      if (!mounted) {
+        return;
+      }
+
       setState(() {
         _errorMessage = 'Error: ${error.toString()}';
         _isGenerating = false;
@@ -105,149 +168,139 @@ class _IngredientsReviewScreenState extends State<IngredientsReviewScreen> {
     }
   }
 
-  // ── UI (sin cambios visuales) ──────────────────────────────────────────────
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
     return Scaffold(
-      backgroundColor: AppColors.background,
-      appBar: AppBar(
-        title: const Text('Ingredientes detectados'),
-        backgroundColor: AppColors.surfaceContainerLowest,
-        elevation: 0,
-      ),
+      backgroundColor: colorScheme.surface,
+      appBar: _isGenerating
+          ? null
+          : AppBar(
+              title: const Text('Ingredientes detectados'),
+              backgroundColor: colorScheme.surfaceContainerLowest,
+              elevation: 0,
+            ),
       body: SafeArea(
-        child: Column(
+        child: Stack(
           children: [
-            Expanded(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.all(AppConstants.paddingLg),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _HeaderSection(
-                      imageFile: widget.imageFile,
-                      count: _ingredients.length,
-                    ),
-                    const SizedBox(height: 24),
-                    Text(
-                      'Ingredientes identificados',
-                      style: GoogleFonts.plusJakartaSans(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w700,
-                        color: AppColors.onSurface,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      'Elimina los incorrectos o añade los que falten.',
-                      style: GoogleFonts.manrope(
-                        fontSize: 13,
-                        color: AppColors.onSurfaceVariant,
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    if (_ingredients.isEmpty)
-                      _EmptyIngredients()
-                    else
-                      Wrap(
-                        spacing: 8,
-                        runSpacing: 8,
-                        children: List.generate(
-                          _ingredients.length,
-                          (i) => _IngredientChip(
-                            label: _ingredients[i],
-                            onDelete: () => _removeIngredient(i),
-                          ),
-                        ),
-                      ),
-                    const SizedBox(height: 24),
-                    Text(
-                      'Añadir ingrediente',
-                      style: GoogleFonts.plusJakartaSans(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w700,
-                        color: AppColors.onSurface,
-                      ),
-                    ),
-                    const SizedBox(height: 10),
-                    Row(
+            Column(
+              children: [
+                Expanded(
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.all(AppConstants.paddingLg),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Expanded(
-                          child: TextField(
-                            controller: _addController,
-                            textCapitalization: TextCapitalization.sentences,
-                            onSubmitted: (_) => _addIngredient(),
-                            decoration: InputDecoration(
-                              hintText: 'ej: tomates, queso, cebolla...',
-                              hintStyle: GoogleFonts.manrope(
-                                color: AppColors.onSurfaceVariant,
-                                fontSize: 14,
-                              ),
-                              filled: true,
-                              fillColor: AppColors.surfaceContainerLowest,
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(
-                                    AppConstants.borderRadiusMd),
-                                borderSide:
-                                    BorderSide(color: AppColors.outline),
-                              ),
-                              enabledBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(
-                                    AppConstants.borderRadiusMd),
-                                borderSide:
-                                    BorderSide(color: AppColors.outline),
-                              ),
-                              focusedBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(
-                                    AppConstants.borderRadiusMd),
-                                borderSide: BorderSide(
-                                    color: AppColors.primary, width: 2),
-                              ),
-                              contentPadding: const EdgeInsets.symmetric(
-                                  horizontal: 14, vertical: 14),
-                            ),
+                        _HeaderSection(
+                          imageFile: widget.imageFile,
+                          count: _ingredients.length,
+                        ),
+                        const SizedBox(height: 24),
+                        Text(
+                          'Ingredientes identificados',
+                          style: GoogleFonts.plusJakartaSans(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w700,
+                            color: colorScheme.onSurface,
                           ),
                         ),
-                        const SizedBox(width: 10),
-                        SizedBox(
-                          height: 52,
-                          child: ElevatedButton(
-                            onPressed: _addIngredient,
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: AppColors.primaryContainer,
-                              foregroundColor: AppColors.onPrimaryContainer,
-                              elevation: 0,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(
-                                    AppConstants.borderRadiusMd),
-                              ),
-                            ),
-                            child: const Icon(Icons.add_rounded),
+                        const SizedBox(height: 4),
+                        Text(
+                          'Elimina los incorrectos antes de guardar o generar la receta.',
+                          style: GoogleFonts.manrope(
+                            fontSize: 13,
+                            color: colorScheme.onSurfaceVariant,
                           ),
                         ),
+                        const SizedBox(height: 16),
+                        if (_ingredients.isEmpty)
+                          const _EmptyIngredients()
+                        else
+                          Wrap(
+                            spacing: 8,
+                            runSpacing: 8,
+                            children: List.generate(
+                              _ingredients.length,
+                              (i) => _IngredientChip(
+                                label: _ingredients[i],
+                                onDelete: () => _removeIngredient(i),
+                              ),
+                            ),
+                          ),
+                        const SizedBox(height: 24),
+                        Text(
+                          'Anadir ingrediente',
+                          style: GoogleFonts.plusJakartaSans(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w700,
+                            color: colorScheme.onSurface,
+                          ),
+                        ),
+                        const SizedBox(height: 10),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: TextField(
+                                controller: _addController,
+                                textCapitalization:
+                                    TextCapitalization.sentences,
+                                onSubmitted: (_) => _addIngredient(),
+                                decoration: InputDecoration(
+                                  hintText: 'ej: tomates, queso, cebolla...',
+                                  contentPadding: const EdgeInsets.symmetric(
+                                    horizontal: 14,
+                                    vertical: 14,
+                                  ),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 10),
+                            SizedBox(
+                              height: 52,
+                              child: ElevatedButton(
+                                onPressed: _addIngredient,
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: colorScheme.primaryContainer,
+                                  foregroundColor:
+                                      colorScheme.onPrimaryContainer,
+                                  elevation: 0,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(
+                                      AppConstants.borderRadiusMd,
+                                    ),
+                                  ),
+                                ),
+                                child: const Icon(Icons.add_rounded),
+                              ),
+                            ),
+                          ],
+                        ),
+                        if (_errorMessage != null) ...[
+                          const SizedBox(height: 16),
+                          _ErrorBanner(message: _errorMessage!),
+                        ],
                       ],
                     ),
-                    if (_errorMessage != null) ...[
-                      const SizedBox(height: 16),
-                      _ErrorBanner(message: _errorMessage!),
-                    ],
-                  ],
+                  ),
                 ),
-              ),
+                if (!_isGenerating)
+                  _BottomBar(
+                    ingredientCount: _ingredients.length,
+                    onSave: _saveIngredientsToFridge,
+                    onGenerate: _generateRecipe,
+                  ),
+              ],
             ),
-            _BottomBar(
-              ingredientCount: _ingredients.length,
-              isGenerating: _isGenerating,
-              onGenerate: _generateRecipe,
-            ),
+            if (_isGenerating)
+              const Positioned.fill(child: _GeneratingRecipeOverlay()),
           ],
         ),
       ),
     );
   }
 }
-
-// ── Widgets privados (sin cambios) ─────────────────────────────────────────
 
 class _HeaderSection extends StatelessWidget {
   const _HeaderSection({required this.imageFile, required this.count});
@@ -257,6 +310,8 @@ class _HeaderSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     return Row(
       children: [
         ClipRRect(
@@ -274,20 +329,22 @@ class _HeaderSection extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 4,
+                ),
                 decoration: BoxDecoration(
-                  color: AppColors.primaryContainer,
+                  color: colorScheme.primaryContainer,
                   borderRadius: BorderRadius.circular(
                     AppConstants.borderRadiusSm,
                   ),
                 ),
                 child: Text(
-                  'Análisis completado',
+                  'Analisis completado',
                   style: GoogleFonts.manrope(
                     fontSize: 12,
                     fontWeight: FontWeight.w700,
-                    color: AppColors.onPrimaryContainer,
+                    color: colorScheme.onPrimaryContainer,
                   ),
                 ),
               ),
@@ -297,14 +354,14 @@ class _HeaderSection extends StatelessWidget {
                 style: GoogleFonts.plusJakartaSans(
                   fontSize: 20,
                   fontWeight: FontWeight.w800,
-                  color: AppColors.onSurface,
+                  color: colorScheme.onSurface,
                 ),
               ),
               Text(
-                'Revisa y edita la lista antes de generar la receta.',
+                'Revisa la lista antes de guardarla en tu nevera.',
                 style: GoogleFonts.manrope(
                   fontSize: 12,
-                  color: AppColors.onSurfaceVariant,
+                  color: colorScheme.onSurfaceVariant,
                 ),
               ),
             ],
@@ -323,14 +380,14 @@ class _IngredientChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
-        color: AppColors.primaryContainer,
+        color: colorScheme.primaryContainer,
         borderRadius: BorderRadius.circular(AppConstants.borderRadiusSm + 4),
-        border: Border.all(
-          color: AppColors.primary.withValues(alpha: 0.25),
-        ),
+        border: Border.all(color: colorScheme.primary.withValues(alpha: 0.25)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -340,16 +397,16 @@ class _IngredientChip extends StatelessWidget {
             style: GoogleFonts.manrope(
               fontSize: 14,
               fontWeight: FontWeight.w600,
-              color: AppColors.onPrimaryContainer,
+              color: colorScheme.onPrimaryContainer,
             ),
           ),
           const SizedBox(width: 6),
           GestureDetector(
             onTap: onDelete,
-            child: const Icon(
+            child: Icon(
               Icons.close_rounded,
               size: 16,
-              color: AppColors.primary,
+              color: colorScheme.primary,
             ),
           ),
         ],
@@ -358,46 +415,50 @@ class _IngredientChip extends StatelessWidget {
   }
 
   String _capitalize(String value) {
-    if (value.isEmpty) return value;
+    if (value.isEmpty) {
+      return value;
+    }
+
     return value[0].toUpperCase() + value.substring(1);
   }
 }
 
 class _EmptyIngredients extends StatelessWidget {
+  const _EmptyIngredients();
+
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(AppConstants.paddingLg),
       decoration: BoxDecoration(
-        color: AppColors.surfaceContainerLowest,
+        color: colorScheme.surfaceContainerLowest,
         borderRadius: BorderRadius.circular(AppConstants.borderRadiusMd),
-        border: Border.all(
-          color: AppColors.outlineVariant,
-          style: BorderStyle.solid,
-        ),
+        border: Border.all(color: colorScheme.outlineVariant),
       ),
       child: Column(
         children: [
-          const Icon(
+          Icon(
             Icons.inbox_rounded,
             size: 36,
-            color: AppColors.onSurfaceVariant,
+            color: colorScheme.onSurfaceVariant,
           ),
           const SizedBox(height: 8),
           Text(
             'Sin ingredientes',
             style: GoogleFonts.manrope(
               fontSize: 14,
-              color: AppColors.onSurfaceVariant,
+              color: colorScheme.onSurfaceVariant,
               fontWeight: FontWeight.w600,
             ),
           ),
           Text(
-            'Añade ingredientes usando el campo de abajo.',
+            'Anade ingredientes usando el campo de abajo.',
             style: GoogleFonts.manrope(
               fontSize: 12,
-              color: AppColors.onSurfaceVariant,
+              color: colorScheme.onSurfaceVariant,
             ),
             textAlign: TextAlign.center,
           ),
@@ -414,26 +475,24 @@ class _ErrorBanner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     return Container(
       padding: const EdgeInsets.all(AppConstants.paddingMd),
       decoration: BoxDecoration(
-        color: AppColors.errorContainer,
+        color: colorScheme.errorContainer,
         borderRadius: BorderRadius.circular(AppConstants.borderRadiusMd),
       ),
       child: Row(
         children: [
-          const Icon(
-            Icons.error_outline_rounded,
-            color: AppColors.error,
-            size: 20,
-          ),
+          Icon(Icons.error_outline_rounded, color: colorScheme.error, size: 20),
           const SizedBox(width: 10),
           Expanded(
             child: Text(
               message,
               style: GoogleFonts.manrope(
                 fontSize: 13,
-                color: AppColors.onErrorContainer,
+                color: colorScheme.onErrorContainer,
                 fontWeight: FontWeight.w500,
               ),
             ),
@@ -447,16 +506,18 @@ class _ErrorBanner extends StatelessWidget {
 class _BottomBar extends StatelessWidget {
   const _BottomBar({
     required this.ingredientCount,
-    required this.isGenerating,
+    required this.onSave,
     required this.onGenerate,
   });
 
   final int ingredientCount;
-  final bool isGenerating;
+  final VoidCallback onSave;
   final VoidCallback onGenerate;
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     return Container(
       padding: EdgeInsets.fromLTRB(
         AppConstants.paddingLg,
@@ -464,48 +525,122 @@ class _BottomBar extends StatelessWidget {
         AppConstants.paddingLg,
         AppConstants.paddingMd + MediaQuery.of(context).padding.bottom,
       ),
-      decoration: BoxDecoration(
-        color: AppColors.surfaceContainerLowest,
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.onSurface.withValues(alpha: 0.06),
-            blurRadius: 16,
-            offset: const Offset(0, -4),
+      decoration: BoxDecoration(color: colorScheme.surface),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          SizedBox(
+            width: double.infinity,
+            height: 50,
+            child: ElevatedButton.icon(
+              onPressed: ingredientCount > 0 ? onSave : null,
+              icon: const Icon(Icons.bookmark_border_rounded),
+              label: Text(
+                'Guardar ingredientes',
+                style: GoogleFonts.manrope(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: colorScheme.secondaryContainer,
+                foregroundColor: colorScheme.onSecondaryContainer,
+                disabledBackgroundColor: colorScheme.secondaryContainer
+                    .withValues(alpha: 0.5),
+                disabledForegroundColor: colorScheme.onSecondaryContainer
+                    .withValues(alpha: 0.7),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(
+                    AppConstants.borderRadiusMd,
+                  ),
+                ),
+                elevation: 0,
+              ),
+            ),
+          ),
+          const SizedBox(height: 12),
+          SizedBox(
+            width: double.infinity,
+            height: 54,
+            child: ElevatedButton.icon(
+              onPressed: ingredientCount > 0 ? onGenerate : null,
+              icon: const Icon(Icons.restaurant_menu_rounded),
+              label: Text(
+                'Generar receta',
+                style: GoogleFonts.manrope(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: colorScheme.primary,
+                foregroundColor: colorScheme.onPrimary,
+                disabledBackgroundColor: colorScheme.primary.withValues(
+                  alpha: 0.4,
+                ),
+                disabledForegroundColor: colorScheme.onPrimary,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(
+                    AppConstants.borderRadiusMd,
+                  ),
+                ),
+                elevation: 0,
+              ),
+            ),
           ),
         ],
       ),
-      child: SizedBox(
-        height: 54,
-        child: ElevatedButton.icon(
-          onPressed:
-              (ingredientCount > 0 && !isGenerating) ? onGenerate : null,
-          icon: isGenerating
-              ? const SizedBox(
-                  width: 20,
-                  height: 20,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2.5,
-                    color: AppColors.onPrimary,
-                  ),
-                )
-              : const Icon(Icons.restaurant_menu_rounded),
-          label: Text(
-            isGenerating ? 'Generando receta...' : 'Generar receta',
-            style: GoogleFonts.manrope(
-              fontSize: 16,
-              fontWeight: FontWeight.w700,
-            ),
+    );
+  }
+}
+
+class _GeneratingRecipeOverlay extends StatelessWidget {
+  const _GeneratingRecipeOverlay();
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
+    return ColoredBox(
+      color: colorScheme.surface,
+      child: Center(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppConstants.paddingXl,
           ),
-          style: ElevatedButton.styleFrom(
-            backgroundColor: AppColors.primary,
-            foregroundColor: AppColors.onPrimary,
-            disabledBackgroundColor: AppColors.primary.withValues(alpha: 0.4),
-            disabledForegroundColor: AppColors.onPrimary,
-            shape: RoundedRectangleBorder(
-              borderRadius:
-                  BorderRadius.circular(AppConstants.borderRadiusMd),
-            ),
-            elevation: 0,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              SizedBox(
+                width: 220,
+                height: 220,
+                child: Lottie.asset(
+                  'assets/json/Preparing Food.json',
+                  fit: BoxFit.contain,
+                  repeat: true,
+                ),
+              ),
+              const SizedBox(height: 20),
+              Text(
+                'Generando receta',
+                style: GoogleFonts.plusJakartaSans(
+                  fontSize: 22,
+                  fontWeight: FontWeight.w800,
+                  color: colorScheme.onSurface,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Estamos preparando la receta y cargando su imagen.',
+                style: GoogleFonts.manrope(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                  color: colorScheme.onSurfaceVariant,
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ],
           ),
         ),
       ),

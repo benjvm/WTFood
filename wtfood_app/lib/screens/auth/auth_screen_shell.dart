@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import 'package:wtfood_app/core/theme.dart';
+
 class AuthScreenShell extends StatelessWidget {
   const AuthScreenShell({
     super.key,
@@ -18,8 +20,10 @@ class AuthScreenShell extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final palette = context.appPalette;
+
     return Scaffold(
-      backgroundColor: const Color(0xFFFFFCF7),
+      backgroundColor: palette.authBackground,
       appBar: appBar,
       body: Stack(
         children: [
@@ -48,40 +52,30 @@ class _AuthBackgroundDecorations extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final palette = context.appPalette;
+
     return IgnorePointer(
       child: Stack(
-        children: const [
+        children: [
           Positioned(
             top: -56,
-            left: -48,
-            child: _AccentCircle(
-              size: 128,
-              color: Color(0xFF66DB6A),
-            ),
+            right: -48,
+            child: _AccentCircle(size: 128, color: palette.authGreenAccent),
           ),
           Positioned(
             top: -34,
-            left: 38,
-            child: _AccentCircle(
-              size: 102,
-              color: Color(0xFFF4CC58),
-            ),
+            right: 38,
+            child: _AccentCircle(size: 102, color: palette.authOrangeAccent),
           ),
           Positioned(
             bottom: -46,
-            right: 34,
-            child: _AccentCircle(
-              size: 110,
-              color: Color(0xFFF4CC58),
-            ),
+            left: 34,
+            child: _AccentCircle(size: 110, color: palette.authOrangeAccent),
           ),
           Positioned(
             bottom: -62,
-            right: -20,
-            child: _AccentCircle(
-              size: 136,
-              color: Color(0xFF66DB6A),
-            ),
+            left: -20,
+            child: _AccentCircle(size: 136, color: palette.authGreenAccent),
           ),
         ],
       ),
@@ -90,10 +84,7 @@ class _AuthBackgroundDecorations extends StatelessWidget {
 }
 
 class _AccentCircle extends StatelessWidget {
-  const _AccentCircle({
-    required this.size,
-    required this.color,
-  });
+  const _AccentCircle({required this.size, required this.color});
 
   final double size;
   final Color color;
@@ -103,32 +94,7 @@ class _AccentCircle extends StatelessWidget {
     return Container(
       width: size,
       height: size,
-      decoration: BoxDecoration(
-        color: color,
-        shape: BoxShape.circle,
-      ),
-    );
-  }
-}
-
-class _AccentRing extends StatelessWidget {
-  const _AccentRing({
-    required this.size,
-    required this.color,
-  });
-
-  final double size;
-  final Color color;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: size,
-      height: size,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        border: Border.all(color: color, width: 1.4),
-      ),
+      decoration: BoxDecoration(color: color, shape: BoxShape.circle),
     );
   }
 }

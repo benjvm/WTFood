@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+
 import '../models/recipe.dart';
 
 class RecipeService {
@@ -15,21 +16,20 @@ class RecipeService {
         .orderBy('title')
         .limit(limit)
         .snapshots()
-        .map(
-          (snap) => snap.docs.map(Recipe.fromFirestore).toList(),
-        );
+        .map((snap) => snap.docs.map(Recipe.fromFirestore).toList());
   }
 
   Stream<List<Recipe>> getRecipesByCategory(
     String category, {
     int limit = 100,
   }) {
-    final normalizedCategory = category.trim().toLowerCase();
+    final normalizedCategory = _normalizeCategoryKey(category);
 
     return getRecipes(limit: limit).map(
       (recipes) => recipes
           .where(
-            (recipe) => recipe.category.trim().toLowerCase() == normalizedCategory,
+            (recipe) =>
+                _normalizeCategoryKey(recipe.category) == normalizedCategory,
           )
           .toList(),
     );
@@ -58,5 +58,22 @@ class RecipeService {
 
       return filteredRecipes;
     });
+  }
+}
+
+String _normalizeCategoryKey(String category) {
+  final normalizedCategory = category.trim().toLowerCase();
+
+  switch (normalizedCategory) {
+    case 'breakfast':
+      return 'desayuno';
+    case 'dinner':
+      return 'cena';
+    case 'dessert':
+      return 'postre';
+    case 'easy':
+      return 'fácil';
+    default:
+      return normalizedCategory;
   }
 }

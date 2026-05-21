@@ -9,10 +9,12 @@ class RecipeResultScreen extends StatefulWidget {
     super.key,
     required this.recipe,
     required this.usedIngredients,
+    this.recipePhoto,
   });
 
   final Map<String, dynamic> recipe;
   final List<String> usedIngredients;
+  final PixabayPhoto? recipePhoto;
 
   @override
   State<RecipeResultScreen> createState() => _RecipeResultScreenState();
@@ -24,10 +26,13 @@ class _RecipeResultScreenState extends State<RecipeResultScreen> {
   @override
   void initState() {
     super.initState();
-    _photoFuture = const PixabayService().findRecipePhoto(_recipeName);
+    _photoFuture = widget.recipePhoto != null
+        ? Future<PixabayPhoto?>.value(widget.recipePhoto)
+        : const PixabayService().findRecipePhoto(_recipeName);
   }
 
-  String get _recipeName => _readText(widget.recipe['nombre'], fallback: 'Receta');
+  String get _recipeName =>
+      _readText(widget.recipe['nombre'], fallback: 'Receta');
 
   @override
   Widget build(BuildContext context) {
@@ -35,10 +40,16 @@ class _RecipeResultScreenState extends State<RecipeResultScreen> {
     final colorScheme = theme.colorScheme;
 
     final description = _readText(widget.recipe['descripcion']);
-    final prepTime = _readText(widget.recipe['tiempo_preparacion'], fallback: '--');
+    final prepTime = _readText(
+      widget.recipe['tiempo_preparacion'],
+      fallback: '--',
+    );
     final cookTime = _readText(widget.recipe['tiempo_coccion'], fallback: '--');
     final servings = _readText(widget.recipe['porciones'], fallback: '2');
-    final difficulty = _readText(widget.recipe['dificultad'], fallback: 'Media');
+    final difficulty = _readText(
+      widget.recipe['dificultad'],
+      fallback: 'Media',
+    );
     final chefTip = _readText(widget.recipe['consejos']);
     final ingredients = _readIngredients(widget.recipe['ingredientes']);
     final steps = _readSteps(widget.recipe['pasos']);
@@ -90,7 +101,7 @@ class _RecipeResultScreenState extends State<RecipeResultScreen> {
                         Image.network(
                           photo.imageUrl,
                           fit: BoxFit.cover,
-                          errorBuilder: (_, __, ___) =>
+                          errorBuilder: (context, error, stackTrace) =>
                               _HeroPlaceholder(colorScheme: colorScheme),
                         )
                       else
@@ -157,23 +168,23 @@ class _RecipeResultScreenState extends State<RecipeResultScreen> {
                       _InfoPill(
                         icon: Icons.schedule_rounded,
                         label: prepTime,
-                        backgroundColor: AppColors.secondaryContainer,
-                        iconColor: AppColors.secondary,
-                        textColor: AppColors.onSecondaryContainer,
+                        backgroundColor: colorScheme.secondaryContainer,
+                        iconColor: colorScheme.secondary,
+                        textColor: colorScheme.onSecondaryContainer,
                       ),
                       _InfoPill(
                         icon: Icons.local_fire_department_rounded,
                         label: cookTime,
-                        backgroundColor: AppColors.primaryContainer,
-                        iconColor: AppColors.primary,
-                        textColor: AppColors.onPrimaryContainer,
+                        backgroundColor: colorScheme.primaryContainer,
+                        iconColor: colorScheme.primary,
+                        textColor: colorScheme.onPrimaryContainer,
                       ),
                       _InfoPill(
                         icon: Icons.people_alt_rounded,
                         label: '$servings porciones',
-                        backgroundColor: AppColors.tertiaryContainer,
-                        iconColor: AppColors.tertiary,
-                        textColor: AppColors.onTertiaryContainer,
+                        backgroundColor: colorScheme.tertiaryContainer,
+                        iconColor: colorScheme.tertiary,
+                        textColor: colorScheme.onTertiaryContainer,
                       ),
                       _InfoPill(
                         icon: Icons.bar_chart_rounded,
@@ -271,7 +282,10 @@ class _RecipeResultScreenState extends State<RecipeResultScreen> {
                         spacing: 8,
                         runSpacing: 8,
                         children: widget.usedIngredients
-                            .map((ingredient) => _UsedIngredientChip(label: ingredient))
+                            .map(
+                              (ingredient) =>
+                                  _UsedIngredientChip(label: ingredient),
+                            )
                             .toList(),
                       ),
                     ),
@@ -313,10 +327,7 @@ class _RecipeResultScreenState extends State<RecipeResultScreen> {
 }
 
 class _RecipeIngredient {
-  const _RecipeIngredient({
-    required this.name,
-    required this.amount,
-  });
+  const _RecipeIngredient({required this.name, required this.amount});
 
   final String name;
   final String amount;
@@ -374,11 +385,7 @@ class _CircleIconButton extends StatelessWidget {
             ),
           ],
         ),
-        child: Icon(
-          icon,
-          size: 20,
-          color: colorScheme.onSurface,
-        ),
+        child: Icon(icon, size: 20, color: colorScheme.onSurface),
       ),
     );
   }
@@ -439,9 +446,9 @@ class _PhotoCreditChip extends StatelessWidget {
       child: Text(
         'Foto: $author en Pixabay',
         style: Theme.of(context).textTheme.labelMedium?.copyWith(
-              color: Colors.white,
-              fontWeight: FontWeight.w700,
-            ),
+          color: Colors.white,
+          fontWeight: FontWeight.w700,
+        ),
       ),
     );
   }
@@ -478,9 +485,9 @@ class _InfoPill extends StatelessWidget {
           Text(
             label,
             style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                  color: textColor,
-                  fontWeight: FontWeight.w700,
-                ),
+              color: textColor,
+              fontWeight: FontWeight.w700,
+            ),
           ),
         ],
       ),
@@ -687,21 +694,21 @@ class _UsedIngredientChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
-        color: AppColors.primaryContainer,
+        color: colorScheme.primaryContainer,
         borderRadius: BorderRadius.circular(AppConstants.borderRadiusSm + 4),
-        border: Border.all(
-          color: AppColors.primary.withValues(alpha: 0.2),
-        ),
+        border: Border.all(color: colorScheme.primary.withValues(alpha: 0.2)),
       ),
       child: Text(
         label,
         style: Theme.of(context).textTheme.labelLarge?.copyWith(
-              color: AppColors.onPrimaryContainer,
-              fontWeight: FontWeight.w700,
-            ),
+          color: colorScheme.onPrimaryContainer,
+          fontWeight: FontWeight.w700,
+        ),
       ),
     );
   }
@@ -714,6 +721,8 @@ class _BottomActionBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     return Container(
       padding: EdgeInsets.fromLTRB(
         AppConstants.paddingLg,
@@ -722,10 +731,10 @@ class _BottomActionBar extends StatelessWidget {
         AppConstants.paddingMd + MediaQuery.of(context).padding.bottom,
       ),
       decoration: BoxDecoration(
-        color: AppColors.surfaceContainerLowest,
+        color: colorScheme.surfaceContainerLowest,
         boxShadow: [
           BoxShadow(
-            color: AppColors.onSurface.withValues(alpha: 0.06),
+            color: colorScheme.onSurface.withValues(alpha: 0.06),
             blurRadius: 16,
             offset: const Offset(0, -4),
           ),

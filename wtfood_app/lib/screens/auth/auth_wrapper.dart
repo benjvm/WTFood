@@ -1,18 +1,13 @@
-// auth_wrapper.dart
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:wtfood_app/core/constants.dart';
+import 'package:wtfood_app/features/onboarding/onboarding.dart';
 import 'package:wtfood_app/providers/user_provider.dart';
 import 'package:wtfood_app/screens/auth/login_screen.dart';
 import 'package:wtfood_app/screens/main_screen.dart';
 
-/// Controla el flujo de sesión y sincroniza el estado global del usuario.
-///
-/// Flujo:
-///   1. Firebase emite un [User] → se dispara [UserProvider.loadUser].
-///   2. Firebase emite null       → se dispara [UserProvider.clearUser].
-///   3. Mientras se cargan los datos se muestra un splash de carga.
+/// Controla el flujo de sesion y sincroniza el estado global del usuario.
 class AuthWrapper extends StatefulWidget {
   const AuthWrapper({super.key});
 
@@ -21,9 +16,38 @@ class AuthWrapper extends StatefulWidget {
 }
 
 class _AuthWrapperState extends State<AuthWrapper> {
-  /// UID del último usuario procesado para evitar cargas repetidas
-  /// si el stream reemite el mismo usuario (ej.: token refresh).
+  final OnboardingStorageService _onboardingStorageService =
+      OnboardingStorageService();
+
   String? _lastLoadedUid;
+  bool? _isOnboardingCompleted;
+  int _mainScreenInitialTabIndex = MainScreen.homeTabIndex;
+
+  Future<void> _loadOnboardingStatus() async {
+    final isCompleted = await _onboardingStorageService.isOnboardingCompleted();
+
+    if (!mounted) {
+      return;
+    }
+
+    setState(() {
+      _isOnboardingCompleted = isCompleted;
+      if (isCompleted) {
+        _mainScreenInitialTabIndex = MainScreen.homeTabIndex;
+      }
+    });
+  }
+
+  Future<void> _handleOnboardingCompleted() async {
+    if (!mounted) {
+      return;
+    }
+
+    setState(() {
+      _isOnboardingCompleted = true;
+      _mainScreenInitialTabIndex = MainScreen.scanTabIndex;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -32,37 +56,48 @@ class _AuthWrapperState extends State<AuthWrapper> {
     return StreamBuilder<User?>(
       stream: FirebaseAuth.instance.authStateChanges(),
       builder: (context, snapshot) {
-        // ── Estado de espera inicial ──────────────────────────────────────
         if (snapshot.connectionState == ConnectionState.waiting) {
           return _buildSplash();
         }
 
         final firebaseUser = snapshot.data;
 
-        // ── Usuario autenticado ───────────────────────────────────────────
         if (firebaseUser != null) {
-          // Solo cargamos si es un UID distinto al último procesado.
           if (_lastLoadedUid != firebaseUser.uid) {
             _lastLoadedUid = firebaseUser.uid;
-            // Lanzamos la carga sin await para no bloquear el build.
+            _isOnboardingCompleted = null;
+            _mainScreenInitialTabIndex = MainScreen.homeTabIndex;
+
             WidgetsBinding.instance.addPostFrameCallback((_) {
               userProvider.loadUser(firebaseUser.uid);
+              _loadOnboardingStatus();
             });
           }
 
-          // Esperamos a que los datos estén disponibles antes de mostrar la app.
           return ListenableBuilder(
             listenable: userProvider,
             builder: (context, _) {
-              if (userProvider.isLoading) return _buildSplash();
-              return const MainScreen();
+              if (userProvider.isLoading || _isOnboardingCompleted == null) {
+                return _buildSplash();
+              }
+
+              if (_isOnboardingCompleted == false) {
+                return OnboardingScreen(
+                  storageService: _onboardingStorageService,
+                  onCompleted: _handleOnboardingCompleted,
+                );
+              }
+
+              return MainScreen(initialTabIndex: _mainScreenInitialTabIndex);
             },
           );
         }
 
-        // ── Sin sesión: limpieza y pantalla de login ──────────────────────
         if (_lastLoadedUid != null) {
           _lastLoadedUid = null;
+          _isOnboardingCompleted = null;
+          _mainScreenInitialTabIndex = MainScreen.homeTabIndex;
+
           WidgetsBinding.instance.addPostFrameCallback((_) {
             userProvider.clearUser();
           });
@@ -75,9 +110,7 @@ class _AuthWrapperState extends State<AuthWrapper> {
 
   Widget _buildSplash() {
     return const Scaffold(
-      body: Center(
-        child: CircularProgressIndicator(color: AppColors.primary),
-      ),
+      body: Center(child: CircularProgressIndicator(color: AppColors.primary)),
     );
   }
 }

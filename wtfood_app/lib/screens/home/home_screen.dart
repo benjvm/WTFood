@@ -1,21 +1,155 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:showcaseview/showcaseview.dart';
 
 import '../../core/constants.dart';
+import '../../core/theme.dart';
+import '../../features/onboarding/onboarding.dart';
+import '../../features/pantry_update/presentation/pantry_update_prompt_dialog.dart';
 import '../../models/recipe.dart';
 import '../../providers/user_provider.dart';
 import '../../services/recipe_service.dart';
 import '../recipes/recipe_detail_screen.dart';
 import '../scan/scan_screen.dart';
 
-class HomeScreen extends StatelessWidget {
-  const HomeScreen({
-    super.key,
-    this.onTabSelected,
-  });
+class HomeScreen extends StatefulWidget {
+  const HomeScreen({super.key, this.onTabSelected});
 
   final ValueChanged<int>? onTabSelected;
+
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+  final OnboardingStorageService _onboardingStorageService =
+      OnboardingStorageService();
+  final GlobalKey _scanShowcaseKey = GlobalKey();
+
+  String? _lastPantryPromptKey;
+  bool _isShowingPantryPrompt = false;
+  bool _isEvaluatingTutorial = false;
+  bool _hasTriggeredTutorial = false;
+
+  @override
+  void initState() {
+    super.initState();
+    ShowcaseView.register();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _schedulePantryUpdatePrompt();
+  }
+
+  @override
+  void dispose() {
+    ShowcaseView.get().unregister();
+    super.dispose();
+  }
+
+  void _schedulePantryUpdatePrompt() {
+    if (_isShowingPantryPrompt) {
+      return;
+    }
+
+    final userProvider = context.read<UserProvider>();
+    if (!userProvider.isReady) {
+      return;
+    }
+
+    final user = userProvider.user;
+    if (user == null) {
+      return;
+    }
+
+    final settings = user.pantryUpdateSettings;
+    final promptKey = [
+      user.uid,
+      settings.schedule.storageKey,
+      settings.lastScanAt?.millisecondsSinceEpoch ?? 0,
+      settings.lastPromptAt?.millisecondsSinceEpoch ?? 0,
+    ].join(':');
+
+    if (_lastPantryPromptKey == promptKey || !settings.shouldShowPrompt()) {
+      return;
+    }
+
+    _lastPantryPromptKey = promptKey;
+    _isShowingPantryPrompt = true;
+
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      if (!mounted) {
+        return;
+      }
+
+      await context.read<UserProvider>().markPantryUpdatePromptShown(user.uid);
+
+      if (!mounted) {
+        return;
+      }
+
+      final shouldUpdate = await showDialog<bool>(
+        context: context,
+        builder: (_) => const PantryUpdatePromptDialog(),
+      );
+
+      _isShowingPantryPrompt = false;
+
+      if (!mounted || shouldUpdate != true) {
+        return;
+      }
+
+      _openScan();
+    });
+  }
+
+  Future<void> _scheduleHomeTutorial() async {
+    if (_hasTriggeredTutorial || _isEvaluatingTutorial || !mounted) {
+      return;
+    }
+
+    _isEvaluatingTutorial = true;
+    final shouldShow = await _onboardingStorageService.shouldShowTutorial(
+      ContextualTutorial.homeScanCta,
+    );
+    _isEvaluatingTutorial = false;
+
+    if (!mounted || !shouldShow || _hasTriggeredTutorial) {
+      return;
+    }
+
+    _hasTriggeredTutorial = true;
+    await _onboardingStorageService.markTutorialShown(
+      ContextualTutorial.homeScanCta,
+    );
+
+    if (!mounted) {
+      return;
+    }
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) {
+        return;
+      }
+
+      ShowcaseView.get().startShowCase([_scanShowcaseKey]);
+    });
+  }
+
+  void _openScan() {
+    if (widget.onTabSelected != null) {
+      widget.onTabSelected!(2);
+      return;
+    }
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => const ScanScreen()),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -23,6 +157,10 @@ class HomeScreen extends StatelessWidget {
     final colorScheme = theme.colorScheme;
     final user = context.watch<UserProvider>().user;
     final displayName = _displayNameFromUser(user?.name);
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _scheduleHomeTutorial();
+    });
 
     return Container(
       color: colorScheme.surface,
@@ -49,30 +187,43 @@ class HomeScreen extends StatelessWidget {
                     children: [
                       _HomeIntro(displayName: displayName),
                       const SizedBox(height: AppConstants.paddingXl),
-                      _ScanCallToAction(
-                        onTap: () {
-                          if (onTabSelected != null) {
-                            onTabSelected!(2);
-                            return;
-                          }
-
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(builder: (_) => const ScanScreen()),
-                          );
-                        },
+                      Showcase(
+                        key: _scanShowcaseKey,
+                        title: 'Empieza aqui',
+                        description:
+                            'Empieza aqui para descubrir recetas con tus ingredientes.',
+                        tooltipBackgroundColor:
+                            colorScheme.surfaceContainerLowest,
+                        textColor: colorScheme.onSurface,
+                        titleTextStyle: theme.textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.w800,
+                        ),
+                        descTextStyle: theme.textTheme.bodyMedium?.copyWith(
+                          color: colorScheme.onSurfaceVariant,
+                          height: 1.45,
+                        ),
+                        overlayColor: colorScheme.onSurface,
+                        overlayOpacity: 0.72,
+                        targetBorderRadius: BorderRadius.circular(
+                          AppConstants.borderRadiusLg,
+                        ),
+                        child: _ScanCallToAction(onTap: _openScan),
                       ),
                       const SizedBox(height: AppConstants.paddingXl),
                       _RecipeOfTheDaySection(
                         recipes: recipes,
-                        isLoading: snapshot.connectionState == ConnectionState.waiting &&
+                        isLoading:
+                            snapshot.connectionState ==
+                                ConnectionState.waiting &&
                             !snapshot.hasData,
                         hasError: snapshot.hasError,
                       ),
                       const SizedBox(height: AppConstants.paddingXl),
                       _ExploreCategoriesSection(
                         recipes: recipes,
-                        isLoading: snapshot.connectionState == ConnectionState.waiting &&
+                        isLoading:
+                            snapshot.connectionState ==
+                                ConnectionState.waiting &&
                             !snapshot.hasData,
                       ),
                     ],
@@ -108,14 +259,14 @@ class _HomeIntro extends StatelessWidget {
             fontWeight: FontWeight.w800,
           ),
         ),
-        const SizedBox(height: 10),
+        const SizedBox(height: 5),
         Text.rich(
           TextSpan(
             children: [
               TextSpan(
                 text: '¿Qué vamos a\n',
-                style: theme.textTheme.headlineLarge?.copyWith(
-                  fontSize: 44,
+                style: theme.textTheme.headlineMedium?.copyWith(
+                  fontSize: 37,
                   height: 1.0,
                   fontWeight: FontWeight.w800,
                   color: colorScheme.onSurface,
@@ -123,8 +274,8 @@ class _HomeIntro extends StatelessWidget {
               ),
               TextSpan(
                 text: 'cocinar',
-                style: theme.textTheme.headlineLarge?.copyWith(
-                  fontSize: 44,
+                style: theme.textTheme.headlineMedium?.copyWith(
+                  fontSize: 37,
                   height: 1.0,
                   fontWeight: FontWeight.w800,
                   fontStyle: FontStyle.italic,
@@ -133,8 +284,8 @@ class _HomeIntro extends StatelessWidget {
               ),
               TextSpan(
                 text: '\n hoy?',
-                style: theme.textTheme.headlineLarge?.copyWith(
-                  fontSize: 44,
+                style: theme.textTheme.headlineMedium?.copyWith(
+                  fontSize: 37,
                   height: 1.0,
                   fontWeight: FontWeight.w800,
                   color: colorScheme.onSurface,
@@ -165,6 +316,7 @@ class _ScanCallToAction extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
+    final palette = context.appPalette;
 
     return Material(
       color: Colors.transparent,
@@ -177,10 +329,7 @@ class _ScanCallToAction extends StatelessWidget {
             gradient: LinearGradient(
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
-              colors: [
-                colorScheme.primary,
-                AppColors.primaryDim,
-              ],
+              colors: [colorScheme.primary, palette.brandPrimaryStrong],
             ),
             boxShadow: [
               BoxShadow(
@@ -190,12 +339,15 @@ class _ScanCallToAction extends StatelessWidget {
               ),
             ],
           ),
-          padding: const EdgeInsets.all(AppConstants.paddingLg),
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppConstants.paddingLg,
+            vertical: AppConstants.paddingMd,
+          ),
           child: Row(
             children: [
               Container(
-                width: 60,
-                height: 60,
+                width: 54,
+                height: 54,
                 decoration: BoxDecoration(
                   color: Colors.white.withValues(alpha: 0.16),
                   borderRadius: BorderRadius.circular(20),
@@ -204,9 +356,9 @@ class _ScanCallToAction extends StatelessWidget {
                   ),
                 ),
                 child: const Icon(
-                  Icons.document_scanner_rounded,
+                  Icons.enhance_photo_translate_rounded,
                   color: Colors.white,
-                  size: 30,
+                  size: 28,
                 ),
               ),
               const SizedBox(width: 16),
@@ -221,12 +373,12 @@ class _ScanCallToAction extends StatelessWidget {
                         fontWeight: FontWeight.w800,
                       ),
                     ),
-                    const SizedBox(height: 6),
+                    const SizedBox(height: 4),
                     Text(
                       'La forma más rápida de convertir tu nevera en una receta.',
                       style: theme.textTheme.bodyMedium?.copyWith(
                         color: Colors.white.withValues(alpha: 0.92),
-                        height: 1.45,
+                        height: 1.3,
                       ),
                     ),
                   ],
@@ -234,8 +386,8 @@ class _ScanCallToAction extends StatelessWidget {
               ),
               const SizedBox(width: 12),
               Container(
-                width: 44,
-                height: 44,
+                width: 40,
+                height: 40,
                 decoration: BoxDecoration(
                   color: Colors.white.withValues(alpha: 0.16),
                   shape: BoxShape.circle,
@@ -291,7 +443,8 @@ class _RecipeOfTheDaySection extends StatelessWidget {
           const _HomeMessageCard(
             icon: Icons.receipt_long_rounded,
             title: 'Todavía no hay recetas disponibles',
-            message: 'Cuando añadamos recetas, aquí aparecerá una destacada cada día.',
+            message:
+                'Cuando añadamos recetas, aquí aparecerá una destacada cada día.',
           )
         else
           _RecipeOfTheDayCard(recipe: recipe),
@@ -348,13 +501,13 @@ class _RecipeOfTheDayCard extends StatelessWidget {
                       vertical: 7,
                     ),
                     decoration: BoxDecoration(
-                      color: AppColors.errorContainer,
+                      color: colorScheme.secondaryContainer,
                       borderRadius: BorderRadius.circular(999),
                     ),
                     child: Text(
                       'Receta del día',
                       style: theme.textTheme.labelMedium?.copyWith(
-                        color: AppColors.onErrorContainer,
+                        color: colorScheme.onSecondaryContainer,
                         letterSpacing: 1.5,
                         fontWeight: FontWeight.w800,
                       ),
@@ -416,10 +569,7 @@ class _RecipeOfTheDayCard extends StatelessWidget {
 }
 
 class _RecipeMetaItem extends StatelessWidget {
-  const _RecipeMetaItem({
-    required this.icon,
-    required this.label,
-  });
+  const _RecipeMetaItem({required this.icon, required this.label});
 
   final IconData icon;
   final String label;
@@ -461,17 +611,17 @@ class _ExploreCategoriesSection extends StatelessWidget {
       _CategoryShelfData(
         title: 'Desayunos',
         subtitle: 'Ideas rápidas para empezar el día',
-        recipes: _recipesByCategory(recipes, 'breakfast'),
+        recipes: _recipesByCategory(recipes, 'desayuno'),
       ),
       _CategoryShelfData(
         title: 'Cenas',
         subtitle: 'Opciones sabrosas para la noche',
-        recipes: _recipesByCategory(recipes, 'dinner'),
+        recipes: _recipesByCategory(recipes, 'cena'),
       ),
       _CategoryShelfData(
         title: 'Postres',
         subtitle: 'Recetas dulces de la categoría dessert',
-        recipes: _recipesByCategory(recipes, 'dessert'),
+        recipes: _recipesByCategory(recipes, 'postre'),
       ),
     ];
 
@@ -525,7 +675,7 @@ class _CategoryShelf extends StatelessWidget {
             child: ListView.separated(
               scrollDirection: Axis.horizontal,
               itemCount: section.recipes.length,
-              separatorBuilder: (_, __) => const SizedBox(width: 14),
+              separatorBuilder: (context, index) => const SizedBox(width: 14),
               itemBuilder: (context, index) {
                 final recipe = section.recipes[index];
                 return _CategoryRecipeCard(recipe: recipe);
@@ -656,7 +806,7 @@ class _RecipeCardImage extends StatelessWidget {
       child: CachedNetworkImage(
         imageUrl: photoUrl,
         fit: BoxFit.cover,
-        placeholder: (_, __) => Container(
+        placeholder: (context, imageUrl) => Container(
           color: colorScheme.surfaceContainerHigh,
           alignment: Alignment.center,
           child: SizedBox(
@@ -668,7 +818,8 @@ class _RecipeCardImage extends StatelessWidget {
             ),
           ),
         ),
-        errorWidget: (_, __, ___) => _RecipeImagePlaceholder(iconSize: iconSize),
+        errorWidget: (context, imageUrl, error) =>
+            _RecipeImagePlaceholder(iconSize: iconSize),
       ),
     );
   }
@@ -681,22 +832,22 @@ class _RecipeImagePlaceholder extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final palette = context.appPalette;
+    final colorScheme = Theme.of(context).colorScheme;
+
     return Container(
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [
-            Color(0xFFEAF4EC),
-            Color(0xFFD8E8DB),
-          ],
+          colors: [palette.imagePlaceholderStart, palette.imagePlaceholderEnd],
         ),
       ),
       alignment: Alignment.center,
       child: Icon(
         Icons.restaurant_rounded,
         size: iconSize,
-        color: AppColors.primary.withValues(alpha: 0.4),
+        color: colorScheme.primary.withValues(alpha: 0.4),
       ),
     );
   }
@@ -784,7 +935,7 @@ class _CategoryShelfSkeleton extends StatelessWidget {
     return Column(
       children: List.generate(
         3,
-        (_) => Padding(
+        (index) => Padding(
           padding: const EdgeInsets.only(bottom: AppConstants.paddingLg),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -803,8 +954,9 @@ class _CategoryShelfSkeleton extends StatelessWidget {
                 child: ListView.separated(
                   scrollDirection: Axis.horizontal,
                   itemCount: 2,
-                  separatorBuilder: (_, __) => const SizedBox(width: 14),
-                  itemBuilder: (_, __) => Container(
+                  separatorBuilder: (context, index) =>
+                      const SizedBox(width: 14),
+                  itemBuilder: (context, index) => Container(
                     width: 172,
                     decoration: BoxDecoration(
                       color: color,
@@ -839,9 +991,9 @@ class _InlineEmptyCategoryCard extends StatelessWidget {
       child: Text(
         'Todavía no hay recetas en esta categoría.',
         style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
-              fontWeight: FontWeight.w600,
-            ),
+          color: Theme.of(context).colorScheme.onSurfaceVariant,
+          fontWeight: FontWeight.w600,
+        ),
       ),
     );
   }
@@ -864,20 +1016,24 @@ Recipe? _recipeOfTheDay(List<Recipe> recipes) {
     return null;
   }
 
+  final sortedRecipes = [...recipes]..sort((a, b) => a.id.compareTo(b.id));
   final now = DateTime.now();
-  final daySeed = DateTime(now.year, now.month, now.day)
-      .difference(DateTime(2024))
-      .inDays;
+  final daySeed = DateTime(
+    now.year,
+    now.month,
+    now.day,
+  ).difference(DateTime(2024)).inDays;
 
-  return recipes[daySeed % recipes.length];
+  return sortedRecipes[daySeed % sortedRecipes.length];
 }
 
 List<Recipe> _recipesByCategory(List<Recipe> recipes, String category) {
-  final normalizedCategory = category.trim().toLowerCase();
+  final normalizedCategory = _normalizeCategoryKey(category);
 
   return recipes
       .where(
-        (recipe) => recipe.category.trim().toLowerCase() == normalizedCategory,
+        (recipe) =>
+            _normalizeCategoryKey(recipe.category) == normalizedCategory,
       )
       .toList();
 }
@@ -896,12 +1052,16 @@ String _categoryLabel(String category) {
 
   switch (normalized) {
     case 'breakfast':
+    case 'desayuno':
       return 'Desayuno';
     case 'dinner':
+    case 'cena':
       return 'Cena';
     case 'dessert':
+    case 'postre':
       return 'Postre';
     case 'easy':
+    case 'fácil':
       return 'Fácil';
     case 'lunch':
       return 'Comida';
@@ -911,5 +1071,22 @@ String _categoryLabel(String category) {
       }
 
       return normalized[0].toUpperCase() + normalized.substring(1);
+  }
+}
+
+String _normalizeCategoryKey(String category) {
+  final normalizedCategory = category.trim().toLowerCase();
+
+  switch (normalizedCategory) {
+    case 'breakfast':
+      return 'desayuno';
+    case 'dinner':
+      return 'cena';
+    case 'dessert':
+      return 'postre';
+    case 'easy':
+      return 'fácil';
+    default:
+      return normalizedCategory;
   }
 }

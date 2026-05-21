@@ -7,30 +7,65 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 import 'package:wtfood_app/core/constants.dart';
-import 'package:wtfood_app/models/user_model.dart';
+import 'package:wtfood_app/core/theme.dart';
 import 'package:wtfood_app/providers/user_provider.dart';
 import 'package:wtfood_app/services/auth_service.dart';
 import 'package:wtfood_app/services/cloudinary_service.dart';
 
 class _ProfilePalette {
-  static const Color background = Color(0xFFF6F7F3);
-  static const Color surface = Color(0xFFFFFFFF);
-  static const Color surfaceBorder = Color(0xFFE8ECE6);
-  static const Color shadow = Color(0x140D2A18);
+  const _ProfilePalette({
+    required this.background,
+    required this.surface,
+    required this.surfaceBorder,
+    required this.shadow,
+    required this.primary,
+    required this.primaryDark,
+    required this.onPrimary,
+    required this.accent,
+    required this.textPrimary,
+    required this.textSecondary,
+    required this.textMuted,
+    required this.avatarBackground,
+  });
 
-  static const Color primary = Color(0xFF0B8A43);
-  static const Color primaryDark = Color(0xFF067437);
-  static const Color onPrimary = Color(0xFFFFFFFF);
+  final Color background;
+  final Color surface;
+  final Color surfaceBorder;
+  final Color shadow;
+  final Color primary;
+  final Color primaryDark;
+  final Color onPrimary;
+  final Color accent;
+  final Color textPrimary;
+  final Color textSecondary;
+  final Color textMuted;
+  final Color avatarBackground;
 
-  static const Color accent = Color(0xFFFF8A24);
-  static const Color textPrimary = Color(0xFF29342D);
-  static const Color textSecondary = Color(0xFF7A847C);
-  static const Color textMuted = Color(0xFFAAB1AB);
-  static const Color avatarBackground = Color(0xFFE3E3E3);
+  factory _ProfilePalette.of(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final palette = context.appPalette;
+
+    return _ProfilePalette(
+      background: colorScheme.surface,
+      surface: colorScheme.surfaceContainerLowest,
+      surfaceBorder: colorScheme.outlineVariant,
+      shadow: palette.shadowSoft,
+      primary: colorScheme.primary,
+      primaryDark: palette.brandPrimaryStrong,
+      onPrimary: colorScheme.onPrimary,
+      accent: colorScheme.secondary,
+      textPrimary: colorScheme.onSurface,
+      textSecondary: colorScheme.onSurfaceVariant,
+      textMuted: colorScheme.onSurfaceVariant.withValues(alpha: 0.72),
+      avatarBackground: palette.profileAvatarBackground,
+    );
+  }
 }
 
 class ProfileScreen extends StatefulWidget {
-  const ProfileScreen({super.key});
+  const ProfileScreen({super.key, this.showBackButton = false});
+
+  final bool showBackButton;
 
   @override
   State<ProfileScreen> createState() => _ProfileScreenState();
@@ -60,18 +95,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
     super.dispose();
   }
 
-  // ── Guardar cambios de perfil ─────────────────────────────────────────────
-
   Future<void> _saveChanges() async {
     final provider = context.read<UserProvider>();
     final user = provider.user;
-    if (user == null) return;
+    if (user == null) {
+      return;
+    }
 
     final newName = _nameController.text.trim();
     final newEmail = _emailController.text.trim();
 
     if (newName.isEmpty || newEmail.isEmpty) {
-      _showSnackbar('Los campos no pueden estar vacíos.', isError: true);
+      _showSnackbar('Los campos no pueden estar vacios.', isError: true);
       return;
     }
 
@@ -94,12 +129,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
         );
       }
 
-      // Actualizar nombre en Firebase Auth
       if (newName != user.name) {
         await firebaseUser.updateDisplayName(newName);
       }
 
-      // Actualizar email en Firebase Auth (requiere reautenticación si cambia)
       if (newEmail != user.email) {
         await firebaseUser.verifyBeforeUpdateEmail(newEmail);
       }
@@ -108,12 +141,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
         await firebaseUser.updatePhotoURL(newPhotoUrl);
       }
 
-      // Actualizar en Firestore
       await FirebaseFirestore.instance.collection('users').doc(user.uid).update(
         {'name': newName, 'email': newEmail, 'photoUrl': newPhotoUrl},
       );
 
-      // Actualizar estado local
       provider.updateUser(
         user.copyWith(name: newName, email: newEmail, photoUrl: newPhotoUrl),
       );
@@ -123,21 +154,21 @@ class _ProfileScreenState extends State<ProfileScreen> {
       }
 
       _showSnackbar('Cambios guardados correctamente.');
-    } catch (e) {
-      _showSnackbar('Error al guardar: $e', isError: true);
+    } catch (error) {
+      _showSnackbar('Error al guardar: $error', isError: true);
     } finally {
-      if (mounted) setState(() => _isSaving = false);
+      if (mounted) {
+        setState(() => _isSaving = false);
+      }
     }
   }
-
-  // ── Cerrar sesión ─────────────────────────────────────────────────────────
 
   Future<void> _signOut() async {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Cerrar sesión'),
-        content: const Text('¿Estás seguro de que quieres cerrar sesión?'),
+        title: const Text('Cerrar sesion'),
+        content: const Text('Estas seguro de que quieres cerrar sesion?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
@@ -146,7 +177,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           TextButton(
             onPressed: () => Navigator.pop(ctx, true),
             child: Text(
-              'Cerrar sesión',
+              'Cerrar sesion',
               style: TextStyle(
                 color: Theme.of(context).colorScheme.error,
                 fontWeight: FontWeight.bold,
@@ -157,10 +188,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
       ),
     );
 
-    if (confirm == true) await AuthService().logout();
+    if (confirm == true) {
+      await AuthService().logout();
+    }
   }
-
-  // ── Cambiar contraseña (bottom sheet) ─────────────────────────────────────
 
   void _showChangePasswordSheet() {
     showModalBottomSheet(
@@ -181,226 +212,262 @@ class _ProfileScreenState extends State<ProfileScreen> {
         imageQuality: 85,
       );
 
-      if (pickedFile == null || !mounted) return;
+      if (pickedFile == null || !mounted) {
+        return;
+      }
 
       setState(() => _selectedImage = File(pickedFile.path));
-    } catch (e) {
-      _showSnackbar('No se pudo seleccionar la imagen: $e', isError: true);
+    } catch (error) {
+      _showSnackbar('No se pudo seleccionar la imagen: $error', isError: true);
     }
   }
 
-  // ── Helpers ───────────────────────────────────────────────────────────────
-
   void _showSnackbar(String message, {bool isError = false}) {
-    if (!mounted) return;
+    if (!mounted) {
+      return;
+    }
+
+    final colorScheme = Theme.of(context).colorScheme;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(message),
-        backgroundColor: isError
-            ? Theme.of(context).colorScheme.error
-            : AppColors.primary,
+        backgroundColor: isError ? colorScheme.error : colorScheme.primary,
         behavior: SnackBarBehavior.floating,
       ),
     );
   }
 
-  // ── Build ─────────────────────────────────────────────────────────────────
-
   @override
   Widget build(BuildContext context) {
     final user = context.watch<UserProvider>().user;
+    final palette = _ProfilePalette.of(context);
 
     return SafeArea(
       child: DecoratedBox(
-        decoration: const BoxDecoration(color: _ProfilePalette.background),
+        decoration: BoxDecoration(color: palette.background),
         child: SingleChildScrollView(
-        padding: const EdgeInsets.all(AppConstants.paddingLg),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const SizedBox(height: AppConstants.paddingMd),
-
-            // Avatar
-            Center(
-              child: Stack(
-                clipBehavior: Clip.none,
-                children: [
-                  Container(
-                    width: 140,
-                    height: 140,
-                    decoration: const BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: _ProfilePalette.avatarBackground,
+          padding: const EdgeInsets.all(AppConstants.paddingLg),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              if (widget.showBackButton) ...[
+                _BackToSettingsButton(
+                  onTap: () => Navigator.of(context).maybePop(),
+                ),
+                const SizedBox(height: AppConstants.paddingLg),
+              ],
+              const SizedBox(height: AppConstants.paddingMd),
+              Center(
+                child: Stack(
+                  clipBehavior: Clip.none,
+                  children: [
+                    Container(
+                      width: 140,
+                      height: 140,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: palette.avatarBackground,
+                        boxShadow: [
+                          BoxShadow(
+                            color: palette.shadow,
+                            blurRadius: 20,
+                            offset: const Offset(0, 10),
+                          ),
+                        ],
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.all(8),
+                        child: _ProfileAvatar(
+                          selectedImage: _selectedImage,
+                          photoUrl: user?.photoUrl,
+                        ),
+                      ),
+                    ),
+                    Positioned(
+                      bottom: 2,
+                      right: 2,
+                      child: GestureDetector(
+                        onTap: _isSaving ? null : _pickProfileImage,
+                        child: Container(
+                          width: 42,
+                          height: 42,
+                          decoration: BoxDecoration(
+                            color: palette.accent,
+                            shape: BoxShape.circle,
+                            border: Border.all(
+                              color: palette.surface,
+                              width: 3,
+                            ),
+                            boxShadow: [
+                              BoxShadow(
+                                color: palette.accent.withValues(alpha: 0.24),
+                                blurRadius: 12,
+                                offset: const Offset(0, 4),
+                              ),
+                            ],
+                          ),
+                          child: Icon(
+                            Icons.edit,
+                            size: 18,
+                            color: palette.onPrimary,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: AppConstants.paddingLg),
+              Center(
+                child: Text(
+                  'Mi Perfil',
+                  style: Theme.of(context).textTheme.headlineLarge?.copyWith(
+                    fontWeight: FontWeight.w800,
+                    color: palette.primaryDark,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 6),
+              Center(
+                child: Text(
+                  'Gestiona tu informacion personal',
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: palette.textSecondary,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+              const SizedBox(height: AppConstants.paddingXl),
+              _EditableField(
+                label: 'NOMBRE COMPLETO',
+                controller: _nameController,
+                keyboardType: TextInputType.name,
+                icon: Icons.person_outline_rounded,
+              ),
+              const SizedBox(height: AppConstants.paddingMd),
+              _EditableField(
+                label: 'EMAIL',
+                controller: _emailController,
+                keyboardType: TextInputType.emailAddress,
+                icon: Icons.email_outlined,
+              ),
+              const SizedBox(height: AppConstants.paddingXl),
+              _ActionRow(
+                icon: Icons.lock_outline_rounded,
+                label: 'Cambiar contrasena',
+                useTertiary: true,
+                onTap: _showChangePasswordSheet,
+              ),
+              const SizedBox(height: AppConstants.paddingXl),
+              SizedBox(
+                width: double.infinity,
+                height: 60,
+                child: GestureDetector(
+                  onTap: _isSaving ? null : _saveChanges,
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [palette.primaryDark, palette.primary],
+                      ),
+                      borderRadius: BorderRadius.circular(999),
                       boxShadow: [
                         BoxShadow(
-                          color: _ProfilePalette.shadow,
+                          color: palette.primary.withValues(alpha: 0.24),
                           blurRadius: 20,
-                          offset: Offset(0, 10),
+                          offset: const Offset(0, 10),
                         ),
                       ],
                     ),
-                    child: Padding(
-                      padding: const EdgeInsets.all(8),
-                      child: _ProfileAvatar(
-                        selectedImage: _selectedImage,
-                        photoUrl: user?.photoUrl,
-                      ),
-                    ),
-                  ),
-                  Positioned(
-                    bottom: 2,
-                    right: 2,
-                    child: GestureDetector(
-                      onTap: _isSaving ? null : _pickProfileImage,
-                      child: Container(
-                        width: 42,
-                        height: 42,
-                        decoration: BoxDecoration(
-                          color: _ProfilePalette.accent,
-                          shape: BoxShape.circle,
-                          border: Border.all(
-                            color: _ProfilePalette.surface,
-                            width: 3,
-                          ),
-                          boxShadow: const [
-                            BoxShadow(
-                              color: Color(0x33FF8A24),
-                              blurRadius: 12,
-                              offset: Offset(0, 4),
+                    child: Center(
+                      child: _isSaving
+                          ? SizedBox(
+                              width: 22,
+                              height: 22,
+                              child: CircularProgressIndicator(
+                                color: palette.onPrimary,
+                                strokeWidth: 2.5,
+                              ),
+                            )
+                          : Text(
+                              'Guardar cambios',
+                              style: Theme.of(context).textTheme.titleMedium
+                                  ?.copyWith(
+                                    color: palette.onPrimary,
+                                    fontWeight: FontWeight.w700,
+                                  ),
                             ),
-                          ],
-                        ),
-                        child: const Icon(
-                          Icons.edit,
-                          size: 18,
-                          color: _ProfilePalette.onPrimary,
-                        ),
-                      ),
                     ),
                   ),
-                ],
-              ),
-            ),
-
-            const SizedBox(height: AppConstants.paddingLg),
-
-            Center(
-              child: Text(
-                'My Profile',
-                style: Theme.of(context).textTheme.headlineLarge?.copyWith(
-                  fontWeight: FontWeight.w800,
-                  color: _ProfilePalette.primaryDark,
                 ),
               ),
-            ),
-            const SizedBox(height: 6),
-            Center(
-              child: Text(
-                'Manage your personal information',
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: _ProfilePalette.textSecondary,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ),
-
-            const SizedBox(height: AppConstants.paddingXl),
-
-            // Nombre
-            _EditableField(
-              label: 'FULL NAME',
-              controller: _nameController,
-              keyboardType: TextInputType.name,
-              icon: Icons.person_outline_rounded,
-            ),
-            const SizedBox(height: AppConstants.paddingMd),
-
-            // Email
-            _EditableField(
-              label: 'EMAIL',
-              controller: _emailController,
-              keyboardType: TextInputType.emailAddress,
-              icon: Icons.email_outlined,
-            ),
-
-            const SizedBox(height: AppConstants.paddingXl),
-
-            // Cambiar contraseña
-            _ActionRow(
-              icon: Icons.lock_outline_rounded,
-              label: 'Change Password',
-              useTertiary: true,
-              onTap: _showChangePasswordSheet,
-            ),
-
-            const SizedBox(height: AppConstants.paddingXl),
-
-            // Botón Save Changes
-            SizedBox(
-              width: double.infinity,
-              height: 60,
-              child: GestureDetector(
-                onTap: _isSaving ? null : _saveChanges,
-                child: DecoratedBox(
-                  decoration: BoxDecoration(
-                    gradient: const LinearGradient(
-                      colors: [
-                        _ProfilePalette.primaryDark,
-                        _ProfilePalette.primary,
-                      ],
+              const SizedBox(height: AppConstants.paddingMd),
+              GestureDetector(
+                onTap: _signOut,
+                child: Center(
+                  child: Text(
+                    'Cerrar sesion',
+                    style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                      color: palette.accent,
+                      letterSpacing: 1.2,
+                      fontWeight: FontWeight.w700,
                     ),
-                    borderRadius: BorderRadius.circular(999),
-                    boxShadow: const [
-                      BoxShadow(
-                        color: Color(0x330B8A43),
-                        blurRadius: 20,
-                        offset: Offset(0, 10),
-                      ),
-                    ],
-                  ),
-                  child: Center(
-                    child: _isSaving
-                        ? const SizedBox(
-                            width: 22,
-                            height: 22,
-                            child: CircularProgressIndicator(
-                              color: _ProfilePalette.onPrimary,
-                              strokeWidth: 2.5,
-                            ),
-                          )
-                        : Text(
-                            'Save Changes',
-                            style: Theme.of(context).textTheme.titleMedium
-                                ?.copyWith(
-                                  color: _ProfilePalette.onPrimary,
-                                  fontWeight: FontWeight.w700,
-                                ),
-                          ),
                   ),
                 ),
               ),
+              const SizedBox(height: 100),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _BackToSettingsButton extends StatelessWidget {
+  const _BackToSettingsButton({required this.onTap});
+
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final palette = _ProfilePalette.of(context);
+
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppConstants.paddingMd,
+          vertical: 12,
+        ),
+        decoration: BoxDecoration(
+          color: palette.surface,
+          borderRadius: BorderRadius.circular(999),
+          border: Border.all(color: palette.surfaceBorder),
+          boxShadow: [
+            BoxShadow(
+              color: palette.shadow,
+              blurRadius: 10,
+              offset: const Offset(0, 4),
             ),
-
-            const SizedBox(height: AppConstants.paddingMd),
-
-            // Sign out
-            GestureDetector(
-              onTap: _signOut,
-              child: Center(
-                child: Text(
-                  'SIGN OUT',
-                  style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                    color: _ProfilePalette.accent,
-                    letterSpacing: 1.2,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-              ),
-            ),
-
-            const SizedBox(height: 100),
           ],
         ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              Icons.arrow_back_ios_new_rounded,
+              size: 16,
+              color: palette.primaryDark,
+            ),
+            const SizedBox(width: 8),
+            Text(
+              'Volver a configuracion',
+              style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                color: palette.primaryDark,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ],
         ),
       ),
     );
@@ -408,13 +475,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
 }
 
 class _ProfileAvatar extends StatelessWidget {
+  const _ProfileAvatar({required this.selectedImage, required this.photoUrl});
+
   final File? selectedImage;
   final String? photoUrl;
 
-  const _ProfileAvatar({required this.selectedImage, required this.photoUrl});
-
   @override
   Widget build(BuildContext context) {
+    final palette = _ProfilePalette.of(context);
     ImageProvider<Object>? imageProvider;
 
     if (selectedImage != null) {
@@ -424,29 +492,16 @@ class _ProfileAvatar extends StatelessWidget {
     }
 
     return CircleAvatar(
-      backgroundColor: _ProfilePalette.avatarBackground,
+      backgroundColor: palette.avatarBackground,
       backgroundImage: imageProvider,
       child: imageProvider == null
-          ? const Icon(
-              Icons.person_rounded,
-              size: 62,
-              color: _ProfilePalette.surface,
-            )
+          ? Icon(Icons.person_rounded, size: 62, color: palette.surface)
           : null,
     );
   }
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Campo editable
-// ─────────────────────────────────────────────────────────────────────────────
-
 class _EditableField extends StatelessWidget {
-  final String label;
-  final TextEditingController controller;
-  final TextInputType keyboardType;
-  final IconData icon;
-
   const _EditableField({
     required this.label,
     required this.controller,
@@ -454,8 +509,15 @@ class _EditableField extends StatelessWidget {
     required this.icon,
   });
 
+  final String label;
+  final TextEditingController controller;
+  final TextInputType keyboardType;
+  final IconData icon;
+
   @override
   Widget build(BuildContext context) {
+    final palette = _ProfilePalette.of(context);
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -465,7 +527,7 @@ class _EditableField extends StatelessWidget {
             label,
             style: Theme.of(context).textTheme.labelMedium?.copyWith(
               letterSpacing: 1.2,
-              color: _ProfilePalette.textSecondary,
+              color: palette.textSecondary,
               fontWeight: FontWeight.w700,
             ),
           ),
@@ -474,32 +536,28 @@ class _EditableField extends StatelessWidget {
         Container(
           width: double.infinity,
           decoration: BoxDecoration(
-            color: _ProfilePalette.surface,
+            color: palette.surface,
             borderRadius: BorderRadius.circular(AppConstants.borderRadiusMd),
-            border: Border.all(color: _ProfilePalette.surfaceBorder),
-            boxShadow: const [
+            border: Border.all(color: palette.surfaceBorder),
+            boxShadow: [
               BoxShadow(
-                color: _ProfilePalette.shadow,
+                color: palette.shadow,
                 blurRadius: 12,
-                offset: Offset(0, 4),
+                offset: const Offset(0, 4),
               ),
             ],
           ),
           child: TextField(
             controller: controller,
             keyboardType: keyboardType,
-            style: Theme.of(
-              context,
-            ).textTheme.titleMedium?.copyWith(
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(
               fontWeight: FontWeight.w700,
-              color: _ProfilePalette.textPrimary,
+              color: palette.textPrimary,
             ),
             decoration: InputDecoration(
-              prefixIcon: Icon(
-                icon,
-                color: _ProfilePalette.primary,
-              ),
+              prefixIcon: Icon(icon, color: palette.primary),
               border: InputBorder.none,
+              fillColor: Colors.transparent,
               contentPadding: const EdgeInsets.symmetric(
                 horizontal: AppConstants.paddingLg,
                 vertical: 16,
@@ -512,16 +570,7 @@ class _EditableField extends StatelessWidget {
   }
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Fila de acción (igual que el original)
-// ─────────────────────────────────────────────────────────────────────────────
-
 class _ActionRow extends StatelessWidget {
-  final String label;
-  final IconData icon;
-  final bool useTertiary;
-  final VoidCallback? onTap;
-
   const _ActionRow({
     required this.label,
     required this.icon,
@@ -529,11 +578,15 @@ class _ActionRow extends StatelessWidget {
     this.onTap,
   });
 
+  final String label;
+  final IconData icon;
+  final bool useTertiary;
+  final VoidCallback? onTap;
+
   @override
   Widget build(BuildContext context) {
-    final iconColor = useTertiary
-        ? _ProfilePalette.accent
-        : _ProfilePalette.primary;
+    final palette = _ProfilePalette.of(context);
+    final iconColor = useTertiary ? palette.accent : palette.primary;
 
     return GestureDetector(
       onTap: onTap,
@@ -542,14 +595,14 @@ class _ActionRow extends StatelessWidget {
         height: 64,
         padding: const EdgeInsets.symmetric(horizontal: AppConstants.paddingMd),
         decoration: BoxDecoration(
-          color: _ProfilePalette.surface,
+          color: palette.surface,
           borderRadius: BorderRadius.circular(AppConstants.borderRadiusMd),
-          border: Border.all(color: _ProfilePalette.surfaceBorder),
-          boxShadow: const [
+          border: Border.all(color: palette.surfaceBorder),
+          boxShadow: [
             BoxShadow(
-              color: _ProfilePalette.shadow,
+              color: palette.shadow,
               blurRadius: 10,
-              offset: Offset(0, 4),
+              offset: const Offset(0, 4),
             ),
           ],
         ),
@@ -568,28 +621,19 @@ class _ActionRow extends StatelessWidget {
             Expanded(
               child: Text(
                 label,
-                style: Theme.of(
-                  context,
-                ).textTheme.bodyLarge?.copyWith(
+                style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                   fontWeight: FontWeight.w700,
-                  color: _ProfilePalette.textPrimary,
+                  color: palette.textPrimary,
                 ),
               ),
             ),
-            const Icon(
-              Icons.chevron_right_rounded,
-              color: _ProfilePalette.textMuted,
-            ),
+            Icon(Icons.chevron_right_rounded, color: palette.textMuted),
           ],
         ),
       ),
     );
   }
 }
-
-// ─────────────────────────────────────────────────────────────────────────────
-// Bottom sheet: cambiar contraseña
-// ─────────────────────────────────────────────────────────────────────────────
 
 class _ChangePasswordSheet extends StatefulWidget {
   const _ChangePasswordSheet();
@@ -628,12 +672,12 @@ class _ChangePasswordSheetState extends State<_ChangePasswordSheet> {
     }
     if (newPass.length < 6) {
       setState(
-        () => _error = 'La nueva contraseña debe tener al menos 6 caracteres.',
+        () => _error = 'La nueva contrasena debe tener al menos 6 caracteres.',
       );
       return;
     }
     if (newPass != confirm) {
-      setState(() => _error = 'Las contraseñas no coinciden.');
+      setState(() => _error = 'Las contrasenas no coinciden.');
       return;
     }
 
@@ -649,16 +693,16 @@ class _ChangePasswordSheetState extends State<_ChangePasswordSheet> {
         password: current,
       );
 
-      // Reautenticar antes de cambiar la contraseña
       await firebaseUser.reauthenticateWithCredential(credential);
       await firebaseUser.updatePassword(newPass);
 
       if (mounted) {
+        final colorScheme = Theme.of(context).colorScheme;
         Navigator.pop(context);
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Contraseña actualizada correctamente.'),
-            backgroundColor: AppColors.primary,
+          SnackBar(
+            content: const Text('Contrasena actualizada correctamente.'),
+            backgroundColor: colorScheme.primary,
             behavior: SnackBarBehavior.floating,
           ),
         );
@@ -666,19 +710,24 @@ class _ChangePasswordSheetState extends State<_ChangePasswordSheet> {
     } on FirebaseAuthException catch (e) {
       setState(() {
         _error = switch (e.code) {
-          'wrong-password' => 'La contraseña actual es incorrecta.',
-          'weak-password' => 'La contraseña es muy débil.',
-          'too-many-requests' => 'Demasiados intentos. Inténtalo más tarde.',
+          'wrong-password' => 'La contrasena actual es incorrecta.',
+          'weak-password' => 'La contrasena es muy debil.',
+          'too-many-requests' => 'Demasiados intentos. Intentalo mas tarde.',
           _ => 'Error: ${e.message}',
         };
       });
     } finally {
-      if (mounted) setState(() => _isLoading = false);
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final palette = _ProfilePalette.of(context);
+    final colorScheme = Theme.of(context).colorScheme;
+
     return Padding(
       padding: EdgeInsets.fromLTRB(
         24,
@@ -690,46 +739,41 @@ class _ChangePasswordSheetState extends State<_ChangePasswordSheet> {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Handle
           Center(
             child: Container(
               width: 40,
               height: 4,
               decoration: BoxDecoration(
-                color: _ProfilePalette.surfaceBorder,
+                color: palette.surfaceBorder,
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
           ),
           const SizedBox(height: 20),
           Text(
-            'Change Password',
-            style: Theme.of(
-              context,
-            ).textTheme.titleLarge?.copyWith(
+            'Cambiar contrasena',
+            style: Theme.of(context).textTheme.titleLarge?.copyWith(
               fontWeight: FontWeight.w800,
-              color: _ProfilePalette.textPrimary,
+              color: palette.textPrimary,
             ),
           ),
           const SizedBox(height: 20),
-
-          // Error
           if (_error != null) ...[
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: AppColors.errorContainer.withValues(alpha: 0.18),
+                color: colorScheme.errorContainer.withValues(alpha: 0.18),
                 borderRadius: BorderRadius.circular(10),
-                border: Border.all(color: AppColors.errorContainer),
+                border: Border.all(color: colorScheme.errorContainer),
               ),
               child: Row(
                 children: [
-                  const Icon(Icons.error_outline, color: AppColors.error, size: 20),
+                  Icon(Icons.error_outline, color: colorScheme.error, size: 20),
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
                       _error!,
-                      style: const TextStyle(color: AppColors.error),
+                      style: TextStyle(color: colorScheme.error),
                     ),
                   ),
                 ],
@@ -737,58 +781,50 @@ class _ChangePasswordSheetState extends State<_ChangePasswordSheet> {
             ),
             const SizedBox(height: 16),
           ],
-
-          // Contraseña actual
           _PasswordField(
             controller: _currentController,
-            label: 'Contraseña actual',
+            label: 'Contrasena actual',
             obscure: _obscureCurrent,
             onToggle: () => setState(() => _obscureCurrent = !_obscureCurrent),
           ),
           const SizedBox(height: 12),
-
-          // Nueva contraseña
           _PasswordField(
             controller: _newController,
-            label: 'Nueva contraseña',
+            label: 'Nueva contrasena',
             obscure: _obscureNew,
             onToggle: () => setState(() => _obscureNew = !_obscureNew),
           ),
           const SizedBox(height: 12),
-
-          // Confirmar contraseña
           _PasswordField(
             controller: _confirmController,
-            label: 'Repite la contraseña',
+            label: 'Repite la contrasena',
             obscure: _obscureConfirm,
             onToggle: () => setState(() => _obscureConfirm = !_obscureConfirm),
           ),
           const SizedBox(height: 24),
-
-          // Botón
           SizedBox(
             width: double.infinity,
             height: 56,
             child: ElevatedButton(
               onPressed: _isLoading ? null : _changePassword,
               style: ElevatedButton.styleFrom(
-                backgroundColor: _ProfilePalette.primary,
-                foregroundColor: _ProfilePalette.onPrimary,
+                backgroundColor: palette.primary,
+                foregroundColor: palette.onPrimary,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(14),
                 ),
               ),
               child: _isLoading
-                  ? const SizedBox(
+                  ? SizedBox(
                       width: 22,
                       height: 22,
                       child: CircularProgressIndicator(
-                        color: _ProfilePalette.onPrimary,
+                        color: palette.onPrimary,
                         strokeWidth: 2.5,
                       ),
                     )
                   : const Text(
-                      'Update Password',
+                      'Actualizar contrasena',
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
@@ -803,11 +839,6 @@ class _ChangePasswordSheetState extends State<_ChangePasswordSheet> {
 }
 
 class _PasswordField extends StatelessWidget {
-  final TextEditingController controller;
-  final String label;
-  final bool obscure;
-  final VoidCallback onToggle;
-
   const _PasswordField({
     required this.controller,
     required this.label,
@@ -815,38 +846,42 @@ class _PasswordField extends StatelessWidget {
     required this.onToggle,
   });
 
+  final TextEditingController controller;
+  final String label;
+  final bool obscure;
+  final VoidCallback onToggle;
+
   @override
   Widget build(BuildContext context) {
+    final palette = _ProfilePalette.of(context);
+
     return TextFormField(
       controller: controller,
       obscureText: obscure,
       decoration: InputDecoration(
         labelText: label,
-        labelStyle: const TextStyle(color: _ProfilePalette.textSecondary),
-        prefixIcon: const Icon(
-          Icons.lock_outline,
-          color: _ProfilePalette.primary,
-        ),
+        labelStyle: TextStyle(color: palette.textSecondary),
+        prefixIcon: Icon(Icons.lock_outline, color: palette.primary),
         suffixIcon: IconButton(
           icon: Icon(
             obscure ? Icons.visibility_off : Icons.visibility,
-            color: _ProfilePalette.textSecondary,
+            color: palette.textSecondary,
           ),
           onPressed: onToggle,
         ),
         filled: true,
-        fillColor: _ProfilePalette.surface,
+        fillColor: palette.surface,
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: _ProfilePalette.surfaceBorder),
+          borderSide: BorderSide(color: palette.surfaceBorder),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: _ProfilePalette.surfaceBorder),
+          borderSide: BorderSide(color: palette.surfaceBorder),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: _ProfilePalette.primary),
+          borderSide: BorderSide(color: palette.primary),
         ),
       ),
     );

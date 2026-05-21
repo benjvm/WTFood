@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:wtfood_app/core/constants.dart';
+import 'package:wtfood_app/providers/fridge_provider.dart';
 import 'package:wtfood_app/models/recipe.dart';
 import 'package:wtfood_app/providers/user_provider.dart';
 
@@ -23,10 +24,73 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
 
     final userProvider = context.watch<UserProvider>();
     final isFav = userProvider.isFavorite(widget.recipe.id);
+    final isShoppingListSaved = userProvider.isShoppingListSaved(
+      widget.recipe.id,
+    );
     final uid = userProvider.user?.uid ?? '';
 
     return Scaffold(
       backgroundColor: colorScheme.surface,
+      bottomNavigationBar: SafeArea(
+        top: false,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(
+            AppConstants.paddingLg,
+            AppConstants.paddingMd,
+            AppConstants.paddingLg,
+            AppConstants.paddingLg,
+          ),
+          child: SizedBox(
+            height: 56,
+            child: FilledButton.icon(
+              onPressed: uid.isEmpty
+                  ? null
+                  : () async {
+                      final wasAlreadySaved = isShoppingListSaved;
+                      final didSave = await userProvider.saveShoppingList(
+                        uid,
+                        widget.recipe,
+                        pantryItems: context.read<FridgeProvider>().ingredients,
+                      );
+
+                      if (!context.mounted) {
+                        return;
+                      }
+
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(
+                            didSave
+                                ? wasAlreadySaved
+                                      ? 'Lista de compra actualizada.'
+                                      : 'Lista de compra guardada.'
+                                : 'No se pudo guardar la lista de compra.',
+                          ),
+                          behavior: SnackBarBehavior.floating,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(
+                              AppConstants.borderRadiusMd,
+                            ),
+                          ),
+                          margin: const EdgeInsets.fromLTRB(
+                            AppConstants.paddingLg,
+                            0,
+                            AppConstants.paddingLg,
+                            AppConstants.paddingLg,
+                          ),
+                        ),
+                      );
+                    },
+              icon: Icon(
+                isShoppingListSaved
+                    ? Icons.playlist_add_check_circle_rounded
+                    : Icons.playlist_add_rounded,
+              ),
+              label: const Text('Guardar lista de compra'),
+            ),
+          ),
+        ),
+      ),
       body: CustomScrollView(
         slivers: [
           // ── Hero App Bar ──────────────────────────────────────────
@@ -55,16 +119,23 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
                   iconColor: isFav ? Colors.redAccent : null,
                   onTap: () async {
                     final wasAlreadyFav = isFav;
-                    await userProvider.toggleFavoriteRecipe(uid, widget.recipe.id);
+                    await userProvider.toggleFavoriteRecipe(
+                      uid,
+                      widget.recipe.id,
+                    );
                     if (!context.mounted) return;
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
                         content: Text(
-                          wasAlreadyFav ? 'Eliminado de favoritos' : 'Guardado en favoritos',
+                          wasAlreadyFav
+                              ? 'Eliminado de favoritos'
+                              : 'Guardado en favoritos',
                         ),
                         behavior: SnackBarBehavior.floating,
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(AppConstants.borderRadiusMd),
+                          borderRadius: BorderRadius.circular(
+                            AppConstants.borderRadiusMd,
+                          ),
                         ),
                         margin: const EdgeInsets.fromLTRB(
                           AppConstants.paddingLg,
@@ -88,7 +159,7 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
                       ? Image.network(
                           widget.recipe.photoUrl,
                           fit: BoxFit.cover,
-                          errorBuilder: (_, __, ___) =>
+                          errorBuilder: (context, error, stackTrace) =>
                               _HeroPlaceholder(colorScheme: colorScheme),
                         )
                       : _HeroPlaceholder(colorScheme: colorScheme),
@@ -154,23 +225,24 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
                       _InfoPill(
                         icon: Icons.schedule_rounded,
                         label: widget.recipe.duration,
-                        backgroundColor: AppColors.secondaryContainer,
-                        iconColor: AppColors.secondary,
-                        textColor: AppColors.onSecondaryContainer,
+                        backgroundColor: colorScheme.secondaryContainer,
+                        iconColor: colorScheme.secondary,
+                        textColor: colorScheme.onSecondaryContainer,
                       ),
                       _InfoPill(
                         icon: Icons.restaurant_rounded,
                         label: widget.recipe.category,
-                        backgroundColor: AppColors.primaryContainer,
-                        iconColor: AppColors.primary,
-                        textColor: AppColors.onPrimaryContainer,
+                        backgroundColor: colorScheme.primaryContainer,
+                        iconColor: colorScheme.primary,
+                        textColor: colorScheme.onPrimaryContainer,
                       ),
                       _InfoPill(
                         icon: Icons.list_alt_rounded,
-                        label: '${widget.recipe.ingredients.length} ingredientes',
-                        backgroundColor: AppColors.tertiaryContainer,
-                        iconColor: AppColors.tertiary,
-                        textColor: AppColors.onTertiaryContainer,
+                        label:
+                            '${widget.recipe.ingredients.length} ingredientes',
+                        backgroundColor: colorScheme.tertiaryContainer,
+                        iconColor: colorScheme.tertiary,
+                        textColor: colorScheme.onTertiaryContainer,
                       ),
                     ],
                   ),
@@ -215,8 +287,8 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
                                       ingredient,
                                       style: theme.textTheme.bodyMedium
                                           ?.copyWith(
-                                        fontWeight: FontWeight.w500,
-                                      ),
+                                            fontWeight: FontWeight.w500,
+                                          ),
                                     ),
                                   ),
                                 ],
@@ -293,11 +365,7 @@ class _CircleIconButton extends StatelessWidget {
             ),
           ],
         ),
-        child: Icon(
-          icon,
-          size: 20,
-          color: iconColor ?? colorScheme.onSurface,
-        ),
+        child: Icon(icon, size: 20, color: iconColor ?? colorScheme.onSurface),
       ),
     );
   }
@@ -352,9 +420,9 @@ class _InfoPill extends StatelessWidget {
           Text(
             label,
             style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                  color: textColor,
-                  fontWeight: FontWeight.w700,
-                ),
+              color: textColor,
+              fontWeight: FontWeight.w700,
+            ),
           ),
         ],
       ),
