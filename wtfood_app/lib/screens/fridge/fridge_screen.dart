@@ -58,10 +58,7 @@ class FridgeScreen extends StatelessWidget {
 }
 
 class _SectionHeading extends StatelessWidget {
-  const _SectionHeading({
-    required this.title,
-    required this.subtitle,
-  });
+  const _SectionHeading({required this.title, required this.subtitle});
 
   final String title;
   final String subtitle;
@@ -76,17 +73,17 @@ class _SectionHeading extends StatelessWidget {
         Text(
           title,
           style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                fontWeight: FontWeight.w900,
-                letterSpacing: -0.8,
-                color: colorScheme.onSurface,
-              ),
+            fontWeight: FontWeight.w900,
+            letterSpacing: -0.8,
+            color: colorScheme.onSurface,
+          ),
         ),
         const SizedBox(height: 6),
         Text(
           subtitle,
-          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: colorScheme.onSurfaceVariant,
-              ),
+          style: Theme.of(
+            context,
+          ).textTheme.bodyMedium?.copyWith(color: colorScheme.onSurfaceVariant),
         ),
       ],
     );
@@ -94,10 +91,7 @@ class _SectionHeading extends StatelessWidget {
 }
 
 class _EmptyFridgeState extends StatelessWidget {
-  const _EmptyFridgeState({
-    required this.colorScheme,
-    required this.onScan,
-  });
+  const _EmptyFridgeState({required this.colorScheme, required this.onScan});
 
   final ColorScheme colorScheme;
   final VoidCallback onScan;
@@ -121,27 +115,23 @@ class _EmptyFridgeState extends StatelessWidget {
       ),
       child: Column(
         children: [
-          Icon(
-            Icons.kitchen_outlined,
-            size: 44,
-            color: colorScheme.primary,
-          ),
+          Icon(Icons.kitchen_outlined, size: 44, color: colorScheme.primary),
           const SizedBox(height: 16),
           Text(
             'A\u00fan no has escaneado alimentos',
             textAlign: TextAlign.center,
             style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                  fontWeight: FontWeight.w800,
-                  color: colorScheme.onSurface,
-                ),
+              fontWeight: FontWeight.w800,
+              color: colorScheme.onSurface,
+            ),
           ),
           const SizedBox(height: 8),
           Text(
             'Cuando guardes ingredientes desde la pantalla de escaneo, apareceran aqui.',
             textAlign: TextAlign.center,
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: colorScheme.onSurfaceVariant,
-                ),
+              color: colorScheme.onSurfaceVariant,
+            ),
           ),
           const SizedBox(height: 24),
           SizedBox(
@@ -189,17 +179,14 @@ class _SavedIngredientsSection extends StatelessWidget {
               child: Text(
                 'Ingredientes guardados',
                 style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      color: colorScheme.primary,
-                      fontWeight: FontWeight.w800,
-                      letterSpacing: -0.4,
-                    ),
+                  color: colorScheme.primary,
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: -0.4,
+                ),
               ),
             ),
             Container(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 12,
-                vertical: 6,
-              ),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
               decoration: BoxDecoration(
                 color: colorScheme.surfaceContainerHigh,
                 borderRadius: BorderRadius.circular(999),
@@ -296,9 +283,9 @@ class _IngredientRow extends StatelessWidget {
             child: Text(
               label,
               style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w700,
-                    color: colorScheme.onSurface,
-                  ),
+                fontWeight: FontWeight.w700,
+                color: colorScheme.onSurface,
+              ),
             ),
           ),
           FilledButton.tonalIcon(
@@ -307,16 +294,14 @@ class _IngredientRow extends StatelessWidget {
             label: const Text('Quitar'),
             style: FilledButton.styleFrom(
               foregroundColor: colorScheme.primary,
-              backgroundColor:
-                  colorScheme.primaryContainer.withValues(alpha: 0.55),
+              backgroundColor: colorScheme.primaryContainer.withValues(
+                alpha: 0.55,
+              ),
               textStyle: const TextStyle(
                 fontWeight: FontWeight.w800,
                 letterSpacing: 0.3,
               ),
-              padding: const EdgeInsets.symmetric(
-                horizontal: 14,
-                vertical: 12,
-              ),
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
             ),
           ),
         ],

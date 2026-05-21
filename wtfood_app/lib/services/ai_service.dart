@@ -21,13 +21,16 @@ class AiService {
   static const AiService instance = AiService._();
 
   // ── Configuración ─────────────────────────────────────────────────────────
-  static const String _baseUrl = 'https://openrouter.ai/api/v1/chat/completions';
+  static const String _baseUrl =
+      'https://openrouter.ai/api/v1/chat/completions';
 
   /// Modelo con capacidad de visión (para analizar la foto de ingredientes).
-  static const String _modelVision = 'google/gemini-2.5-flash-lite-preview-09-2025';
+  static const String _modelVision =
+      'google/gemini-2.5-flash-lite-preview-09-2025';
 
   /// Modelo de texto (para generar la receta en JSON).
-  static const String _modelText = 'google/gemini-2.5-flash-lite-preview-09-2025';
+  static const String _modelText =
+      'google/gemini-2.5-flash-lite-preview-09-2025';
 
   // ── Método privado: llamada genérica a OpenRouter ─────────────────────────
   Future<String> _call({
@@ -62,8 +65,7 @@ class AiService {
     }
 
     final body = jsonDecode(response.body) as Map<String, dynamic>;
-    final content =
-        body['choices']?[0]?['message']?['content'] as String?;
+    final content = body['choices']?[0]?['message']?['content'] as String?;
 
     if (content == null || content.isEmpty) {
       throw Exception('La IA devolvió una respuesta vacía.');
@@ -100,9 +102,7 @@ class AiService {
             },
             {
               'type': 'image_url',
-              'image_url': {
-                'url': 'data:$mimeType;base64,$base64Image',
-              },
+              'image_url': {'url': 'data:$mimeType;base64,$base64Image'},
             },
           ],
         },

@@ -11,12 +11,15 @@ import 'package:wtfood_app/screens/settings/settings_screen.dart';
 import 'package:wtfood_app/services/auth_service.dart';
 
 class MainScreen extends StatefulWidget {
-  const MainScreen({
-    super.key,
-    this.initialIndex = 0,
-  });
+  static const int homeTabIndex = 0;
+  static const int recipesTabIndex = 1;
+  static const int scanTabIndex = 2;
+  static const int shoppingListTabIndex = 3;
+  static const int settingsTabIndex = 4;
 
-  final int initialIndex;
+  const MainScreen({super.key, this.initialTabIndex = homeTabIndex});
+
+  final int initialTabIndex;
 
   @override
   State<MainScreen> createState() => _MainScreenState();
@@ -28,7 +31,10 @@ class _MainScreenState extends State<MainScreen> {
   @override
   void initState() {
     super.initState();
-    _currentIndex = widget.initialIndex.clamp(0, 4);
+    _currentIndex = widget.initialTabIndex.clamp(
+      MainScreen.homeTabIndex,
+      MainScreen.settingsTabIndex,
+    );
   }
 
   Future<void> _confirmLogout() async {
@@ -60,21 +66,21 @@ class _MainScreenState extends State<MainScreen> {
 
   Future<void> _openProfile() async {
     await Navigator.of(context).push(
-      MaterialPageRoute<void>(
-        builder: (_) => const _ProfileRouteScreen(),
-      ),
+      MaterialPageRoute<void>(builder: (_) => const _ProfileRouteScreen()),
     );
   }
 
   Future<void> _openSettings() async {
     await Navigator.of(context).push(
-      MaterialPageRoute<void>(
-        builder: (_) => const _SettingsRouteScreen(),
-      ),
+      MaterialPageRoute<void>(builder: (_) => const _SettingsRouteScreen()),
     );
   }
 
   void _selectTab(int index) {
+    if (_currentIndex == index) {
+      return;
+    }
+
     setState(() {
       _currentIndex = index;
     });
@@ -87,12 +93,14 @@ class _MainScreenState extends State<MainScreen> {
     final palette = context.appPalette;
     final user = context.watch<UserProvider>().user;
     final photoUrl = user?.photoUrl;
-    final isSettingsTab = _currentIndex == 4;
+    final isSettingsTab = _currentIndex == MainScreen.settingsTabIndex;
     final pages = [
       HomeScreen(onTabSelected: _selectTab),
       const RecipesScreen(),
       const ScanScreen(),
-      ShoppingListsScreen(onGoToRecipes: () => _selectTab(1)),
+      ShoppingListsScreen(
+        onGoToRecipes: () => _selectTab(MainScreen.recipesTabIndex),
+      ),
       const SettingsScreen(),
     ];
 
@@ -265,10 +273,7 @@ class _MainScreenState extends State<MainScreen> {
                         ? NetworkImage(photoUrl)
                         : null,
                     child: photoUrl == null || photoUrl.isEmpty
-                        ? const Icon(
-                            Icons.menu_rounded,
-                            color: Colors.white,
-                          )
+                        ? const Icon(Icons.menu_rounded, color: Colors.white)
                         : null,
                   ),
                 ),
@@ -282,11 +287,7 @@ class _MainScreenState extends State<MainScreen> {
   }
 }
 
-enum _MainMenuAction {
-  profile,
-  settings,
-  logout,
-}
+enum _MainMenuAction { profile, settings, logout }
 
 class _ProfileRouteScreen extends StatelessWidget {
   const _ProfileRouteScreen();

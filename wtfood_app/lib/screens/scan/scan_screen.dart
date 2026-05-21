@@ -3,9 +3,11 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:showcaseview/showcaseview.dart';
 
 import '../../../core/constants.dart';
 import '../../../core/theme.dart';
+import '../../../features/onboarding/onboarding.dart';
 import '../../../services/ai_service.dart';
 import 'ingredients_review_screen.dart';
 
@@ -18,9 +20,15 @@ class ScanScreen extends StatefulWidget {
 
 class _ScanScreenState extends State<ScanScreen>
     with SingleTickerProviderStateMixin {
+  final OnboardingStorageService _onboardingStorageService =
+      OnboardingStorageService();
+  final GlobalKey _cameraTutorialKey = GlobalKey();
+
   File? _selectedImage;
   bool _isAnalyzing = false;
   String? _errorMessage;
+  bool _isEvaluatingTutorial = false;
+  bool _hasTriggeredTutorial = false;
 
   late final AnimationController _pulseController;
   late final Animation<double> _pulseAnimation;
@@ -28,6 +36,7 @@ class _ScanScreenState extends State<ScanScreen>
   @override
   void initState() {
     super.initState();
+    ShowcaseView.register();
     _pulseController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 1200),
@@ -39,6 +48,7 @@ class _ScanScreenState extends State<ScanScreen>
 
   @override
   void dispose() {
+    ShowcaseView.get().unregister();
     _pulseController.dispose();
     super.dispose();
   }
@@ -122,6 +132,39 @@ class _ScanScreenState extends State<ScanScreen>
     }
   }
 
+  Future<void> _scheduleScanTutorial() async {
+    if (_hasTriggeredTutorial || _isEvaluatingTutorial || !mounted) {
+      return;
+    }
+
+    _isEvaluatingTutorial = true;
+    final shouldShow = await _onboardingStorageService.shouldShowTutorial(
+      ContextualTutorial.scanCamera,
+    );
+    _isEvaluatingTutorial = false;
+
+    if (!mounted || !shouldShow || _hasTriggeredTutorial) {
+      return;
+    }
+
+    _hasTriggeredTutorial = true;
+    await _onboardingStorageService.markTutorialShown(
+      ContextualTutorial.scanCamera,
+    );
+
+    if (!mounted) {
+      return;
+    }
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) {
+        return;
+      }
+
+      ShowcaseView.get().startShowCase([_cameraTutorialKey]);
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -129,134 +172,166 @@ class _ScanScreenState extends State<ScanScreen>
 
     return Scaffold(
       body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(AppConstants.paddingLg),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Text(
-                'Escanea tu nevera!',
-                style: GoogleFonts.plusJakartaSans(
-                  fontSize: 26,
-                  fontWeight: FontWeight.w800,
-                  color: colorScheme.onSurface,
-                  letterSpacing: -0.5,
-                ),
-              ),
-              const SizedBox(height: 6),
-              Text(
-                'Haz una foto o sube una imagen y la IA identificara los ingredientes automaticamente.',
-                style: GoogleFonts.manrope(
-                  fontSize: 14,
-                  color: colorScheme.onSurfaceVariant,
-                  height: 1.5,
-                ),
-              ),
-              const SizedBox(height: 28),
-              _ImagePreviewCard(
-                image: _selectedImage,
-                pulseAnimation: _pulseAnimation,
-                isAnalyzing: _isAnalyzing,
-                onTap: () => _pickImage(ImageSource.gallery),
-              ),
-              const SizedBox(height: 20),
-              Row(
+        child: Builder(
+          builder: (context) {
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              _scheduleScanTutorial();
+            });
+
+            return SingleChildScrollView(
+              padding: const EdgeInsets.all(AppConstants.paddingLg),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Expanded(
-                    child: _SourceButton(
-                      icon: Icons.photo_camera_rounded,
-                      label: 'Camara',
-                      onTap: _isAnalyzing
-                          ? null
-                          : () => _pickImage(ImageSource.camera),
+                  Text(
+                    'Escanea tu nevera!',
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 26,
+                      fontWeight: FontWeight.w800,
+                      color: colorScheme.onSurface,
+                      letterSpacing: -0.5,
                     ),
                   ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: _SourceButton(
-                      icon: Icons.photo_library_rounded,
-                      label: 'Galeria',
-                      onTap: _isAnalyzing
-                          ? null
-                          : () => _pickImage(ImageSource.gallery),
+                  const SizedBox(height: 6),
+                  Text(
+                    'Haz una foto o sube una imagen y la IA identificara los ingredientes automaticamente.',
+                    style: GoogleFonts.manrope(
+                      fontSize: 14,
+                      color: colorScheme.onSurfaceVariant,
+                      height: 1.5,
                     ),
                   ),
+                  const SizedBox(height: 28),
+                  _ImagePreviewCard(
+                    image: _selectedImage,
+                    pulseAnimation: _pulseAnimation,
+                    isAnalyzing: _isAnalyzing,
+                    onTap: () => _pickImage(ImageSource.gallery),
+                  ),
+                  const SizedBox(height: 20),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Showcase(
+                          key: _cameraTutorialKey,
+                          title: 'Escaneo rapido',
+                          description: 'Apunta la camara a tus ingredientes.',
+                          tooltipBackgroundColor:
+                              colorScheme.surfaceContainerLowest,
+                          textColor: colorScheme.onSurface,
+                          titleTextStyle: theme.textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.w800,
+                          ),
+                          descTextStyle: theme.textTheme.bodyMedium?.copyWith(
+                            color: colorScheme.onSurfaceVariant,
+                            height: 1.45,
+                          ),
+                          overlayColor: colorScheme.onSurface,
+                          overlayOpacity: 0.72,
+                          targetBorderRadius: BorderRadius.circular(
+                            AppConstants.borderRadiusMd,
+                          ),
+                          child: _SourceButton(
+                            icon: Icons.photo_camera_rounded,
+                            label: 'Camara',
+                            onTap: _isAnalyzing
+                                ? null
+                                : () => _pickImage(ImageSource.camera),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: _SourceButton(
+                          icon: Icons.photo_library_rounded,
+                          label: 'Galeria',
+                          onTap: _isAnalyzing
+                              ? null
+                              : () => _pickImage(ImageSource.gallery),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 24),
+                  if (_errorMessage != null)
+                    _ErrorBanner(message: _errorMessage!),
+                  if (_errorMessage != null) const SizedBox(height: 16),
+                  AnimatedOpacity(
+                    opacity: _selectedImage != null ? 1.0 : 0.45,
+                    duration: const Duration(milliseconds: 300),
+                    child: SizedBox(
+                      height: 54,
+                      child: ElevatedButton.icon(
+                        onPressed: (_selectedImage != null && !_isAnalyzing)
+                            ? _analyzeImage
+                            : null,
+                        icon: _isAnalyzing
+                            ? SizedBox(
+                                width: 20,
+                                height: 20,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2.5,
+                                  color: colorScheme.onPrimary,
+                                ),
+                              )
+                            : const Icon(Icons.search_rounded),
+                        label: Text(
+                          _isAnalyzing
+                              ? 'Analizando imagen...'
+                              : 'Identificar ingredientes',
+                          style: GoogleFonts.manrope(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: colorScheme.primary,
+                          foregroundColor: colorScheme.onPrimary,
+                          disabledBackgroundColor: colorScheme.primary
+                              .withValues(alpha: 0.4),
+                          disabledForegroundColor: colorScheme.onPrimary,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(
+                              AppConstants.borderRadiusMd,
+                            ),
+                          ),
+                          elevation: 0,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  SizedBox(
+                    height: 52,
+                    child: ElevatedButton.icon(
+                      onPressed: () =>
+                          Navigator.of(context).pushNamed('/fridge'),
+                      icon: const Icon(Icons.kitchen_outlined),
+                      label: Text(
+                        'Ver mi nevera',
+                        style: GoogleFonts.manrope(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: colorScheme.secondary,
+                        foregroundColor: colorScheme.onSecondary,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(
+                            AppConstants.borderRadiusMd,
+                          ),
+                        ),
+                        elevation: 0,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 32),
+                  const _TipsSection(),
                 ],
               ),
-              const SizedBox(height: 24),
-              if (_errorMessage != null) _ErrorBanner(message: _errorMessage!),
-              if (_errorMessage != null) const SizedBox(height: 16),
-              AnimatedOpacity(
-                opacity: _selectedImage != null ? 1.0 : 0.45,
-                duration: const Duration(milliseconds: 300),
-                child: SizedBox(
-                  height: 54,
-                  child: ElevatedButton.icon(
-                    onPressed: (_selectedImage != null && !_isAnalyzing)
-                        ? _analyzeImage
-                        : null,
-                    icon: _isAnalyzing
-                        ? SizedBox(
-                            width: 20,
-                            height: 20,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2.5,
-                              color: colorScheme.onPrimary,
-                            ),
-                          )
-                        : const Icon(Icons.search_rounded),
-                    label: Text(
-                      _isAnalyzing
-                          ? 'Analizando imagen...'
-                          : 'Identificar ingredientes',
-                      style: GoogleFonts.manrope(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: colorScheme.primary,
-                      foregroundColor: colorScheme.onPrimary,
-                      disabledBackgroundColor:
-                          colorScheme.primary.withValues(alpha: 0.4),
-                      disabledForegroundColor: colorScheme.onPrimary,
-                      shape: RoundedRectangleBorder(
-                        borderRadius:
-                            BorderRadius.circular(AppConstants.borderRadiusMd),
-                      ),
-                      elevation: 0,
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 12),
-              SizedBox(
-                height: 52,
-                child: ElevatedButton.icon(
-                  onPressed: () => Navigator.of(context).pushNamed('/fridge'),
-                  icon: const Icon(Icons.kitchen_outlined),
-                  label: Text(
-                    'Ver mi nevera',
-                    style: GoogleFonts.manrope(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: colorScheme.secondary,
-                    foregroundColor: colorScheme.onSecondary,
-                    shape: RoundedRectangleBorder(
-                      borderRadius:
-                          BorderRadius.circular(AppConstants.borderRadiusMd),
-                    ),
-                    elevation: 0,
-                  ),
-                ),
-              ),
-              const SizedBox(height: 32),
-              const _TipsSection(),
-            ],
-          ),
+            );
+          },
         ),
       ),
     );
@@ -360,7 +435,9 @@ class _ImagePreviewCard extends StatelessWidget {
                     'JPG o PNG',
                     style: GoogleFonts.manrope(
                       fontSize: 12,
-                      color: colorScheme.onSurfaceVariant.withValues(alpha: 0.6),
+                      color: colorScheme.onSurfaceVariant.withValues(
+                        alpha: 0.6,
+                      ),
                     ),
                   ),
                 ],
@@ -371,11 +448,7 @@ class _ImagePreviewCard extends StatelessWidget {
 }
 
 class _SourceButton extends StatelessWidget {
-  const _SourceButton({
-    required this.icon,
-    required this.label,
-    this.onTap,
-  });
+  const _SourceButton({required this.icon, required this.label, this.onTap});
 
   final IconData icon;
   final String label;
@@ -507,8 +580,9 @@ class _TipsSection extends StatelessWidget {
                     padding: const EdgeInsets.all(6),
                     decoration: BoxDecoration(
                       color: colorScheme.primaryContainer,
-                      borderRadius:
-                          BorderRadius.circular(AppConstants.borderRadiusSm),
+                      borderRadius: BorderRadius.circular(
+                        AppConstants.borderRadiusSm,
+                      ),
                     ),
                     child: Icon(tip.$1, size: 16, color: colorScheme.primary),
                   ),

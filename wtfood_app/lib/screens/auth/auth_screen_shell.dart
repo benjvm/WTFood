@@ -60,34 +60,22 @@ class _AuthBackgroundDecorations extends StatelessWidget {
           Positioned(
             top: -56,
             right: -48,
-            child: _AccentCircle(
-              size: 128,
-              color: palette.authGreenAccent,
-            ),
+            child: _AccentCircle(size: 128, color: palette.authGreenAccent),
           ),
           Positioned(
             top: -34,
             right: 38,
-            child: _AccentCircle(
-              size: 102,
-              color: palette.authOrangeAccent,
-            ),
+            child: _AccentCircle(size: 102, color: palette.authOrangeAccent),
           ),
           Positioned(
             bottom: -46,
             left: 34,
-            child: _AccentCircle(
-              size: 110,
-              color: palette.authOrangeAccent,
-            ),
+            child: _AccentCircle(size: 110, color: palette.authOrangeAccent),
           ),
           Positioned(
             bottom: -62,
             left: -20,
-            child: _AccentCircle(
-              size: 136,
-              color: palette.authGreenAccent,
-            ),
+            child: _AccentCircle(size: 136, color: palette.authGreenAccent),
           ),
         ],
       ),
@@ -96,10 +84,7 @@ class _AuthBackgroundDecorations extends StatelessWidget {
 }
 
 class _AccentCircle extends StatelessWidget {
-  const _AccentCircle({
-    required this.size,
-    required this.color,
-  });
+  const _AccentCircle({required this.size, required this.color});
 
   final double size;
   final Color color;
@@ -109,10 +94,7 @@ class _AccentCircle extends StatelessWidget {
     return Container(
       width: size,
       height: size,
-      decoration: BoxDecoration(
-        color: color,
-        shape: BoxShape.circle,
-      ),
+      decoration: BoxDecoration(color: color, shape: BoxShape.circle),
     );
   }
 }

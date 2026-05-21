@@ -1,9 +1,11 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:showcaseview/showcaseview.dart';
 
 import '../../core/constants.dart';
 import '../../core/theme.dart';
+import '../../features/onboarding/onboarding.dart';
 import '../../features/pantry_update/presentation/pantry_update_prompt_dialog.dart';
 import '../../models/recipe.dart';
 import '../../providers/user_provider.dart';
@@ -21,13 +23,31 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+  final OnboardingStorageService _onboardingStorageService =
+      OnboardingStorageService();
+  final GlobalKey _scanShowcaseKey = GlobalKey();
+
   String? _lastPantryPromptKey;
   bool _isShowingPantryPrompt = false;
+  bool _isEvaluatingTutorial = false;
+  bool _hasTriggeredTutorial = false;
+
+  @override
+  void initState() {
+    super.initState();
+    ShowcaseView.register();
+  }
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
     _schedulePantryUpdatePrompt();
+  }
+
+  @override
+  void dispose() {
+    ShowcaseView.get().unregister();
+    super.dispose();
   }
 
   void _schedulePantryUpdatePrompt() {
@@ -86,6 +106,39 @@ class _HomeScreenState extends State<HomeScreen> {
     });
   }
 
+  Future<void> _scheduleHomeTutorial() async {
+    if (_hasTriggeredTutorial || _isEvaluatingTutorial || !mounted) {
+      return;
+    }
+
+    _isEvaluatingTutorial = true;
+    final shouldShow = await _onboardingStorageService.shouldShowTutorial(
+      ContextualTutorial.homeScanCta,
+    );
+    _isEvaluatingTutorial = false;
+
+    if (!mounted || !shouldShow || _hasTriggeredTutorial) {
+      return;
+    }
+
+    _hasTriggeredTutorial = true;
+    await _onboardingStorageService.markTutorialShown(
+      ContextualTutorial.homeScanCta,
+    );
+
+    if (!mounted) {
+      return;
+    }
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) {
+        return;
+      }
+
+      ShowcaseView.get().startShowCase([_scanShowcaseKey]);
+    });
+  }
+
   void _openScan() {
     if (widget.onTabSelected != null) {
       widget.onTabSelected!(2);
@@ -102,9 +155,12 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
-    final palette = context.appPalette;
     final user = context.watch<UserProvider>().user;
     final displayName = _displayNameFromUser(user?.name);
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _scheduleHomeTutorial();
+    });
 
     return Container(
       color: colorScheme.surface,
@@ -131,9 +187,27 @@ class _HomeScreenState extends State<HomeScreen> {
                     children: [
                       _HomeIntro(displayName: displayName),
                       const SizedBox(height: AppConstants.paddingXl),
-                      _ScanCallToAction(
-                        brandPrimaryStrong: palette.brandPrimaryStrong,
-                        onTap: _openScan,
+                      Showcase(
+                        key: _scanShowcaseKey,
+                        title: 'Empieza aqui',
+                        description:
+                            'Empieza aqui para descubrir recetas con tus ingredientes.',
+                        tooltipBackgroundColor:
+                            colorScheme.surfaceContainerLowest,
+                        textColor: colorScheme.onSurface,
+                        titleTextStyle: theme.textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.w800,
+                        ),
+                        descTextStyle: theme.textTheme.bodyMedium?.copyWith(
+                          color: colorScheme.onSurfaceVariant,
+                          height: 1.45,
+                        ),
+                        overlayColor: colorScheme.onSurface,
+                        overlayOpacity: 0.72,
+                        targetBorderRadius: BorderRadius.circular(
+                          AppConstants.borderRadiusLg,
+                        ),
+                        child: _ScanCallToAction(onTap: _openScan),
                       ),
                       const SizedBox(height: AppConstants.paddingXl),
                       _RecipeOfTheDaySection(
@@ -234,18 +308,15 @@ class _HomeIntro extends StatelessWidget {
 }
 
 class _ScanCallToAction extends StatelessWidget {
-  const _ScanCallToAction({
-    required this.onTap,
-    required this.brandPrimaryStrong,
-  });
+  const _ScanCallToAction({required this.onTap});
 
   final VoidCallback onTap;
-  final Color brandPrimaryStrong;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
+    final palette = context.appPalette;
 
     return Material(
       color: Colors.transparent,
@@ -258,7 +329,7 @@ class _ScanCallToAction extends StatelessWidget {
             gradient: LinearGradient(
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
-              colors: [colorScheme.primary, brandPrimaryStrong],
+              colors: [colorScheme.primary, palette.brandPrimaryStrong],
             ),
             boxShadow: [
               BoxShadow(

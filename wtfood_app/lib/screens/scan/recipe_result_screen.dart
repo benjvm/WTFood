@@ -31,7 +31,8 @@ class _RecipeResultScreenState extends State<RecipeResultScreen> {
         : const PixabayService().findRecipePhoto(_recipeName);
   }
 
-  String get _recipeName => _readText(widget.recipe['nombre'], fallback: 'Receta');
+  String get _recipeName =>
+      _readText(widget.recipe['nombre'], fallback: 'Receta');
 
   @override
   Widget build(BuildContext context) {
@@ -39,10 +40,16 @@ class _RecipeResultScreenState extends State<RecipeResultScreen> {
     final colorScheme = theme.colorScheme;
 
     final description = _readText(widget.recipe['descripcion']);
-    final prepTime = _readText(widget.recipe['tiempo_preparacion'], fallback: '--');
+    final prepTime = _readText(
+      widget.recipe['tiempo_preparacion'],
+      fallback: '--',
+    );
     final cookTime = _readText(widget.recipe['tiempo_coccion'], fallback: '--');
     final servings = _readText(widget.recipe['porciones'], fallback: '2');
-    final difficulty = _readText(widget.recipe['dificultad'], fallback: 'Media');
+    final difficulty = _readText(
+      widget.recipe['dificultad'],
+      fallback: 'Media',
+    );
     final chefTip = _readText(widget.recipe['consejos']);
     final ingredients = _readIngredients(widget.recipe['ingredientes']);
     final steps = _readSteps(widget.recipe['pasos']);
@@ -275,7 +282,10 @@ class _RecipeResultScreenState extends State<RecipeResultScreen> {
                         spacing: 8,
                         runSpacing: 8,
                         children: widget.usedIngredients
-                            .map((ingredient) => _UsedIngredientChip(label: ingredient))
+                            .map(
+                              (ingredient) =>
+                                  _UsedIngredientChip(label: ingredient),
+                            )
                             .toList(),
                       ),
                     ),
@@ -317,10 +327,7 @@ class _RecipeResultScreenState extends State<RecipeResultScreen> {
 }
 
 class _RecipeIngredient {
-  const _RecipeIngredient({
-    required this.name,
-    required this.amount,
-  });
+  const _RecipeIngredient({required this.name, required this.amount});
 
   final String name;
   final String amount;
@@ -378,11 +385,7 @@ class _CircleIconButton extends StatelessWidget {
             ),
           ],
         ),
-        child: Icon(
-          icon,
-          size: 20,
-          color: colorScheme.onSurface,
-        ),
+        child: Icon(icon, size: 20, color: colorScheme.onSurface),
       ),
     );
   }
@@ -443,9 +446,9 @@ class _PhotoCreditChip extends StatelessWidget {
       child: Text(
         'Foto: $author en Pixabay',
         style: Theme.of(context).textTheme.labelMedium?.copyWith(
-              color: Colors.white,
-              fontWeight: FontWeight.w700,
-            ),
+          color: Colors.white,
+          fontWeight: FontWeight.w700,
+        ),
       ),
     );
   }
@@ -482,9 +485,9 @@ class _InfoPill extends StatelessWidget {
           Text(
             label,
             style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                  color: textColor,
-                  fontWeight: FontWeight.w700,
-                ),
+              color: textColor,
+              fontWeight: FontWeight.w700,
+            ),
           ),
         ],
       ),
@@ -698,16 +701,14 @@ class _UsedIngredientChip extends StatelessWidget {
       decoration: BoxDecoration(
         color: colorScheme.primaryContainer,
         borderRadius: BorderRadius.circular(AppConstants.borderRadiusSm + 4),
-        border: Border.all(
-          color: colorScheme.primary.withValues(alpha: 0.2),
-        ),
+        border: Border.all(color: colorScheme.primary.withValues(alpha: 0.2)),
       ),
       child: Text(
         label,
         style: Theme.of(context).textTheme.labelLarge?.copyWith(
-              color: colorScheme.onPrimaryContainer,
-              fontWeight: FontWeight.w700,
-            ),
+          color: colorScheme.onPrimaryContainer,
+          fontWeight: FontWeight.w700,
+        ),
       ),
     );
   }

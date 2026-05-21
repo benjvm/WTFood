@@ -63,10 +63,7 @@ class _ProfilePalette {
 }
 
 class ProfileScreen extends StatefulWidget {
-  const ProfileScreen({
-    super.key,
-    this.showBackButton = false,
-  });
+  const ProfileScreen({super.key, this.showBackButton = false});
 
   final bool showBackButton;
 
@@ -370,10 +367,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   child: DecoratedBox(
                     decoration: BoxDecoration(
                       gradient: LinearGradient(
-                        colors: [
-                          palette.primaryDark,
-                          palette.primary,
-                        ],
+                        colors: [palette.primaryDark, palette.primary],
                       ),
                       borderRadius: BorderRadius.circular(999),
                       boxShadow: [
@@ -501,11 +495,7 @@ class _ProfileAvatar extends StatelessWidget {
       backgroundColor: palette.avatarBackground,
       backgroundImage: imageProvider,
       child: imageProvider == null
-          ? Icon(
-              Icons.person_rounded,
-              size: 62,
-              color: palette.surface,
-            )
+          ? Icon(Icons.person_rounded, size: 62, color: palette.surface)
           : null,
     );
   }
@@ -561,9 +551,9 @@ class _EditableField extends StatelessWidget {
             controller: controller,
             keyboardType: keyboardType,
             style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.w700,
-                  color: palette.textPrimary,
-                ),
+              fontWeight: FontWeight.w700,
+              color: palette.textPrimary,
+            ),
             decoration: InputDecoration(
               prefixIcon: Icon(icon, color: palette.primary),
               border: InputBorder.none,
@@ -632,15 +622,12 @@ class _ActionRow extends StatelessWidget {
               child: Text(
                 label,
                 style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                      fontWeight: FontWeight.w700,
-                      color: palette.textPrimary,
-                    ),
+                  fontWeight: FontWeight.w700,
+                  color: palette.textPrimary,
+                ),
               ),
             ),
-            Icon(
-              Icons.chevron_right_rounded,
-              color: palette.textMuted,
-            ),
+            Icon(Icons.chevron_right_rounded, color: palette.textMuted),
           ],
         ),
       ),
@@ -766,9 +753,9 @@ class _ChangePasswordSheetState extends State<_ChangePasswordSheet> {
           Text(
             'Cambiar contrasena',
             style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                  fontWeight: FontWeight.w800,
-                  color: palette.textPrimary,
-                ),
+              fontWeight: FontWeight.w800,
+              color: palette.textPrimary,
+            ),
           ),
           const SizedBox(height: 20),
           if (_error != null) ...[
@@ -781,11 +768,7 @@ class _ChangePasswordSheetState extends State<_ChangePasswordSheet> {
               ),
               child: Row(
                 children: [
-                  Icon(
-                    Icons.error_outline,
-                    color: colorScheme.error,
-                    size: 20,
-                  ),
+                  Icon(Icons.error_outline, color: colorScheme.error, size: 20),
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
@@ -878,10 +861,7 @@ class _PasswordField extends StatelessWidget {
       decoration: InputDecoration(
         labelText: label,
         labelStyle: TextStyle(color: palette.textSecondary),
-        prefixIcon: Icon(
-          Icons.lock_outline,
-          color: palette.primary,
-        ),
+        prefixIcon: Icon(Icons.lock_outline, color: palette.primary),
         suffixIcon: IconButton(
           icon: Icon(
             obscure ? Icons.visibility_off : Icons.visibility,

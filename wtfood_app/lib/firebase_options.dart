@@ -64,7 +64,8 @@ class DefaultFirebaseOptions {
     messagingSenderId: '952247677247',
     projectId: 'wtfood-firebase',
     storageBucket: 'wtfood-firebase.firebasestorage.app',
-    iosClientId: '952247677247-5cd5soprtnd7vgf24p16ls6j63a14dpi.apps.googleusercontent.com',
+    iosClientId:
+        '952247677247-5cd5soprtnd7vgf24p16ls6j63a14dpi.apps.googleusercontent.com',
     iosBundleId: 'com.example.wtfoodApp',
   );
 
@@ -74,7 +75,8 @@ class DefaultFirebaseOptions {
     messagingSenderId: '952247677247',
     projectId: 'wtfood-firebase',
     storageBucket: 'wtfood-firebase.firebasestorage.app',
-    iosClientId: '952247677247-5cd5soprtnd7vgf24p16ls6j63a14dpi.apps.googleusercontent.com',
+    iosClientId:
+        '952247677247-5cd5soprtnd7vgf24p16ls6j63a14dpi.apps.googleusercontent.com',
     iosBundleId: 'com.example.wtfoodApp',
   );
 
@@ -87,5 +89,4 @@ class DefaultFirebaseOptions {
     storageBucket: 'wtfood-firebase.firebasestorage.app',
     measurementId: 'G-YERM644FZR',
   );
-
 }

@@ -85,25 +85,40 @@ class AppThemePalette extends ThemeExtension<AppThemePalette> {
     }
 
     return AppThemePalette(
-      brandPrimaryStrong:
-          Color.lerp(brandPrimaryStrong, other.brandPrimaryStrong, t)!,
-      brandSecondaryStrong:
-          Color.lerp(brandSecondaryStrong, other.brandSecondaryStrong, t)!,
+      brandPrimaryStrong: Color.lerp(
+        brandPrimaryStrong,
+        other.brandPrimaryStrong,
+        t,
+      )!,
+      brandSecondaryStrong: Color.lerp(
+        brandSecondaryStrong,
+        other.brandSecondaryStrong,
+        t,
+      )!,
       shadowSoft: Color.lerp(shadowSoft, other.shadowSoft, t)!,
       shadowStrong: Color.lerp(shadowStrong, other.shadowStrong, t)!,
       authBackground: Color.lerp(authBackground, other.authBackground, t)!,
       authGreenAccent: Color.lerp(authGreenAccent, other.authGreenAccent, t)!,
-      authOrangeAccent:
-          Color.lerp(authOrangeAccent, other.authOrangeAccent, t)!,
+      authOrangeAccent: Color.lerp(
+        authOrangeAccent,
+        other.authOrangeAccent,
+        t,
+      )!,
       authHeading: Color.lerp(authHeading, other.authHeading, t)!,
       authBody: Color.lerp(authBody, other.authBody, t)!,
       authFieldIcon: Color.lerp(authFieldIcon, other.authFieldIcon, t)!,
       authFieldBorder: Color.lerp(authFieldBorder, other.authFieldBorder, t)!,
       overlayScrim: Color.lerp(overlayScrim, other.overlayScrim, t)!,
-      imagePlaceholderStart:
-          Color.lerp(imagePlaceholderStart, other.imagePlaceholderStart, t)!,
-      imagePlaceholderEnd:
-          Color.lerp(imagePlaceholderEnd, other.imagePlaceholderEnd, t)!,
+      imagePlaceholderStart: Color.lerp(
+        imagePlaceholderStart,
+        other.imagePlaceholderStart,
+        t,
+      )!,
+      imagePlaceholderEnd: Color.lerp(
+        imagePlaceholderEnd,
+        other.imagePlaceholderEnd,
+        t,
+      )!,
       profileAvatarBackground: Color.lerp(
         profileAvatarBackground,
         other.profileAvatarBackground,
@@ -222,8 +237,9 @@ class AppTheme {
           backgroundColor: colorScheme.primary,
           foregroundColor: colorScheme.onPrimary,
           disabledBackgroundColor: colorScheme.primary.withValues(alpha: 0.35),
-          disabledForegroundColor:
-              colorScheme.onPrimary.withValues(alpha: 0.82),
+          disabledForegroundColor: colorScheme.onPrimary.withValues(
+            alpha: 0.82,
+          ),
           elevation: 0,
           shadowColor: Colors.transparent,
           shape: RoundedRectangleBorder(
@@ -231,9 +247,7 @@ class AppTheme {
               AppConstants.borderRadiusSm + 4,
             ),
           ),
-          textStyle: GoogleFonts.manrope(
-            fontWeight: FontWeight.w700,
-          ),
+          textStyle: GoogleFonts.manrope(fontWeight: FontWeight.w700),
         ),
       ),
       filledButtonTheme: FilledButtonThemeData(
@@ -241,13 +255,12 @@ class AppTheme {
           backgroundColor: colorScheme.primary,
           foregroundColor: colorScheme.onPrimary,
           disabledBackgroundColor: colorScheme.primary.withValues(alpha: 0.35),
-          disabledForegroundColor:
-              colorScheme.onPrimary.withValues(alpha: 0.82),
+          disabledForegroundColor: colorScheme.onPrimary.withValues(
+            alpha: 0.82,
+          ),
           elevation: 0,
           shadowColor: Colors.transparent,
-          textStyle: GoogleFonts.manrope(
-            fontWeight: FontWeight.w700,
-          ),
+          textStyle: GoogleFonts.manrope(fontWeight: FontWeight.w700),
         ),
       ),
       textButtonTheme: TextButtonThemeData(
@@ -271,9 +284,7 @@ class AppTheme {
         selectedColor: colorScheme.primaryContainer,
         secondarySelectedColor: colorScheme.secondaryContainer,
         side: BorderSide(color: colorScheme.outlineVariant),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(999),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(999)),
         labelStyle: GoogleFonts.manrope(
           color: colorScheme.onSurface,
           fontWeight: FontWeight.w600,
