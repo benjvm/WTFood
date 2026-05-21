@@ -32,6 +32,6 @@ flutter:
     - .env 
     - assets/json/ingredientes.json
     - assets/json/Preparing Food.json
-    - assets/json/Chef_animation.json
+    - assets/json/WTFood-animation.json
     - assets/images/wtfood_logo.png
     - assets/images/wtfood_title.png

@@ -7,6 +7,7 @@ import 'package:provider/provider.dart';
 
 import '../../../core/constants.dart';
 import '../../../providers/fridge_provider.dart';
+import '../../../providers/user_provider.dart';
 import '../../../services/ai_service.dart';
 import '../../../services/pixabay_service.dart';
 import 'recipe_result_screen.dart';
@@ -54,7 +55,9 @@ class _IngredientsReviewScreenState extends State<IngredientsReviewScreen> {
       return;
     }
 
-    if (_ingredients.any((ingredient) => ingredient.toLowerCase() == text.toLowerCase())) {
+    if (_ingredients.any(
+      (ingredient) => ingredient.toLowerCase() == text.toLowerCase(),
+    )) {
       final colorScheme = Theme.of(context).colorScheme;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -72,7 +75,7 @@ class _IngredientsReviewScreenState extends State<IngredientsReviewScreen> {
     });
   }
 
-  void _saveIngredientsToFridge() {
+  Future<void> _saveIngredientsToFridge() async {
     if (_ingredients.isEmpty) {
       setState(() {
         _errorMessage = 'Necesitas al menos un ingrediente para guardarlo.';
@@ -80,8 +83,18 @@ class _IngredientsReviewScreenState extends State<IngredientsReviewScreen> {
       return;
     }
 
-    final addedIngredients =
-        context.read<FridgeProvider>().addIngredients(_ingredients);
+    final addedIngredients = context.read<FridgeProvider>().addIngredients(
+      _ingredients,
+    );
+    final user = context.read<UserProvider>().user;
+
+    if (user != null) {
+      await context.read<UserProvider>().registerPantryScan(user.uid);
+    }
+
+    if (!mounted) {
+      return;
+    }
 
     setState(() => _errorMessage = null);
 
@@ -91,10 +104,7 @@ class _IngredientsReviewScreenState extends State<IngredientsReviewScreen> {
 
     final colorScheme = Theme.of(context).colorScheme;
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        backgroundColor: colorScheme.secondary,
-      ),
+      SnackBar(content: Text(message), backgroundColor: colorScheme.secondary),
     );
   }
 
@@ -234,7 +244,8 @@ class _IngredientsReviewScreenState extends State<IngredientsReviewScreen> {
                             Expanded(
                               child: TextField(
                                 controller: _addController,
-                                textCapitalization: TextCapitalization.sentences,
+                                textCapitalization:
+                                    TextCapitalization.sentences,
                                 onSubmitted: (_) => _addIngredient(),
                                 decoration: InputDecoration(
                                   hintText: 'ej: tomates, queso, cebolla...',
@@ -282,7 +293,8 @@ class _IngredientsReviewScreenState extends State<IngredientsReviewScreen> {
                   ),
               ],
             ),
-            if (_isGenerating) const Positioned.fill(child: _GeneratingRecipeOverlay()),
+            if (_isGenerating)
+              const Positioned.fill(child: _GeneratingRecipeOverlay()),
           ],
         ),
       ),
@@ -317,7 +329,10 @@ class _HeaderSection extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 4,
+                ),
                 decoration: BoxDecoration(
                   color: colorScheme.primaryContainer,
                   borderRadius: BorderRadius.circular(
@@ -372,9 +387,7 @@ class _IngredientChip extends StatelessWidget {
       decoration: BoxDecoration(
         color: colorScheme.primaryContainer,
         borderRadius: BorderRadius.circular(AppConstants.borderRadiusSm + 4),
-        border: Border.all(
-          color: colorScheme.primary.withValues(alpha: 0.25),
-        ),
+        border: Border.all(color: colorScheme.primary.withValues(alpha: 0.25)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -472,11 +485,7 @@ class _ErrorBanner extends StatelessWidget {
       ),
       child: Row(
         children: [
-          Icon(
-            Icons.error_outline_rounded,
-            color: colorScheme.error,
-            size: 20,
-          ),
+          Icon(Icons.error_outline_rounded, color: colorScheme.error, size: 20),
           const SizedBox(width: 10),
           Expanded(
             child: Text(
@@ -516,9 +525,7 @@ class _BottomBar extends StatelessWidget {
         AppConstants.paddingLg,
         AppConstants.paddingMd + MediaQuery.of(context).padding.bottom,
       ),
-      decoration: BoxDecoration(
-        color: colorScheme.surface,
-      ),
+      decoration: BoxDecoration(color: colorScheme.surface),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -538,13 +545,14 @@ class _BottomBar extends StatelessWidget {
               style: ElevatedButton.styleFrom(
                 backgroundColor: colorScheme.secondaryContainer,
                 foregroundColor: colorScheme.onSecondaryContainer,
-                disabledBackgroundColor:
-                    colorScheme.secondaryContainer.withValues(alpha: 0.5),
-                disabledForegroundColor:
-                    colorScheme.onSecondaryContainer.withValues(alpha: 0.7),
+                disabledBackgroundColor: colorScheme.secondaryContainer
+                    .withValues(alpha: 0.5),
+                disabledForegroundColor: colorScheme.onSecondaryContainer
+                    .withValues(alpha: 0.7),
                 shape: RoundedRectangleBorder(
-                  borderRadius:
-                      BorderRadius.circular(AppConstants.borderRadiusMd),
+                  borderRadius: BorderRadius.circular(
+                    AppConstants.borderRadiusMd,
+                  ),
                 ),
                 elevation: 0,
               ),
@@ -567,12 +575,14 @@ class _BottomBar extends StatelessWidget {
               style: ElevatedButton.styleFrom(
                 backgroundColor: colorScheme.primary,
                 foregroundColor: colorScheme.onPrimary,
-                disabledBackgroundColor:
-                    colorScheme.primary.withValues(alpha: 0.4),
+                disabledBackgroundColor: colorScheme.primary.withValues(
+                  alpha: 0.4,
+                ),
                 disabledForegroundColor: colorScheme.onPrimary,
                 shape: RoundedRectangleBorder(
-                  borderRadius:
-                      BorderRadius.circular(AppConstants.borderRadiusMd),
+                  borderRadius: BorderRadius.circular(
+                    AppConstants.borderRadiusMd,
+                  ),
                 ),
                 elevation: 0,
               ),

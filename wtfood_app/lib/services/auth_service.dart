@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:wtfood_app/features/pantry_update/domain/pantry_update_settings.dart';
 
 class AuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
@@ -27,6 +28,7 @@ class AuthService {
       'email': email,
       'favoriteRecipes': const <String>[],
       'shoppingLists': const <Map<String, dynamic>>[],
+      'pantryUpdateSettings': const PantryUpdateSettings().toFirestore(),
       'createdAt': FieldValue.serverTimestamp(),
       'lastLogin': FieldValue.serverTimestamp(),
     });

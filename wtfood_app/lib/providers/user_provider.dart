@@ -1,6 +1,8 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
 import 'package:wtfood_app/core/utils/ingredient_normalizer.dart';
+import 'package:wtfood_app/features/pantry_update/domain/pantry_update_schedule.dart';
+import 'package:wtfood_app/features/pantry_update/domain/pantry_update_settings.dart';
 import 'package:wtfood_app/features/shopping_list/domain/ingredient_matcher.dart';
 import 'package:wtfood_app/models/recipe.dart';
 import 'package:wtfood_app/models/shopping_list.dart';
@@ -56,6 +58,72 @@ class UserProvider extends ChangeNotifier {
   void updateUser(UserModel updatedUser) {
     _user = updatedUser;
     notifyListeners();
+  }
+
+  Future<bool> updatePantryUpdateSchedule(
+    String uid,
+    PantryUpdateSchedule schedule,
+  ) async {
+    if (_user == null) {
+      return false;
+    }
+
+    final previousUser = _user!;
+    final updatedSettings = previousUser.pantryUpdateSettings.copyWith(
+      schedule: schedule,
+    );
+
+    updateUser(previousUser.copyWith(pantryUpdateSettings: updatedSettings));
+
+    try {
+      await _savePantryUpdateSettings(uid, updatedSettings);
+      return true;
+    } catch (e) {
+      updateUser(previousUser);
+      debugPrint('[UserProvider] Error al guardar recordatorio: $e');
+      return false;
+    }
+  }
+
+  Future<void> registerPantryScan(String uid) async {
+    if (_user == null) {
+      return;
+    }
+
+    final previousUser = _user!;
+    final updatedSettings = previousUser.pantryUpdateSettings.copyWith(
+      lastScanAt: DateTime.now(),
+      clearLastPromptAt: true,
+    );
+
+    updateUser(previousUser.copyWith(pantryUpdateSettings: updatedSettings));
+
+    try {
+      await _savePantryUpdateSettings(uid, updatedSettings);
+    } catch (e) {
+      updateUser(previousUser);
+      debugPrint('[UserProvider] Error al registrar escaneo: $e');
+    }
+  }
+
+  Future<void> markPantryUpdatePromptShown(String uid) async {
+    if (_user == null) {
+      return;
+    }
+
+    final previousUser = _user!;
+    final updatedSettings = previousUser.pantryUpdateSettings.copyWith(
+      lastPromptAt: DateTime.now(),
+    );
+
+    updateUser(previousUser.copyWith(pantryUpdateSettings: updatedSettings));
+
+    try {
+      await _savePantryUpdateSettings(uid, updatedSettings);
+    } catch (e) {
+      updateUser(previousUser);
+      debugPrint('[UserProvider] Error al registrar aviso de despensa: $e');
+    }
   }
 
   Future<void> toggleFavoriteRecipe(String uid, String recipeId) async {
@@ -246,6 +314,15 @@ class UserProvider extends ChangeNotifier {
   ) {
     return _db.collection('users').doc(uid).update({
       'shoppingLists': shoppingLists.map((list) => list.toMap()).toList(),
+    });
+  }
+
+  Future<void> _savePantryUpdateSettings(
+    String uid,
+    PantryUpdateSettings settings,
+  ) {
+    return _db.collection('users').doc(uid).update({
+      'pantryUpdateSettings': settings.toFirestore(),
     });
   }
 

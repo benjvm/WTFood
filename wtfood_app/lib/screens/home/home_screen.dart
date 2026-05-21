@@ -4,16 +4,99 @@ import 'package:provider/provider.dart';
 
 import '../../core/constants.dart';
 import '../../core/theme.dart';
+import '../../features/pantry_update/presentation/pantry_update_prompt_dialog.dart';
 import '../../models/recipe.dart';
 import '../../providers/user_provider.dart';
 import '../../services/recipe_service.dart';
 import '../recipes/recipe_detail_screen.dart';
 import '../scan/scan_screen.dart';
 
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key, this.onTabSelected});
 
   final ValueChanged<int>? onTabSelected;
+
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+  String? _lastPantryPromptKey;
+  bool _isShowingPantryPrompt = false;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _schedulePantryUpdatePrompt();
+  }
+
+  void _schedulePantryUpdatePrompt() {
+    if (_isShowingPantryPrompt) {
+      return;
+    }
+
+    final userProvider = context.read<UserProvider>();
+    if (!userProvider.isReady) {
+      return;
+    }
+
+    final user = userProvider.user;
+    if (user == null) {
+      return;
+    }
+
+    final settings = user.pantryUpdateSettings;
+    final promptKey = [
+      user.uid,
+      settings.schedule.storageKey,
+      settings.lastScanAt?.millisecondsSinceEpoch ?? 0,
+      settings.lastPromptAt?.millisecondsSinceEpoch ?? 0,
+    ].join(':');
+
+    if (_lastPantryPromptKey == promptKey || !settings.shouldShowPrompt()) {
+      return;
+    }
+
+    _lastPantryPromptKey = promptKey;
+    _isShowingPantryPrompt = true;
+
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      if (!mounted) {
+        return;
+      }
+
+      await context.read<UserProvider>().markPantryUpdatePromptShown(user.uid);
+
+      if (!mounted) {
+        return;
+      }
+
+      final shouldUpdate = await showDialog<bool>(
+        context: context,
+        builder: (_) => const PantryUpdatePromptDialog(),
+      );
+
+      _isShowingPantryPrompt = false;
+
+      if (!mounted || shouldUpdate != true) {
+        return;
+      }
+
+      _openScan();
+    });
+  }
+
+  void _openScan() {
+    if (widget.onTabSelected != null) {
+      widget.onTabSelected!(2);
+      return;
+    }
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => const ScanScreen()),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -50,19 +133,7 @@ class HomeScreen extends StatelessWidget {
                       const SizedBox(height: AppConstants.paddingXl),
                       _ScanCallToAction(
                         brandPrimaryStrong: palette.brandPrimaryStrong,
-                        onTap: () {
-                          if (onTabSelected != null) {
-                            onTabSelected!(2);
-                            return;
-                          }
-
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) => const ScanScreen(),
-                            ),
-                          );
-                        },
+                        onTap: _openScan,
                       ),
                       const SizedBox(height: AppConstants.paddingXl),
                       _RecipeOfTheDaySection(
@@ -698,10 +769,7 @@ class _RecipeImagePlaceholder extends StatelessWidget {
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [
-            palette.imagePlaceholderStart,
-            palette.imagePlaceholderEnd,
-          ],
+          colors: [palette.imagePlaceholderStart, palette.imagePlaceholderEnd],
         ),
       ),
       alignment: Alignment.center,
@@ -893,7 +961,8 @@ List<Recipe> _recipesByCategory(List<Recipe> recipes, String category) {
 
   return recipes
       .where(
-        (recipe) => _normalizeCategoryKey(recipe.category) == normalizedCategory,
+        (recipe) =>
+            _normalizeCategoryKey(recipe.category) == normalizedCategory,
       )
       .toList();
 }

@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:wtfood_app/core/constants.dart';
 import 'package:wtfood_app/core/theme_controller.dart';
+import 'package:wtfood_app/features/pantry_update/domain/pantry_update_schedule.dart';
+import 'package:wtfood_app/features/pantry_update/presentation/pantry_update_frequency_sheet.dart';
 import 'package:wtfood_app/providers/user_provider.dart';
 import 'package:wtfood_app/screens/profile/profile_screen.dart';
 import 'package:wtfood_app/services/auth_service.dart';
@@ -23,7 +25,54 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   Future<void> _openPantryUpdate() async {
-    await Navigator.of(context).pushNamed('/fridge');
+    final userProvider = context.read<UserProvider>();
+    final user = userProvider.user;
+
+    if (user == null) {
+      _showSnackBar(
+        'No pudimos cargar tu configuracion de despensa.',
+        isError: true,
+      );
+      return;
+    }
+
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      builder: (sheetContext) {
+        final selectedSchedule =
+            sheetContext
+                .watch<UserProvider>()
+                .user
+                ?.pantryUpdateSettings
+                .schedule ??
+            PantryUpdateSchedule.everyTwoDays;
+
+        return PantryUpdateFrequencySheet(
+          selectedSchedule: selectedSchedule,
+          onSelected: (schedule) async {
+            final didSave = await context
+                .read<UserProvider>()
+                .updatePantryUpdateSchedule(user.uid, schedule);
+
+            if (!sheetContext.mounted) {
+              return;
+            }
+
+            if (didSave) {
+              Navigator.of(sheetContext).pop();
+              _showSnackBar(schedule.confirmationMessage);
+              return;
+            }
+
+            _showSnackBar(
+              'No se pudo guardar tu preferencia de recordatorio.',
+              isError: true,
+            );
+          },
+        );
+      },
+    );
   }
 
   Future<void> _openAppearanceSheet() async {
@@ -172,6 +221,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final colorScheme = theme.colorScheme;
     final themePreference = context.watch<ThemeController>().preference;
     final user = context.watch<UserProvider>().user;
+    final pantryUpdateSchedule =
+        user?.pantryUpdateSettings.schedule ??
+        PantryUpdateSchedule.everyTwoDays;
     final photoUrl = user?.photoUrl;
     final hasPhoto = photoUrl != null && photoUrl.isNotEmpty;
     final title = user != null && user.name.trim().isNotEmpty
@@ -253,7 +305,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   _SettingsTile(
                     icon: Icons.kitchen_outlined,
                     title: 'Actualizacion de despensa',
-                    subtitle: 'Revisa y ajusta tus ingredientes',
+                    subtitle: pantryUpdateSchedule.settingsSummary,
                     onTap: _openPantryUpdate,
                   ),
                   _SettingsDivider(color: colorScheme.outlineVariant),

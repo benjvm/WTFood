@@ -84,7 +84,7 @@ class _InitialAnimationGateState extends State<InitialAnimationGate>
     if (_fallbackScheduled) return;
     _fallbackScheduled = true;
 
-    Future<void>.delayed(const Duration(seconds: 3), () {
+    Future<void>.delayed(const Duration(seconds: 7), () {
       if (!mounted || _hasFinished) return;
       _finishAnimation();
     });
@@ -107,9 +107,9 @@ class _InitialAnimationGateState extends State<InitialAnimationGate>
       backgroundColor: Theme.of(context).colorScheme.surface,
       body: Center(
         child: SizedBox(
-          width: 340,
+          width: 500,
           child: Lottie.asset(
-            'assets/json/Chef_animation.json',
+            'assets/json/WTFood-animation.json',
             controller: _controller,
             fit: BoxFit.contain,
             repeat: false,

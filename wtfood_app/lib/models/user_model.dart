@@ -1,5 +1,6 @@
 // user_model.dart
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:wtfood_app/features/pantry_update/domain/pantry_update_settings.dart';
 import 'package:wtfood_app/models/shopping_list.dart';
 
 class UserModel {
@@ -10,6 +11,7 @@ class UserModel {
   final DateTime createdAt;
   final List<String> favoriteRecipes;
   final List<ShoppingList> shoppingLists;
+  final PantryUpdateSettings pantryUpdateSettings;
 
   const UserModel({
     required this.uid,
@@ -19,6 +21,7 @@ class UserModel {
     required this.createdAt,
     this.favoriteRecipes = const [],
     this.shoppingLists = const [],
+    this.pantryUpdateSettings = const PantryUpdateSettings(),
   });
 
   /// Construye un UserModel desde un documento de Firestore.
@@ -35,18 +38,24 @@ class UserModel {
           .whereType<Map>()
           .map((item) => ShoppingList.fromMap(Map<String, dynamic>.from(item)))
           .toList(),
+      pantryUpdateSettings: PantryUpdateSettings.fromMap(
+        data['pantryUpdateSettings'] is Map
+            ? Map<String, dynamic>.from(data['pantryUpdateSettings'] as Map)
+            : null,
+      ),
     );
   }
 
   /// Serializa el modelo para guardarlo en Firestore.
   Map<String, dynamic> toFirestore() => {
-        'name': name,
-        'email': email,
-        'photoUrl': photoUrl,
-        'createdAt': Timestamp.fromDate(createdAt),
-        'favoriteRecipes': favoriteRecipes,
-        'shoppingLists': shoppingLists.map((list) => list.toMap()).toList(),
-      };
+    'name': name,
+    'email': email,
+    'photoUrl': photoUrl,
+    'createdAt': Timestamp.fromDate(createdAt),
+    'favoriteRecipes': favoriteRecipes,
+    'shoppingLists': shoppingLists.map((list) => list.toMap()).toList(),
+    'pantryUpdateSettings': pantryUpdateSettings.toFirestore(),
+  };
 
   /// Copia inmutable con campos opcionales modificados.
   UserModel copyWith({
@@ -55,16 +64,17 @@ class UserModel {
     String? photoUrl,
     List<String>? favoriteRecipes,
     List<ShoppingList>? shoppingLists,
-  }) =>
-      UserModel(
-        uid: uid,
-        name: name ?? this.name,
-        email: email ?? this.email,
-        photoUrl: photoUrl ?? this.photoUrl,
-        createdAt: createdAt,
-        favoriteRecipes: favoriteRecipes ?? this.favoriteRecipes,
-        shoppingLists: shoppingLists ?? this.shoppingLists,
-      );
+    PantryUpdateSettings? pantryUpdateSettings,
+  }) => UserModel(
+    uid: uid,
+    name: name ?? this.name,
+    email: email ?? this.email,
+    photoUrl: photoUrl ?? this.photoUrl,
+    createdAt: createdAt,
+    favoriteRecipes: favoriteRecipes ?? this.favoriteRecipes,
+    shoppingLists: shoppingLists ?? this.shoppingLists,
+    pantryUpdateSettings: pantryUpdateSettings ?? this.pantryUpdateSettings,
+  );
 
   @override
   String toString() => 'UserModel(uid: $uid, name: $name, email: $email)';
