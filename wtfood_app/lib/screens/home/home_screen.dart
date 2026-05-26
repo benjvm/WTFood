@@ -114,9 +114,16 @@ class _HomeScreenState extends State<HomeScreen> {
       return;
     }
 
+    final user = context.read<UserProvider>().user;
+    final uid = user?.uid;
+    if (uid == null) {
+      return;
+    }
+
     _isEvaluatingTutorial = true;
     final shouldShow = await _onboardingStorageService.shouldShowTutorial(
       ContextualTutorial.homeScanCta,
+      uid: uid,
     );
     _isEvaluatingTutorial = false;
 
@@ -127,6 +134,7 @@ class _HomeScreenState extends State<HomeScreen> {
     _hasTriggeredTutorial = true;
     await _onboardingStorageService.markTutorialShown(
       ContextualTutorial.homeScanCta,
+      uid: uid,
     );
 
     if (!mounted) {

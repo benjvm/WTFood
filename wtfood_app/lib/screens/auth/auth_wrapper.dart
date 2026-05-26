@@ -23,8 +23,10 @@ class _AuthWrapperState extends State<AuthWrapper> {
   bool? _isOnboardingCompleted;
   int _mainScreenInitialTabIndex = MainScreen.homeTabIndex;
 
-  Future<void> _loadOnboardingStatus() async {
-    final isCompleted = await _onboardingStorageService.isOnboardingCompleted();
+  Future<void> _loadOnboardingStatus(String uid) async {
+    final isCompleted = await _onboardingStorageService.isOnboardingCompleted(
+      uid: uid,
+    );
 
     if (!mounted) {
       return;
@@ -70,7 +72,7 @@ class _AuthWrapperState extends State<AuthWrapper> {
 
             WidgetsBinding.instance.addPostFrameCallback((_) {
               userProvider.loadUser(firebaseUser.uid);
-              _loadOnboardingStatus();
+              _loadOnboardingStatus(firebaseUser.uid);
             });
           }
 

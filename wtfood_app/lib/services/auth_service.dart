@@ -1,10 +1,13 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:wtfood_app/features/onboarding/data/onboarding_storage_service.dart';
 import 'package:wtfood_app/features/pantry_update/domain/pantry_update_settings.dart';
 
 class AuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final OnboardingStorageService _onboardingStorageService =
+      OnboardingStorageService();
 
   Stream<User?> get authStateChanges => _auth.authStateChanges();
 
@@ -29,6 +32,7 @@ class AuthService {
       'favoriteRecipes': const <String>[],
       'shoppingLists': const <Map<String, dynamic>>[],
       'pantryUpdateSettings': const PantryUpdateSettings().toFirestore(),
+      'onboardingState': _onboardingStorageService.createInitialState(),
       'createdAt': FieldValue.serverTimestamp(),
       'lastLogin': FieldValue.serverTimestamp(),
     });

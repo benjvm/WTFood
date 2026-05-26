@@ -3,11 +3,13 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:provider/provider.dart';
 import 'package:showcaseview/showcaseview.dart';
 
 import '../../../core/constants.dart';
 import '../../../core/theme.dart';
 import '../../../features/onboarding/onboarding.dart';
+import '../../../providers/user_provider.dart';
 import '../../../services/ai_service.dart';
 import 'ingredients_review_screen.dart';
 
@@ -140,9 +142,16 @@ class _ScanScreenState extends State<ScanScreen>
       return;
     }
 
+    final user = context.read<UserProvider>().user;
+    final uid = user?.uid;
+    if (uid == null) {
+      return;
+    }
+
     _isEvaluatingTutorial = true;
     final shouldShow = await _onboardingStorageService.shouldShowTutorial(
       ContextualTutorial.scanCamera,
+      uid: uid,
     );
     _isEvaluatingTutorial = false;
 
@@ -153,6 +162,7 @@ class _ScanScreenState extends State<ScanScreen>
     _hasTriggeredTutorial = true;
     await _onboardingStorageService.markTutorialShown(
       ContextualTutorial.scanCamera,
+      uid: uid,
     );
 
     if (!mounted) {
