@@ -20,12 +20,17 @@ class ScanScreen extends StatefulWidget {
 
 class _ScanScreenState extends State<ScanScreen>
     with SingleTickerProviderStateMixin {
+<<<<<<< HEAD
   static const String _showcaseScope = 'scan_screen_showcase';
 
+=======
+  static const String _showcaseScope = 'scanScreenShowcase';
+>>>>>>> 410ddb2ccf72cb6f2bd1f50e71b5368bfb27a9f0
   final OnboardingStorageService _onboardingStorageService =
       OnboardingStorageService();
   final GlobalKey _cameraTutorialKey = GlobalKey();
 
+  late final ShowcaseView _showcaseView;
   File? _selectedImage;
   bool _isAnalyzing = false;
   String? _errorMessage;

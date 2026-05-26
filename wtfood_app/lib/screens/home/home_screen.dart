@@ -23,12 +23,17 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+<<<<<<< HEAD
   static const String _showcaseScope = 'home_screen_showcase';
 
+=======
+  static const String _showcaseScope = 'homeScreenShowcase';
+>>>>>>> 410ddb2ccf72cb6f2bd1f50e71b5368bfb27a9f0
   final OnboardingStorageService _onboardingStorageService =
       OnboardingStorageService();
   final GlobalKey _scanShowcaseKey = GlobalKey();
 
+  late final ShowcaseView _showcaseView;
   String? _lastPantryPromptKey;
   bool _isShowingPantryPrompt = false;
   bool _isEvaluatingTutorial = false;
