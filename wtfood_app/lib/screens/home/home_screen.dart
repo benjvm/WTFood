@@ -23,6 +23,8 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+  static const String _showcaseScope = 'home_screen_showcase';
+
   final OnboardingStorageService _onboardingStorageService =
       OnboardingStorageService();
   final GlobalKey _scanShowcaseKey = GlobalKey();
@@ -31,11 +33,12 @@ class _HomeScreenState extends State<HomeScreen> {
   bool _isShowingPantryPrompt = false;
   bool _isEvaluatingTutorial = false;
   bool _hasTriggeredTutorial = false;
+  late final ShowcaseView _showcaseView;
 
   @override
   void initState() {
     super.initState();
-    ShowcaseView.register();
+    _showcaseView = ShowcaseView.register(scope: _showcaseScope);
   }
 
   @override
@@ -46,7 +49,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   void dispose() {
-    ShowcaseView.get().unregister();
+    _showcaseView.unregister();
     super.dispose();
   }
 
@@ -135,7 +138,7 @@ class _HomeScreenState extends State<HomeScreen> {
         return;
       }
 
-      ShowcaseView.get().startShowCase([_scanShowcaseKey]);
+      _showcaseView.startShowCase([_scanShowcaseKey]);
     });
   }
 
@@ -189,6 +192,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       const SizedBox(height: AppConstants.paddingXl),
                       Showcase(
                         key: _scanShowcaseKey,
+                        scope: _showcaseScope,
                         title: 'Empieza aqui',
                         description:
                             'Empieza aqui para descubrir recetas con tus ingredientes.',

@@ -20,6 +20,8 @@ class ScanScreen extends StatefulWidget {
 
 class _ScanScreenState extends State<ScanScreen>
     with SingleTickerProviderStateMixin {
+  static const String _showcaseScope = 'scan_screen_showcase';
+
   final OnboardingStorageService _onboardingStorageService =
       OnboardingStorageService();
   final GlobalKey _cameraTutorialKey = GlobalKey();
@@ -32,11 +34,12 @@ class _ScanScreenState extends State<ScanScreen>
 
   late final AnimationController _pulseController;
   late final Animation<double> _pulseAnimation;
+  late final ShowcaseView _showcaseView;
 
   @override
   void initState() {
     super.initState();
-    ShowcaseView.register();
+    _showcaseView = ShowcaseView.register(scope: _showcaseScope);
     _pulseController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 1200),
@@ -48,7 +51,7 @@ class _ScanScreenState extends State<ScanScreen>
 
   @override
   void dispose() {
-    ShowcaseView.get().unregister();
+    _showcaseView.unregister();
     _pulseController.dispose();
     super.dispose();
   }
@@ -161,7 +164,7 @@ class _ScanScreenState extends State<ScanScreen>
         return;
       }
 
-      ShowcaseView.get().startShowCase([_cameraTutorialKey]);
+      _showcaseView.startShowCase([_cameraTutorialKey]);
     });
   }
 
@@ -214,6 +217,7 @@ class _ScanScreenState extends State<ScanScreen>
                       Expanded(
                         child: Showcase(
                           key: _cameraTutorialKey,
+                          scope: _showcaseScope,
                           title: 'Escaneo rapido',
                           description: 'Apunta la camara a tus ingredientes.',
                           tooltipBackgroundColor:

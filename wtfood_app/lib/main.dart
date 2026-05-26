@@ -17,17 +17,37 @@ Future<void> main() async {
   await dotenv.load(fileName: '.env');
 
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
-  runApp(const MainApp());
+  final themePreferenceStorage = ThemePreferenceStorage();
+  final initialThemePreference = await themePreferenceStorage.loadPreference();
+
+  runApp(
+    MainApp(
+      initialThemePreference: initialThemePreference,
+      themePreferenceStorage: themePreferenceStorage,
+    ),
+  );
 }
 
 class MainApp extends StatelessWidget {
-  const MainApp({super.key});
+  const MainApp({
+    required this.initialThemePreference,
+    required this.themePreferenceStorage,
+    super.key,
+  });
+
+  final AppThemePreference initialThemePreference;
+  final ThemePreferenceStorage themePreferenceStorage;
 
   @override
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
-        ChangeNotifierProvider(create: (_) => ThemeController()),
+        ChangeNotifierProvider(
+          create: (_) => ThemeController(
+            initialPreference: initialThemePreference,
+            storage: themePreferenceStorage,
+          ),
+        ),
         ChangeNotifierProvider(create: (_) => FridgeProvider()),
         ChangeNotifierProvider(create: (_) => UserProvider()),
       ],
