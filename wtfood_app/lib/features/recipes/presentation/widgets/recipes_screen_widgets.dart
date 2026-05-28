@@ -522,24 +522,6 @@ class _ExploreFeaturedCollectionCard extends StatelessWidget {
                     ],
                   ),
                 ),
-                Positioned(
-                  top: 14,
-                  left: 14,
-                  right: 14,
-                  bottom: 14,
-                  child: IgnorePointer(
-                    child: Container(
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(
-                          AppConstants.borderRadiusLg,
-                        ),
-                        border: Border.all(
-                          color: Colors.white.withValues(alpha: 0.18),
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
               ],
             ),
           ),
@@ -559,52 +541,97 @@ class _ExploreCategoryTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
+    final hasPhoto =
+        collection.previewRecipe?.photoUrl.trim().isNotEmpty ?? false;
 
     return Material(
       color: Colors.transparent,
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(32),
+        borderRadius: BorderRadius.circular(AppConstants.borderRadiusLg),
         child: Ink(
-          height: 190,
+          height: 156,
           decoration: BoxDecoration(
-            color: colorScheme.surface,
-            borderRadius: BorderRadius.circular(32),
+            borderRadius: BorderRadius.circular(AppConstants.borderRadiusLg),
             boxShadow: [
               BoxShadow(
-                color: colorScheme.onSurface.withValues(alpha: 0.05),
-                blurRadius: 24,
-                offset: const Offset(0, 12),
+                color: colorScheme.onSurface.withValues(alpha: 0.08),
+                blurRadius: 18,
+                offset: const Offset(0, 10),
               ),
             ],
           ),
-          child: Padding(
-            padding: const EdgeInsets.all(AppConstants.paddingLg),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.center,
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(AppConstants.borderRadiusLg),
+            child: Stack(
+              fit: StackFit.expand,
               children: [
-                _ExploreSoftIconCard(
-                  icon: collection.icon,
-                  colors: collection.gradientColors,
-                ),
-                const Spacer(),
-                Text(
-                  collection.title,
-                  textAlign: TextAlign.center,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: theme.textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.w800,
-                    color: colorScheme.onSurface,
+                if (hasPhoto)
+                  Image.network(
+                    collection.previewRecipe!.photoUrl,
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) =>
+                        _CollectionTileFallback(
+                          colors: collection.gradientColors,
+                          icon: collection.icon,
+                        ),
+                  )
+                else
+                  _CollectionTileFallback(
+                    colors: collection.gradientColors,
+                    icon: collection.icon,
+                  ),
+                DecoratedBox(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: [
+                        Colors.black.withValues(alpha: 0.08),
+                        Colors.black.withValues(alpha: 0.24),
+                        Colors.black.withValues(alpha: 0.68),
+                      ],
+                    ),
                   ),
                 ),
-                const SizedBox(height: 6),
-                Text(
-                  '${collection.recipeCount} recetas',
-                  textAlign: TextAlign.center,
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                    color: colorScheme.onSurfaceVariant,
-                    fontWeight: FontWeight.w600,
+                Positioned(
+                  left: AppConstants.paddingMd,
+                  right: AppConstants.paddingMd,
+                  bottom: AppConstants.paddingMd,
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      Expanded(
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              collection.title,
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                              style: theme.textTheme.titleMedium?.copyWith(
+                                color: Colors.white,
+                                fontSize: 20,
+                                height: 1.02,
+                                fontWeight: FontWeight.w800,
+                              ),
+                            ),
+                            const SizedBox(height: 3),
+                            Text(
+                              '${collection.recipeCount} recetas',
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                color: Colors.white.withValues(alpha: 0.88),
+                                fontSize: 13,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ],
@@ -697,35 +724,6 @@ class _FeaturedInfoChip extends StatelessWidget {
           ),
         ],
       ),
-    );
-  }
-}
-
-class _ExploreSoftIconCard extends StatelessWidget {
-  const _ExploreSoftIconCard({required this.icon, required this.colors});
-
-  final IconData icon;
-  final List<Color> colors;
-
-  @override
-  Widget build(BuildContext context) {
-    final iconColor = colors.length > 1 ? colors[1] : colors.first;
-
-    return Container(
-      width: 72,
-      height: 72,
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            colors.first.withValues(alpha: 0.12),
-            colors.last.withValues(alpha: 0.08),
-          ],
-        ),
-        borderRadius: BorderRadius.circular(22),
-      ),
-      child: Icon(icon, size: 34, color: iconColor),
     );
   }
 }
@@ -873,7 +871,7 @@ List<_ExploreCollection> _buildExploreCollections({
       title: 'Desayuno',
       description: 'Ideas ligeras y rápidas para arrancar el día.',
       filterKey: 'desayuno',
-      icon: Icons.free_breakfast_rounded,
+      icon: Icons.breakfast_dining_rounded,
       gradientColors: const [
         Color(0xFFB6E2D3),
         Color(0xFF7BC4A4),
@@ -888,7 +886,7 @@ List<_ExploreCollection> _buildExploreCollections({
       title: 'Fáciles',
       description: 'Recetas simples para cocinar sin complicarte.',
       filterKey: 'fácil',
-      icon: Icons.spa_rounded,
+      icon: Icons.auto_awesome_rounded,
       gradientColors: const [
         Color(0xFFC8F0D8),
         Color(0xFF74C69D),
@@ -901,7 +899,7 @@ List<_ExploreCollection> _buildExploreCollections({
       title: 'Cenas',
       description: 'Opciones reconfortantes para cerrar el día.',
       filterKey: 'cena',
-      icon: Icons.dinner_dining_rounded,
+      icon: Icons.local_dining_rounded,
       gradientColors: const [
         Color(0xFFE8E8E8),
         Color(0xFFB7B7B7),
@@ -914,7 +912,7 @@ List<_ExploreCollection> _buildExploreCollections({
       title: 'Postres',
       description: 'El toque dulce perfecto para cualquier antojo.',
       filterKey: 'postre',
-      icon: Icons.cake_rounded,
+      icon: Icons.icecream_rounded,
       gradientColors: const [
         Color(0xFFFDE2E4),
         Color(0xFFF4A8B8),
