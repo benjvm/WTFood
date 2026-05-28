@@ -66,7 +66,7 @@ class AuthService {
     if (user == null) {
       throw FirebaseAuthException(
         code: 'no-current-user',
-        message: 'No hay ninguna sesion activa.',
+        message: 'No hay ninguna sesión activa.',
       );
     }
 

@@ -235,7 +235,7 @@ class _ProfileRouteScreen extends StatelessWidget {
 String _appearanceSummary(AppThemePreference preference) {
   switch (preference) {
     case AppThemePreference.system:
-      return 'Sigue la configuracion del dispositivo';
+      return 'Sigue la configuración del dispositivo';
     case AppThemePreference.light:
       return 'Tema claro con la paleta original de WTFood';
     case AppThemePreference.dark:

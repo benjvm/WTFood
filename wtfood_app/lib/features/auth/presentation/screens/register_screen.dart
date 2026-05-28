@@ -340,7 +340,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   TextButton(
                     onPressed: () => Navigator.pop(context),
                     child: Text(
-                      'Iniciar sesion',
+                      'Iniciar sesión',
                       style: TextStyle(
                         color: colorScheme.primary,
                         fontWeight: FontWeight.w700,

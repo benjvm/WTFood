@@ -41,7 +41,7 @@ class _MainScreenState extends State<MainScreen> {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        title: const Text('Cerrar sesion'),
+        title: const Text('Cerrar sesión'),
         content: const Text('Estas seguro de que quieres salir?'),
         actions: [
           TextButton(
@@ -242,7 +242,7 @@ class _MainScreenState extends State<MainScreen> {
               child: ListTile(
                 contentPadding: EdgeInsets.zero,
                 leading: Icon(Icons.settings_outlined),
-                title: Text('Configuracion'),
+                title: Text('Configuración'),
               ),
             ),
             PopupMenuItem<_MainMenuAction>(
@@ -250,7 +250,7 @@ class _MainScreenState extends State<MainScreen> {
               child: ListTile(
                 contentPadding: EdgeInsets.zero,
                 leading: Icon(Icons.logout),
-                title: Text('Cerrar sesion'),
+                title: Text('Cerrar sesión'),
               ),
             ),
           ],

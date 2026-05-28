@@ -65,17 +65,17 @@ class _LoginScreenState extends State<LoginScreen> {
       case 'user-not-found':
         return 'No existe una cuenta con ese correo.';
       case 'wrong-password':
-        return 'Contrasena incorrecta.';
+        return 'Contraseña incorrecta.';
       case 'invalid-email':
-        return 'El correo electronico no es valido.';
+        return 'El correo electrónico no es válido.';
       case 'user-disabled':
         return 'Esta cuenta ha sido deshabilitada.';
       case 'too-many-requests':
         return 'Demasiados intentos fallidos. Intentalo mas tarde.';
       case 'invalid-credential':
-        return 'Correo o contrasena incorrectos.';
+        return 'Correo o contraseña incorrectos.';
       default:
-        return 'Error al iniciar sesion. Intentalo de nuevo.';
+        return 'Error al iniciar sesión. Intentalo de nuevo.';
     }
   }
 
@@ -148,7 +148,7 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
               const SizedBox(height: 8),
               Text(
-                'Inicia sesion para continuar',
+                'Inicia sesión para continuar',
                 textAlign: TextAlign.center,
                 style: theme.textTheme.bodyMedium?.copyWith(
                   color: palette.authBody,
@@ -255,7 +255,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           ),
                         )
                       : const Text(
-                          'Iniciar sesion',
+                          'Iniciar sesión',
                           style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.w700,

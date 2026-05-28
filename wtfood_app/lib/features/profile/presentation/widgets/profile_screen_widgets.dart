@@ -38,7 +38,7 @@ class _BackToSettingsButton extends StatelessWidget {
             ),
             const SizedBox(width: 8),
             Text(
-              'Volver a configuracion',
+              'Volver a configuración',
               style: Theme.of(context).textTheme.labelLarge?.copyWith(
                 color: palette.primaryDark,
                 fontWeight: FontWeight.w700,

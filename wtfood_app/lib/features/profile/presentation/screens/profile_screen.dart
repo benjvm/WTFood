@@ -169,8 +169,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Cerrar sesion'),
-        content: const Text('Estas seguro de que quieres cerrar sesion?'),
+        title: const Text('Cerrar sesión'),
+        content: const Text('Estas seguro de que quieres cerrar sesión?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
@@ -179,7 +179,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           TextButton(
             onPressed: () => Navigator.pop(ctx, true),
             child: Text(
-              'Cerrar sesion',
+              'Cerrar sesión',
               style: TextStyle(
                 color: Theme.of(context).colorScheme.error,
                 fontWeight: FontWeight.bold,
@@ -356,7 +356,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               const SizedBox(height: AppConstants.paddingXl),
               _ActionRow(
                 icon: Icons.lock_outline_rounded,
-                label: 'Cambiar contrasena',
+                label: 'Cambiar contraseña',
                 useTertiary: true,
                 onTap: _showChangePasswordSheet,
               ),
@@ -407,7 +407,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 onTap: _signOut,
                 child: Center(
                   child: Text(
-                    'Cerrar sesion',
+                    'Cerrar sesión',
                     style: Theme.of(context).textTheme.labelLarge?.copyWith(
                       color: palette.accent,
                       letterSpacing: 1.2,

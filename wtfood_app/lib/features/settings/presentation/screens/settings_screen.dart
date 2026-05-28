@@ -32,7 +32,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
     if (user == null) {
       _showSnackBar(
-        'No pudimos cargar tu configuracion de despensa.',
+        'No pudimos cargar tu configuración de despensa.',
         isError: true,
       );
       return;
@@ -137,7 +137,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        title: const Text('Cerrar sesion'),
+        title: const Text('Cerrar sesión'),
         content: const Text('Estas seguro de que quieres salir de la app?'),
         actions: [
           TextButton(
@@ -147,7 +147,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           TextButton(
             onPressed: () => Navigator.pop(dialogContext, true),
             child: Text(
-              'Cerrar sesion',
+              'Cerrar sesión',
               style: TextStyle(color: Theme.of(context).colorScheme.error),
             ),
           ),
@@ -196,7 +196,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       }
 
       final message = error.toString().contains('requires-recent-login')
-          ? 'Por seguridad, vuelve a iniciar sesion antes de borrar tu cuenta.'
+          ? 'Por seguridad, vuelve a iniciar sesión antes de borrar tu cuenta.'
           : 'No se pudo borrar la cuenta: $error';
       _showSnackBar(message, isError: true);
     }
@@ -247,7 +247,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Configuracion',
+              'Configuración',
               style: theme.textTheme.headlineMedium?.copyWith(
                 fontWeight: FontWeight.w800,
                 color: colorScheme.onSurface,
@@ -288,7 +288,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ),
             const SizedBox(height: AppConstants.paddingXl),
             Text(
-              'Configuracion',
+              'Configuración',
               style: theme.textTheme.titleLarge?.copyWith(
                 fontWeight: FontWeight.w800,
               ),
@@ -313,7 +313,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   _SettingsDivider(color: colorScheme.outlineVariant),
                   _SettingsTile(
                     icon: Icons.logout_rounded,
-                    title: 'Cerrar sesion',
+                    title: 'Cerrar sesión',
                     subtitle: 'Salir de tu cuenta actual',
                     iconColor: colorScheme.error,
                     iconBackground: colorScheme.errorContainer.withValues(
