@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:wtfood_app/core/constants.dart';
 import 'package:wtfood_app/features/onboarding/data/onboarding_storage_service.dart';
 import 'package:wtfood_app/features/onboarding/models/onboarding_page_model.dart';
 
@@ -19,20 +20,20 @@ class OnboardingController extends ChangeNotifier {
       title: 'Descubre qué cocinar hoy',
       description:
           'Escanea lo que ya tienes en casa y recibe ideas al instante.',
-      assetPath: 'assets/images/onboarding_screen1.png',
+      assetPath: AppAssets.onboardingScreen1,
       fallbackIcon: Icons.restaurant_menu_rounded,
     ),
     OnboardingPageModel(
       title: 'Escanea tus ingredientes',
       description: 'Usa la cámara para detectar alimentos de forma rápida.',
-      assetPath: 'assets/images/onboarding_screen2.png',
+      assetPath: AppAssets.onboardingScreen2,
       fallbackIcon: Icons.enhance_photo_translate_rounded,
     ),
     OnboardingPageModel(
       title: 'Todo en un solo lugar',
       description:
           'Guarda ingredientes, crea listas y organiza tu cocina sin esfuerzo.',
-      assetPath: 'assets/images/onboarding_screen3.png',
+      assetPath: AppAssets.onboardingScreen3,
       fallbackIcon: Icons.playlist_add_check_circle_rounded,
     ),
   ];
