@@ -101,36 +101,12 @@ class ShoppingListDetailScreen extends StatelessWidget {
                       height: 1.1,
                     ),
                   ),
-                  const SizedBox(height: 12),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 14,
-                      vertical: 10,
-                    ),
-                    decoration: BoxDecoration(
-                      color: colorScheme.surfaceContainerLow,
-                      borderRadius: BorderRadius.circular(999),
-                    ),
-                    child: Text(
-                      '${shoppingList.pendingItemsCount} ingrediente${shoppingList.pendingItemsCount == 1 ? '' : 's'} pendiente${shoppingList.pendingItemsCount == 1 ? '' : 's'}',
-                      style: theme.textTheme.labelLarge?.copyWith(
-                        color: colorScheme.onSurfaceVariant,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: AppConstants.paddingXl),
-                  Text(
-                    'Toca un ingrediente para marcarlo como comprado.',
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      color: colorScheme.onSurfaceVariant,
-                      height: 1.45,
-                    ),
-                  ),
+                  const SizedBox(height: AppConstants.paddingLg),
+                  _ShoppingProgressOverview(shoppingList: shoppingList),
                   const SizedBox(height: AppConstants.paddingLg),
                   ...shoppingList.items.map(
                     (item) => Padding(
-                      padding: const EdgeInsets.only(bottom: 14),
+                      padding: const EdgeInsets.only(bottom: 10),
                       child: _ShoppingListItemCard(
                         item: item,
                         onTap: uid.isEmpty

@@ -70,7 +70,19 @@ class ShoppingList {
   final DateTime savedAt;
   final List<ShoppingListItem> items;
 
+  int get totalItemsCount => items.length;
+
+  int get completedItemsCount => items.where((item) => item.isChecked).length;
+
   int get pendingItemsCount => items.where((item) => !item.isChecked).length;
+
+  double get completionProgress {
+    if (totalItemsCount == 0) {
+      return 0;
+    }
+
+    return completedItemsCount / totalItemsCount;
+  }
 
   bool get hasPhoto => photoUrl.trim().isNotEmpty;
 

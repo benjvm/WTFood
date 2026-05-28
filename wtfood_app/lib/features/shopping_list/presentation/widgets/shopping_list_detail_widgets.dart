@@ -1,5 +1,99 @@
 part of '../screens/shopping_list_detail_screen.dart';
 
+class _ShoppingProgressOverview extends StatelessWidget {
+  const _ShoppingProgressOverview({required this.shoppingList});
+
+  final ShoppingList shoppingList;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final progress = shoppingList.completionProgress.clamp(0.0, 1.0).toDouble();
+    final percentage = (progress * 100).round();
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(AppConstants.paddingMd),
+      decoration: BoxDecoration(
+        color: colorScheme.surfaceContainerLow,
+        borderRadius: BorderRadius.circular(AppConstants.borderRadiusLg),
+        border: Border.all(color: colorScheme.outlineVariant),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'PROGRESO DE COMPRA',
+            style: theme.textTheme.labelSmall?.copyWith(
+              color: colorScheme.onSurfaceVariant,
+              letterSpacing: 1.4,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+          const SizedBox(height: 10),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Expanded(
+                child: Text(
+                  _shoppingProgressMessage(progress, shoppingList),
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w800,
+                    height: 1.1,
+                  ),
+                ),
+              ),
+              const SizedBox(width: AppConstants.paddingMd),
+              Text(
+                '$percentage% (${shoppingList.completedItemsCount}/${shoppingList.totalItemsCount})',
+                style: theme.textTheme.labelLarge?.copyWith(
+                  color: AppColors.primary,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(999),
+            child: LinearProgressIndicator(
+              value: progress,
+              minHeight: 8,
+              backgroundColor: colorScheme.surfaceContainerHighest,
+              color: AppColors.primary,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+String _shoppingProgressMessage(double progress, ShoppingList shoppingList) {
+  if (shoppingList.totalItemsCount == 0) {
+    return 'Sin ingredientes';
+  }
+
+  if (progress >= 1) {
+    return 'A cocinar!';
+  }
+
+  if (progress >= 0.7) {
+    return 'Casi listo';
+  }
+
+  if (progress >= 0.35) {
+    return 'Buen ritmo';
+  }
+
+  if (progress > 0) {
+    return 'En marcha';
+  }
+
+  return 'Por empezar';
+}
+
 class _ShoppingListItemCard extends StatelessWidget {
   const _ShoppingListItemCard({required this.item, this.onTap});
 
@@ -16,22 +110,22 @@ class _ShoppingListItemCard extends StatelessWidget {
       color: Colors.transparent,
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(AppConstants.borderRadiusLg),
+        borderRadius: BorderRadius.circular(AppConstants.borderRadiusMd),
         child: Ink(
           padding: const EdgeInsets.symmetric(
-            horizontal: AppConstants.paddingLg,
-            vertical: 20,
+            horizontal: AppConstants.paddingMd,
+            vertical: 14,
           ),
           decoration: BoxDecoration(
             color: item.isChecked
                 ? colorScheme.surfaceContainerLow
                 : colorScheme.surfaceContainerLowest,
-            borderRadius: BorderRadius.circular(AppConstants.borderRadiusLg),
+            borderRadius: BorderRadius.circular(AppConstants.borderRadiusMd),
             boxShadow: [
               BoxShadow(
-                color: colorScheme.onSurface.withValues(alpha: 0.05),
-                blurRadius: 20,
-                offset: const Offset(0, 10),
+                color: colorScheme.onSurface.withValues(alpha: 0.04),
+                blurRadius: 14,
+                offset: const Offset(0, 6),
               ),
             ],
           ),
@@ -39,8 +133,8 @@ class _ShoppingListItemCard extends StatelessWidget {
             children: [
               AnimatedContainer(
                 duration: const Duration(milliseconds: 180),
-                width: 34,
-                height: 34,
+                width: 28,
+                height: 28,
                 decoration: BoxDecoration(
                   color: item.isChecked
                       ? AppColors.primary
@@ -57,19 +151,20 @@ class _ShoppingListItemCard extends StatelessWidget {
                     ? const Icon(
                         Icons.check_rounded,
                         color: Colors.white,
-                        size: 20,
+                        size: 17,
                       )
                     : null,
               ),
-              const SizedBox(width: 16),
+              const SizedBox(width: 12),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
                       presentation.name,
-                      style: theme.textTheme.titleLarge?.copyWith(
-                        fontWeight: FontWeight.w800,
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w700,
+                        height: 1.2,
                         decoration: item.isChecked
                             ? TextDecoration.lineThrough
                             : null,
@@ -78,10 +173,10 @@ class _ShoppingListItemCard extends StatelessWidget {
                             : colorScheme.onSurface,
                       ),
                     ),
-                    const SizedBox(height: 6),
+                    const SizedBox(height: 4),
                     Wrap(
-                      spacing: 8,
-                      runSpacing: 8,
+                      spacing: 6,
+                      runSpacing: 6,
                       crossAxisAlignment: WrapCrossAlignment.center,
                       children: [
                         Text(
@@ -90,7 +185,7 @@ class _ShoppingListItemCard extends StatelessWidget {
                               : item.isChecked
                               ? 'Comprado'
                               : 'Pendiente',
-                          style: theme.textTheme.bodyMedium?.copyWith(
+                          style: theme.textTheme.labelMedium?.copyWith(
                             color: item.isChecked
                                 ? colorScheme.onSurfaceVariant
                                 : AppColors.primary,
@@ -100,8 +195,8 @@ class _ShoppingListItemCard extends StatelessWidget {
                         if ((item.sourceTag ?? '').isNotEmpty)
                           Container(
                             padding: const EdgeInsets.symmetric(
-                              horizontal: 10,
-                              vertical: 6,
+                              horizontal: 8,
+                              vertical: 4,
                             ),
                             decoration: BoxDecoration(
                               color: colorScheme.secondaryContainer,
@@ -109,7 +204,7 @@ class _ShoppingListItemCard extends StatelessWidget {
                             ),
                             child: Text(
                               item.sourceTag!,
-                              style: theme.textTheme.labelMedium?.copyWith(
+                              style: theme.textTheme.labelSmall?.copyWith(
                                 color: colorScheme.onSecondaryContainer,
                                 fontWeight: FontWeight.w800,
                               ),
@@ -121,19 +216,19 @@ class _ShoppingListItemCard extends StatelessWidget {
                 ),
               ),
               if (presentation.amountLabel.isNotEmpty) ...[
-                const SizedBox(width: 16),
+                const SizedBox(width: 10),
                 Container(
                   padding: const EdgeInsets.symmetric(
-                    horizontal: 14,
-                    vertical: 10,
+                    horizontal: 10,
+                    vertical: 7,
                   ),
                   decoration: BoxDecoration(
                     color: colorScheme.surfaceContainerHigh,
-                    borderRadius: BorderRadius.circular(16),
+                    borderRadius: BorderRadius.circular(12),
                   ),
                   child: Text(
                     presentation.amountLabel,
-                    style: theme.textTheme.labelLarge?.copyWith(
+                    style: theme.textTheme.labelMedium?.copyWith(
                       fontWeight: FontWeight.w800,
                     ),
                   ),
