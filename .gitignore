@@ -1,0 +1,25 @@
+# Local IDE and editor settings
+.idea/
+.vscode/
+*.iml
+*.ipr
+*.iws
+
+# Local design-tool exports and generated prototypes
+.stitch/
+
+# Flutter-generated files (the application lives in wtfood_app/)
+wtfood_app/.dart_tool/
+wtfood_app/.flutter-plugins
+wtfood_app/.flutter-plugins-dependencies
+wtfood_app/.pub/
+wtfood_app/build/
+wtfood_app/coverage/
+
+# Private local configuration and signing material
+wtfood_app/.env
+wtfood_app/.env.*
+!wtfood_app/.env.example
+*.keystore
+*.jks
+key.properties

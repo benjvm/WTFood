@@ -50,3 +50,10 @@ ios/Runner/GoogleService-Info.plist
 
 # Environment variables
 .env
+.env.*
+!.env.example
+
+# Android signing keys
+*.keystore
+*.jks
+key.properties
