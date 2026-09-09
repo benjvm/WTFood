@@ -1,5 +1,9 @@
 # WTFood
 
+<p align="center">
+  <img src="wtfood_app/assets/gif/WTfood-animation_20260909105604.gif" alt="WTFood animated logo" width="220">
+</p>
+
 **Turn the food in your fridge into a recipe.**
 
 WTFood is a mobile application developed during an internship in collaboration
